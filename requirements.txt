@@ -1,4 +1,4 @@
-# --------- pytorch --------- #
+# -------- pytorch -------- #
 torch>=2.0.0
 torchvision>=0.15.0
 lightning>=2.0.0
@@ -9,6 +9,14 @@ hydra-core==1.3.2
 hydra-colorlog==1.2.0
 hydra-optuna-sweeper==1.2.0
 
+# ---------- cv ----------- #
+opencv-python
+
+# ---------- ds ----------- #
+matplotlib
+seaborn
+pandas
+
 # --------- loggers --------- #
 # wandb
 # neptune-client
@@ -18,6 +26,8 @@ hydra-optuna-sweeper==1.2.0
 
 # --------- others --------- #
 rootutils       # standardizing the project root setup
+autoroot        # set path to root directory
+autorootcwd     # set path to root directory
 pre-commit      # hooks for applying linters on commit
 rich            # beautiful text formatting in terminal
 pytest          # tests
