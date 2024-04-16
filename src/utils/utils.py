@@ -1,3 +1,4 @@
+import torch
 import warnings
 from importlib.util import find_spec
 from typing import Any, Callable, Dict, Optional, Tuple
@@ -95,7 +96,9 @@ def task_wrapper(task_func: Callable) -> Callable:
     return wrap
 
 
-def get_metric_value(metric_dict: Dict[str, Any], metric_name: Optional[str]) -> Optional[float]:
+def get_metric_value(
+    metric_dict: Dict[str, Any], metric_name: Optional[str]
+) -> Optional[float]:
     """Safely retrieves value of the metric logged in LightningModule.
 
     :param metric_dict: A dict containing metric values.
@@ -117,3 +120,33 @@ def get_metric_value(metric_dict: Dict[str, Any], metric_name: Optional[str]) ->
     log.info(f"Retrieved metric value! <{metric_name}={metric_value}>")
 
     return metric_value
+
+
+def undo_transforms(img: torch.Tensor) -> torch.Tensor:
+    """
+    Undoes common normalisation of an image tensor, specifically:
+    - Denormalises the image tensor
+    - Converts the image tensor to the [0, 255] range
+    - Converts the image tensor to uint8
+
+    Args:
+        img (torch.Tensor): Image tensor
+
+    Returns:
+        torch.Tensor: The transformed image tensor
+    """
+    # Denormalise
+    mean = torch.tensor([0.485, 0.456, 0.406]).reshape(3, 1, 1)
+    std = torch.tensor([0.229, 0.224, 0.225]).reshape(3, 1, 1)
+    img = img * std + mean
+
+    # Convert to [0, 255] range
+    img = img * 255.0
+
+    # Convert back to uint8
+    img = img.type(torch.uint8)
+
+    # Permute to [H, W, C]
+    img = img.permute(1, 2, 0)
+
+    return img
