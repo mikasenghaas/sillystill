@@ -69,13 +69,18 @@ def _match_features(query_ds, train_ds, method="flann", **kwargs):
     return good_matches
 
 
-def _transform_image(query, train, query_kp, train_kp, matches) -> np.ndarray:
+def _transform_image(
+    query: np.ndarray, train: np.ndarray, query_kp: List, train_kp: List, matches: List
+) -> np.ndarray:
     """
-    Aligns two images using ORB feature detection and homography matrix.
+    Aligns two images using a homography matrix estimated from keypoint matches.
 
     Args:
-        img1: Image 1
-        img2: Image 2
+        query (np.ndarray): The query image
+        train (np.ndarray): The train image
+        query_kp (List): Keypoints of the query image
+        train_kp (List): Keypoints of the train image
+        matches (List): List of matches
 
     Returns:
         Transformed train image
@@ -92,10 +97,10 @@ def _transform_image(query, train, query_kp, train_kp, matches) -> np.ndarray:
     M, _ = cv.findHomography(train_pts, query_pts, cv.RANSAC, 5.0)
 
     # Find the perspective transformation
-    h, w = query.shape[:2]  # query
-    aligned_train = cv.warpPerspective(train, M, (w, h))[0:h, 0:w]
+    h, w = query.shape[:2]
+    transformed_train = cv.warpPerspective(train, M, (w, h))[0:h, 0:w]
 
-    return aligned_train
+    return transformed_train
 
 
 def align_images(
@@ -116,11 +121,16 @@ def align_images(
     is the film image.
 
     Args:
-        train (np.ndarray): Train image
         query (np.ndarray): Query image
+        train (np.ndarray): Train image
+        mask (np.ndarray, optional): Mask for feature extraction
+        extract_method (str, optional): Feature extraction method. Defaults to "orb".
+        match_method (str, optional): Feature matching method. Defaults to "bf".
+        extract_kwargs (dict, optional): Additional arguments for feature extraction. Defaults to {}.
+        match_kwargs (dict, optional): Additional arguments for feature matching. Defaults to {}.
 
     Returns:
-        Tuple of aligned images
+        Tuple of aligned images (query, aligned_train)
     """
     # Extract features
     query_kp, query_ds = _extract_features(
@@ -138,18 +148,4 @@ def align_images(
         query, train, query_kp, train_kp, matches, **transform_kwargs
     )
 
-    return aligned_train, query
-
-
-def preprocess_data(raw_dir: str, processed_dir: str) -> None:
-    """Preprocess the raw data.
-
-    :param raw_dir: The directory containing the raw data.
-    :param processed_dir: The directory to save the processed data to.
-    """
-    assert os.path.exists(raw_dir), "Raw data directory does not exist."
-    assert (
-        processed_dir != raw_dir
-    ), "Processed data cannot be saved in the same directory as raw data."
-
-    # Preprocess data
+    return query, aligned_train

@@ -1,36 +1,31 @@
 import os
+from psutil import Process
 import yaml
 
 from PIL import Image as PIL
 from PIL.Image import Image
+import numpy as np
 import pandas as pd
 
-from typing import Literal, Tuple, List, Dict, Optional, Union
+from typing import Literal, Tuple, List, Dict, Optional, Union, get_args
 
-ImageType = Literal["digital", "film"]
-ImageFormat = Literal["raw", "processed"]
-
-
-def _assert_image_format(image_format: str) -> None:
-    assert image_format in ["raw", "processed"], f"Invalid image format: {image_format}"
+CameraType = Literal["film", "digital"]
+ProcessingStateType = Literal["raw", "processed"]
+ImageFormatType = Literal["tif", "png", "jpg"]
+ColorSpaceType = Literal["RGB"]
 
 
-def _assert_image_type(image_type: str) -> None:
-    assert image_type in ["digital", "film"], f"Invalid image type: {image_type}"
+def _assert_literal(value, expected_type) -> None:
+    assert value in get_args(expected_type), f"Expected {expected_type}, got {value}"
 
 
-def _assert_inputs(idx: int, image_type: str, image_format: str) -> None:
-    assert isinstance(idx, int), f"Index must be an integer, not {type(idx)}"
-    _assert_image_type(image_type)
-    _assert_image_format(image_format)
-
-
-def _load_image_from_path(path: str) -> Image:
+def _load_image_from_path(path: str, as_array: bool = False) -> Image:
     """
     Load an image from a file into a PIL Image.
 
     Args:
         path (str): The path to the image file.
+        as_array (bool, optional): Whether to return the image as an array.
 
     Returns:
         Image: The loaded image.
@@ -39,33 +34,97 @@ def _load_image_from_path(path: str) -> Image:
     assert os.path.exists(path), f"Image file {path} does not exist."
 
     # Load the image
-    return PIL.open(path).convert("RGB")
+    img = PIL.open(path).convert("RGB")
+
+    # Convert to array if specified
+    if as_array:
+        return np.array(img)
+    return img
 
 
-def load_image(idx: int, image_type: ImageType, image_format: ImageFormat) -> Image:
+def _save_image_to_path(path: str, image: Union[np.ndarray, Image]) -> None:
+    """
+    Save an image to a file (can be numpy array or PIL Image)
+
+    Args:
+        path (str): The path to save the image.
+        image (Image): The image to save.
+    """
+    # Convert to PIL image if necessary
+    if isinstance(image, np.ndarray):
+        image = PIL.fromarray(image)
+
+    # Ensure save directory exists
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+
+    # Save the image
+    image.save(path)
+
+
+def load_image(
+    idx: int,
+    processing_state: ProcessingStateType,
+    camera: CameraType,
+    as_array: bool = False,
+) -> Image:
     """
     Load an image of a specific type and format for a given index
     of our image-pairs dataset.
 
     Args:
         idx (int): The index of the image pair.
-        image_type (ImageType): The type of image to load.
-        image_format (ImageFormat): The format of the image to load.
+        processing_state (str): The processing state of the image (raw/processed).
+        camera (str): The camera type of the image (film/digital).
+        as_array (bool, optional): Whether to return the image as an array.
 
     Returns:
         Image: The loaded image.
     """
     # Assertions
-    _assert_inputs(idx, image_type, image_format)
+    _assert_literal(processing_state, ProcessingStateType)
+    _assert_literal(camera, CameraType)
 
     # Set base directory
-    data_dir = os.path.join("data", image_format, image_type)
+    data_dir = os.path.join("data", processing_state, camera)
 
     # Match over files to search indepently of image format (.tif, .png, etc.)
     filenames = [f for f in os.listdir(data_dir) if f"{idx:03d}" in f]
     assert len(filenames) == 1, f"Expected 1 image file, found {len(filenames)}."
 
-    return _load_image_from_path(os.path.join(data_dir, filenames[0]))
+    return _load_image_from_path(
+        os.path.join(data_dir, filenames[0]), as_array=as_array
+    )
+
+
+def save_image(
+    idx: int,
+    image: Image,
+    processing_state: ProcessingStateType,
+    camera: CameraType,
+    image_format: ImageFormatType = "jpeg",
+):
+    """
+    Save an image of a specific type and format for a given index
+    of our image-pairs dataset.
+
+    Args:
+        idx (int): The index of the image pair
+        processing_state (ProcessingStateType): The processing state of the image (raw/processed)
+        camera (CameraType): The camera type of the image (film/digital)
+        image_format (ImageFormatType): The format of the image to save
+        image (Image): The image to save
+    """
+    # Assertions
+    _assert_literal(processing_state, ProcessingStateType)
+    _assert_literal(camera, CameraType)
+    _assert_literal(image_format, ImageFormatType)
+
+    # Set path to save the image
+    data_dir = os.path.join("data", processing_state, camera)
+    path = os.path.join(data_dir, f"{idx:03d}.{image_format}")
+
+    # Save the image
+    _save_image_to_path(path, image)
 
 
 def load_metadata(
@@ -104,25 +163,61 @@ def load_metadata(
 
 
 def load_image_pair(
-    idx: int, image_format: Literal["raw", "processed"]
-) -> Tuple[Image, Image, Dict]:
+    idx: int, processing_state: ProcessingStateType, as_array: bool = False
+) -> Union[Tuple[np.ndarray, np.ndarray, Dict], Tuple[Image, Image, Dict]]:
     """
     Load a pair of images and their metadata. Each image pair is stored in the
     digital and film directories with the same filename.
 
     Args:
         idx (int): The index of the image pair to load.
-        format (str): The format of the images to load.
+        processing_state (ProcessingStateType): The processing state of the images.
+        as_array (bool, optional): Whether to return the images as arrays.
 
     Returns:
         Tuple of digital image, film image and metadata.
     """
     # Assertions
-    _assert_image_format(image_format)
+    _assert_literal(processing_state, ProcessingStateType)
 
     # Load the images and metadata
     meta = load_metadata(idx)
-    digital = load_image(idx, image_type="digital", image_format=image_format)
-    film = load_image(idx, image_type="film", image_format=image_format)
+    digital = load_image(
+        idx, camera="digital", processing_state=processing_state, as_array=as_array
+    )
+    film = load_image(
+        idx, camera="film", processing_state=processing_state, as_array=as_array
+    )
 
-    return digital, film, meta
+    return film, digital, meta
+
+
+def save_image_pair(
+    idx: int, film: Image, digital: Image, image_format: ImageFormatType = "jpeg"
+):
+    """
+    Save a pair of images to the processed directory for a given index.
+
+    Args:
+        idx (int): The index of the image pair.
+        film (Image): The film image.
+        digital (Image): The digital image.
+    """
+    # Assertions
+    _assert_literal(image_format, ImageFormatType)
+
+    # Save images
+    save_image(
+        idx,
+        film,
+        camera="film",
+        processing_state="processed",
+        image_format=image_format,
+    )
+    save_image(
+        idx,
+        digital,
+        camera="digital",
+        processing_state="processed",
+        image_format=image_format,
+    )
