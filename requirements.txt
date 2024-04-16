@@ -12,6 +12,7 @@ hydra-optuna-sweeper==1.2.0
 # ---------- cv ----------- #
 pillow
 opencv-python
+scikit-image
 
 # ---------- ds ----------- #
 matplotlib
