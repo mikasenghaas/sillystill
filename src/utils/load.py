@@ -11,7 +11,7 @@ from typing import Literal, Tuple, List, Dict, Optional, Union, get_args
 
 CameraType = Literal["film", "digital"]
 ProcessingStateType = Literal["raw", "processed"]
-ImageFormatType = Literal["tif", "png", "jpg"]
+ImageFormatType = Literal["tif", "png", "jpeg", "jpg"]
 ColorSpaceType = Literal["RGB"]
 
 

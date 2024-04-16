@@ -64,7 +64,7 @@ def _match_features(query_ds, train_ds, method="flann", **kwargs):
     # Apply ratio test
     good_matches = []
     for m, n in matches:
-        if m.distance < 0.8 * n.distance:
+        if m.distance < 0.7 * n.distance:
             good_matches.append([m])
 
     return good_matches

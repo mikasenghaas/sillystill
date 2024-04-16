@@ -1,5 +1,6 @@
 import rootutils
 from tqdm import tqdm
+import cv2 as cv
 
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
@@ -11,11 +12,14 @@ def main():
     """
     Preprocesses all the data inside the `data/raw` folder.
     """
+    # Set OpenCV seed
+    cv.setRNGSeed(42)
+
     # Load all metadata
     meta = load_metadata()
     image_pair_idxs = list(meta.keys())
 
-    pbar = tqdm(total=len(image_pair_idxs))
+    pbar = tqdm(image_pair_idxs, total=len(image_pair_idxs))
     for idx in pbar:
         # Load raw image pair
         film, digital, _ = load_image_pair(idx, processing_state="raw", as_array=True)
@@ -28,23 +32,19 @@ def main():
                 digital,
                 extract_method="sift",
                 match_method="flann",
-                extract_kwargs=dict(nfeatures=1000),
-                match_kwargs=dict(
-                    indexParams=dict(algorithm=1, trees=10),
-                    searchParams=dict(checks=100),
-                ),
             )
         except Exception as e:
             print(f"[ERROR] Failed to align image pair {idx}: {e}")
             continue
 
         # 2) Luminance alignment
+        pbar.set_description(f"Luminance Alignment")
         digital, film = luminance_align(template=digital, source=film)
 
         # Save processed image pair
         save_image_pair(idx, film, digital)
 
-    print(f"[DONE] Processed {len(image_pair_idxs)})")
+    print(f"[DONE] Processed {len(image_pair_idxs)} image pairs.")
 
 
 if __name__ == "__main__":
