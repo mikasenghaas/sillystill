@@ -2,7 +2,7 @@ defaults:
   - _self_
   - net: conv_translation_net # Default to using the UNet configuration
 
-target: src.models.image_translation_module.ImageTranslationBase
+_target_: src.models.image_translation_base.ImageTranslationBase
 
 optimizer:
   _target_: torch.optim.Adam
@@ -18,7 +18,7 @@ scheduler:
   patience: 5
 
 # Assuming that the model configuration needs the `compile` option as well
-compile: false
+# compile: false
 
 # Placeholder for the 'net' parameter that will be filled by the defaults
 net: ???

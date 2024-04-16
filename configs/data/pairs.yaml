@@ -1,0 +1,8 @@
+defaults:
+  - default
+
+_target_: src.data.datamodule.DataModule
+
+dataset:
+  _target_: src.data.components.image_pair_dataset.ImagePairDataset
+  data_dir: ${paths.data_dir}

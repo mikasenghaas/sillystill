@@ -4,6 +4,7 @@ import torch
 from lightning import LightningModule
 from torchmetrics import MetricCollection, MeanMetric
 
+
 class ImageTranslationBase(LightningModule):
     """Base LightningModule for image-to-image translation tasks,
        such as transforming digital images to appear as if shot on CineStill800T film.
@@ -12,13 +13,14 @@ class ImageTranslationBase(LightningModule):
     handling square images with three data channels. Subclasses should implement
     specific model architectures and training strategies.
     """
+
     def __init__(
         self,
         net: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
-        loss_fn: torch.nn.Module,
+        # loss_fn: torch.nn.Module,
         scheduler: torch.optim.lr_scheduler._LRScheduler = None,
-        lr_monitor: str = "val/loss"
+        lr_monitor: str = "val/loss",
     ) -> None:
         """Initialize the base module.
 
@@ -31,14 +33,16 @@ class ImageTranslationBase(LightningModule):
         """
         super().__init__()
         self.save_hyperparameters(logger=False)  # store hyperparameters
-        
+
         self.net = net
-        self.loss_fn = loss_fn
-        self.metrics = MetricCollection({
-            'train_loss': MeanMetric(),
-            'val_loss': MeanMetric(),
-            'test_loss': MeanMetric()
-        })
+        self.loss_fn = None  # TODO: Implement custom loss function
+        self.metrics = MetricCollection(
+            {
+                "train_loss": MeanMetric(),
+                "val_loss": MeanMetric(),
+                "test_loss": MeanMetric(),
+            }
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass through the model.
@@ -52,7 +56,9 @@ class ImageTranslationBase(LightningModule):
         # assert x.shape[1] == 3, "Input tensor should have 3 color channels"
         return self.net(x)
 
-    def step(self, batch: Tuple[torch.Tensor, torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
+    def step(
+        self, batch: Tuple[torch.Tensor, torch.Tensor]
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Perform a single step with the given batch, computing loss.
 
         Args:
@@ -70,28 +76,28 @@ class ImageTranslationBase(LightningModule):
     def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         """Training step for processing one batch of data."""
         loss, _ = self.step(batch)
-        self.log('train_loss', loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         return loss
 
     def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         """Validation step for processing one batch of data."""
         loss, _ = self.step(batch)
-        self.log('val_loss', loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         """Test step for processing one batch of data."""
         loss, _ = self.step(batch)
-        self.log('test_loss', loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("test_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
 
     def configure_optimizers(self):
         """Setup the optimizer and the LR scheduler."""
         optimizer = self.hparams.optimizer(params=self.net.parameters())
         if self.hparams.scheduler:
             scheduler = {
-                'scheduler': self.hparams.scheduler(optimizer),
-                'monitor': self.hparams.lr_monitor,
-                'interval': 'epoch',
-                'frequency': 1
+                "scheduler": self.hparams.scheduler(optimizer),
+                "monitor": self.hparams.lr_monitor,
+                "interval": "epoch",
+                "frequency": 1,
             }
             return [optimizer], [scheduler]
         return optimizer
