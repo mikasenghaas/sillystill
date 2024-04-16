@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import cv2 as cv
+from skimage.exposure import cumulative_distribution
 
 from typing import List, Tuple, Union
 
@@ -63,7 +64,7 @@ def _match_features(query_ds, train_ds, method="flann", **kwargs):
     # Apply ratio test
     good_matches = []
     for m, n in matches:
-        if m.distance < 0.7 * n.distance:
+        if m.distance < 0.8 * n.distance:
             good_matches.append([m])
 
     return good_matches
@@ -103,7 +104,52 @@ def _transform_image(
     return transformed_train
 
 
-def align_images(
+def _cdf(channel: np.ndarray):
+    """
+    Computes the CDF of an image
+
+    Args:
+        channel (np.ndarray): An image channel
+
+    Returns:
+        np.ndarray: The CDF of the image channel
+    """
+    # Compute the CDF and the bin centres
+    cdf, b = cumulative_distribution(channel)
+
+    # Pad the CDF to have values between 0 and 1
+    cdf = np.insert(cdf, 0, [0] * b[0])
+    cdf = np.append(cdf, [1] * (255 - b[-1]))
+
+    return cdf
+
+
+def _histogram_matching(
+    template_cdf: np.ndarray, source_cdf: np.ndarray, channel: np.ndarray
+) -> np.ndarray:
+    """
+    Matches the histogram of a channel to the histogram of another channel.
+
+    Args:
+        template_cdf (np.ndarray): The CDF of the template image
+        source_cdf (np.ndarray): The CDF of the source image
+        channel (np.ndarray): The channel to match (of source image)
+
+    Returns:
+        np.ndarray: The channel with the matched histogram
+    """
+    pixels = np.arange(256)
+    # find closest pixel-matches corresponding to the CDF of the input image, given the value of the CDF H of
+    # the template image at the corresponding pixels, s.t. c_t = H(pixels) <=> pixels = H-1(c_t)
+    new_pixels = np.interp(source_cdf, template_cdf, pixels)
+    new_channel = (np.reshape(new_pixels[channel.ravel()], channel.shape)).astype(
+        np.uint8
+    )
+
+    return new_channel
+
+
+def keypoint_align(
     query: np.ndarray,
     train: np.ndarray,
     mask: Union[np.ndarray, None] = None,
@@ -149,3 +195,42 @@ def align_images(
     )
 
     return query, aligned_train
+
+
+def luminance_align(
+    template: np.ndarray, source: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Matches the luminance of the source image to the template image.
+
+    Args:
+        template (np.ndarray): The template image (RGB)
+        source (np.ndarray): The source image (RGB)
+
+    Returns:
+        Tuple[np.ndarray, np.ndarray]: The source and template images
+                                    with matched luminance
+    """
+    # Convert images from RGB to LAB
+    source_lab = cv.cvtColor(source, cv.COLOR_RGB2LAB)
+    template_lab = cv.cvtColor(template, cv.COLOR_RGB2LAB)
+
+    # Split the image channels
+    source_l, source_a, source_b = cv.split(source_lab)
+    template_l, _, _ = cv.split(template_lab)
+
+    # Compute the CDF of the images
+    source_cdf = _cdf(source_l)
+    template_cdf = _cdf(template_l)
+
+    # Match the histograms
+    matched_source_l = _histogram_matching(template_cdf, source_cdf, source_l)
+
+    # Merge the new L channel with the original A and B channels
+    source_lab = cv.merge((matched_source_l, source_a, source_b))
+
+    # Convert back to RBG and then return result
+    source = cv.cvtColor(source_lab, cv.COLOR_LAB2RGB)
+    template = cv.cvtColor(template_lab, cv.COLOR_LAB2RGB)
+
+    return template, source

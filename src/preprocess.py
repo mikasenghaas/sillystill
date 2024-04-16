@@ -4,7 +4,7 @@ from tqdm import tqdm
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
 from src.utils.load import load_metadata, load_image_pair, save_image_pair
-from src.utils.preprocess import align_images
+from src.utils.preprocess import keypoint_align, luminance_align
 
 
 def main():
@@ -23,16 +23,25 @@ def main():
         # 1) Keypoint alignment
         try:
             pbar.set_description(f"Keypoint Alignment")
-            film, digital = align_images(
-                film, digital, extract_method="sift", match_method="flann"
+            film, digital = keypoint_align(
+                film,
+                digital,
+                extract_method="sift",
+                match_method="flann",
+                extract_kwargs=dict(nfeatures=1000),
+                match_kwargs=dict(
+                    indexParams=dict(algorithm=1, trees=10),
+                    searchParams=dict(checks=100),
+                ),
             )
         except Exception as e:
             print(f"[ERROR] Failed to align image pair {idx}: {e}")
             continue
 
-        # 2) Luminance alignment (TODO)
+        # 2) Luminance alignment
+        digital, film = luminance_align(template=digital, source=film)
 
-        # Save images
+        # Save processed image pair
         save_image_pair(idx, film, digital)
 
     print(f"[DONE] Processed {len(image_pair_idxs)})")
