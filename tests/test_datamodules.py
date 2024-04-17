@@ -8,7 +8,7 @@ from src.data.datamodule import DataModule
 
 
 def test_image_pair_dataset_no_transforms() -> None:
-    """Tests `ImagePairDataset` without transforms"""
+    """Tests `ImagePairDataset` without transforms."""
     dataset = ImagePairDataset(data_dir="/data", transform=None)
     assert dataset.meta and dataset.keys
     assert len(dataset) == 38  # 41 - 3 (skipped images)
@@ -19,7 +19,7 @@ def test_image_pair_dataset_no_transforms() -> None:
 
 
 def test_image_pair_dataset() -> None:
-    """Tests `ImagePairDataset` with transforms"""
+    """Tests `ImagePairDataset` with transforms."""
     transform = transforms.Compose([transforms.ToTensor()])
     dataset = ImagePairDataset(data_dir="/data", transform=transform)
     assert dataset.meta and dataset.keys

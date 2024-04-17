@@ -96,9 +96,7 @@ def task_wrapper(task_func: Callable) -> Callable:
     return wrap
 
 
-def get_metric_value(
-    metric_dict: Dict[str, Any], metric_name: Optional[str]
-) -> Optional[float]:
+def get_metric_value(metric_dict: Dict[str, Any], metric_name: Optional[str]) -> Optional[float]:
     """Safely retrieves value of the metric logged in LightningModule.
 
     :param metric_dict: A dict containing metric values.
@@ -123,8 +121,8 @@ def get_metric_value(
 
 
 def undo_transforms(img: torch.Tensor) -> torch.Tensor:
-    """
-    Undoes common normalisation of an image tensor, specifically:
+    """Undoes common normalisation of an image tensor, specifically:
+
     - Denormalises the image tensor
     - Converts the image tensor to the [0, 255] range
     - Converts the image tensor to uint8

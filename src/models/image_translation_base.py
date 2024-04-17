@@ -6,12 +6,12 @@ from torchmetrics import MeanMetric, MetricCollection
 
 
 class ImageTranslationBase(LightningModule):
-    """Base LightningModule for image-to-image translation tasks,
-       such as transforming digital images to appear as if shot on CineStill800T film.
+    """Base LightningModule for image-to-image translation tasks, such as transforming digital
+    images to appear as if shot on CineStill800T film.
 
-    This class is designed to be architecture and dataset agnostic, focusing on
-    handling square images with three data channels. Subclasses should implement
-    specific model architectures and training strategies.
+    This class is designed to be architecture and dataset agnostic, focusing on handling square
+    images with three data channels. Subclasses should implement specific model architectures and
+    training strategies.
     """
 
     def __init__(
@@ -56,9 +56,7 @@ class ImageTranslationBase(LightningModule):
         # assert x.shape[1] == 3, "Input tensor should have 3 color channels"
         return self.net(x)
 
-    def step(
-        self, batch: Tuple[torch.Tensor, torch.Tensor]
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+    def step(self, batch: Tuple[torch.Tensor, torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
         """Perform a single step with the given batch, computing loss.
 
         Args:

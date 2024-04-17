@@ -8,16 +8,12 @@ from ...utils.load import load_image_pair, load_metadata
 
 
 class ImagePairDataset(Dataset):
-    """
-    A PyTorch Dataset class for loading processed image pairs of digital and
-    film images.
-    """
+    """A PyTorch Dataset class for loading processed image pairs of digital and film images."""
 
     def __init__(self, data_dir: str, transform: Optional[transforms.Compose] = None):
-        """
-        Initialises an `ImagePairDataset` instance. This dataset is used to load
-        image pairs from the processed data directory. The dataset assumes that
-        the filenames in both directories match for corresponding image pairs.
+        """Initialises an `ImagePairDataset` instance. This dataset is used to load image pairs
+        from the processed data directory. The dataset assumes that the filenames in both
+        directories match for corresponding image pairs.
 
         Args:
             data_dir (str): Data directory
@@ -39,9 +35,7 @@ class ImagePairDataset(Dataset):
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """Returns a sample from the dataset at the given index."""
         key = self.idx_to_key[idx]
-        film, digital, _ = load_image_pair(
-            key, processing_state="processed", as_array=True
-        )
+        film, digital, _ = load_image_pair(key, processing_state="processed", as_array=True)
 
         if self.transform:
             return self.transform((film, digital))

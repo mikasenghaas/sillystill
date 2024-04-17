@@ -9,9 +9,7 @@ from skimage.exposure import cumulative_distribution
 def _extract_features(
     img: np.ndarray, method: str = "orb", mask: Union[np.ndarray, None] = None, **kwargs
 ) -> Tuple[List[cv.KeyPoint], np.ndarray]:
-    """
-    Extract features from an image using a given method.
-    Currently supports SIFT and ORB.
+    """Extract features from an image using a given method. Currently supports SIFT and ORB.
 
     Args:
         img (np.ndarray): Image to get features
@@ -37,9 +35,8 @@ def _extract_features(
 
 
 def _match_features(query_ds, train_ds, method="flann", **kwargs):
-    """
-    Match features between two sets of keypoints and descriptors.
-    Currently supports brute-force and FLANN.
+    """Match features between two sets of keypoints and descriptors. Currently supports brute-force
+    and FLANN.
 
     Args:
         query_ds (np.ndarray): Descriptors of query image
@@ -73,8 +70,7 @@ def _match_features(query_ds, train_ds, method="flann", **kwargs):
 def _transform_image(
     query: np.ndarray, train: np.ndarray, query_kp: List, train_kp: List, matches: List
 ) -> np.ndarray:
-    """
-    Aligns two images using a homography matrix estimated from keypoint matches.
+    """Aligns two images using a homography matrix estimated from keypoint matches.
 
     Args:
         query (np.ndarray): The query image
@@ -105,8 +101,7 @@ def _transform_image(
 
 
 def _cdf(channel: np.ndarray):
-    """
-    Computes the CDF of an image
+    """Computes the CDF of an image.
 
     Args:
         channel (np.ndarray): An image channel
@@ -127,8 +122,7 @@ def _cdf(channel: np.ndarray):
 def _histogram_matching(
     template_cdf: np.ndarray, source_cdf: np.ndarray, channel: np.ndarray
 ) -> np.ndarray:
-    """
-    Matches the histogram of a channel to the histogram of another channel.
+    """Matches the histogram of a channel to the histogram of another channel.
 
     Args:
         template_cdf (np.ndarray): The CDF of the template image
@@ -142,9 +136,7 @@ def _histogram_matching(
     # find closest pixel-matches corresponding to the CDF of the input image, given the value of the CDF H of
     # the template image at the corresponding pixels, s.t. c_t = H(pixels) <=> pixels = H-1(c_t)
     new_pixels = np.interp(source_cdf, template_cdf, pixels)
-    new_channel = (np.reshape(new_pixels[channel.ravel()], channel.shape)).astype(
-        np.uint8
-    )
+    new_channel = (np.reshape(new_pixels[channel.ravel()], channel.shape)).astype(np.uint8)
 
     return new_channel
 
@@ -159,9 +151,8 @@ def keypoint_align(
     match_kwargs: dict = {},
     transform_kwargs: dict = {},
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Aligns the train image (complex scence, expected to include the query)
-    image using a pipeline of feature extraction, matching and homography.
+    """Aligns the train image (complex scene, expected to include the query) image using a pipeline
+    of feature extraction, matching and homography.
 
     For our dataset, the train image is the digital image and the query image
     is the film image.
@@ -179,9 +170,7 @@ def keypoint_align(
         Tuple of aligned images (query, aligned_train)
     """
     # Extract features
-    query_kp, query_ds = _extract_features(
-        query, method=extract_method, **extract_kwargs
-    )
+    query_kp, query_ds = _extract_features(query, method=extract_method, **extract_kwargs)
     train_kp, train_ds = _extract_features(
         train, method=extract_method, mask=mask, **extract_kwargs
     )
@@ -190,18 +179,13 @@ def keypoint_align(
     matches = _match_features(query_ds, train_ds, method=match_method, **match_kwargs)
 
     # Align images
-    aligned_train = _transform_image(
-        query, train, query_kp, train_kp, matches, **transform_kwargs
-    )
+    aligned_train = _transform_image(query, train, query_kp, train_kp, matches, **transform_kwargs)
 
     return query, aligned_train
 
 
-def luminance_align(
-    template: np.ndarray, source: np.ndarray
-) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Matches the luminance of the source image to the template image.
+def luminance_align(template: np.ndarray, source: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """Matches the luminance of the source image to the template image.
 
     Args:
         template (np.ndarray): The template image (RGB)

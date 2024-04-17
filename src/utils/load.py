@@ -18,8 +18,7 @@ def _assert_literal(value, expected_type) -> None:
 
 
 def _load_image_from_path(path: str, as_array: bool = False) -> Image:
-    """
-    Load an image from a file into a PIL Image.
+    """Load an image from a file into a PIL Image.
 
     Args:
         path (str): The path to the image file.
@@ -41,8 +40,7 @@ def _load_image_from_path(path: str, as_array: bool = False) -> Image:
 
 
 def _save_image_to_path(path: str, image: Union[np.ndarray, Image]) -> None:
-    """
-    Save an image to a file (can be numpy array or PIL Image)
+    """Save an image to a file (can be numpy array or PIL Image)
 
     Args:
         path (str): The path to save the image.
@@ -65,9 +63,7 @@ def load_image(
     camera: CameraType,
     as_array: bool = False,
 ) -> Image:
-    """
-    Load an image of a specific type and format for a given index
-    of our image-pairs dataset.
+    """Load an image of a specific type and format for a given index of our image-pairs dataset.
 
     Args:
         idx (int): The index of the image pair.
@@ -85,13 +81,11 @@ def load_image(
     # Set base directory
     data_dir = os.path.join("data", processing_state, camera)
 
-    # Match over files to search indepently of image format (.tif, .png, etc.)
+    # Match over files to search independently of image format (.tif, .png, etc.)
     filenames = [f for f in os.listdir(data_dir) if f"{idx:03d}" in f]
     assert len(filenames) == 1, f"Expected 1 image file, found {len(filenames)}."
 
-    return _load_image_from_path(
-        os.path.join(data_dir, filenames[0]), as_array=as_array
-    )
+    return _load_image_from_path(os.path.join(data_dir, filenames[0]), as_array=as_array)
 
 
 def save_image(
@@ -101,9 +95,7 @@ def save_image(
     camera: CameraType,
     image_format: ImageFormatType = "jpeg",
 ):
-    """
-    Save an image of a specific type and format for a given index
-    of our image-pairs dataset.
+    """Save an image of a specific type and format for a given index of our image-pairs dataset.
 
     Args:
         idx (int): The index of the image pair
@@ -125,11 +117,8 @@ def save_image(
     _save_image_to_path(path, image)
 
 
-def load_metadata(
-    idx: Optional[int] = None, as_df: bool = False
-) -> Union[Dict, pd.DataFrame]:
-    """
-    Load the metadata for a specific image pair or all image pairs.
+def load_metadata(idx: Optional[int] = None, as_df: bool = False) -> Union[Dict, pd.DataFrame]:
+    """Load the metadata for a specific image pair or all image pairs.
 
     Args:
         idx (int, optional): The index of the image pair.
@@ -163,9 +152,8 @@ def load_metadata(
 def load_image_pair(
     idx: int, processing_state: ProcessingStateType, as_array: bool = False
 ) -> Union[Tuple[np.ndarray, np.ndarray, Dict], Tuple[Image, Image, Dict]]:
-    """
-    Load a pair of images and their metadata. Each image pair is stored in the
-    digital and film directories with the same filename.
+    """Load a pair of images and their metadata. Each image pair is stored in the digital and film
+    directories with the same filename.
 
     Args:
         idx (int): The index of the image pair to load.
@@ -183,18 +171,13 @@ def load_image_pair(
     digital = load_image(
         idx, camera="digital", processing_state=processing_state, as_array=as_array
     )
-    film = load_image(
-        idx, camera="film", processing_state=processing_state, as_array=as_array
-    )
+    film = load_image(idx, camera="film", processing_state=processing_state, as_array=as_array)
 
     return film, digital, meta
 
 
-def save_image_pair(
-    idx: int, film: Image, digital: Image, image_format: ImageFormatType = "jpeg"
-):
-    """
-    Save a pair of images to the processed directory for a given index.
+def save_image_pair(idx: int, film: Image, digital: Image, image_format: ImageFormatType = "jpeg"):
+    """Save a pair of images to the processed directory for a given index.
 
     Args:
         idx (int): The index of the image pair.

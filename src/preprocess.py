@@ -9,9 +9,7 @@ from src.utils.preprocess import keypoint_align, luminance_align
 
 
 def main():
-    """
-    Preprocesses all the data inside the `data/raw` folder.
-    """
+    """Preprocesses all the data inside the `data/raw` folder."""
     # Set OpenCV seed
     cv.setRNGSeed(42)
 
@@ -26,7 +24,7 @@ def main():
 
         # 1) Keypoint alignment
         try:
-            pbar.set_description(f"Keypoint Alignment")
+            pbar.set_description("Keypoint Alignment")
             film, digital = keypoint_align(
                 film,
                 digital,
@@ -38,7 +36,7 @@ def main():
             continue
 
         # 2) Luminance alignment
-        pbar.set_description(f"Luminance Alignment")
+        pbar.set_description("Luminance Alignment")
         digital, film = luminance_align(template=digital, source=film)
 
         # Save processed image pair

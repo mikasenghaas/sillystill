@@ -4,7 +4,7 @@ from torch import nn
 
 class ConvTranslationNet(nn.Module):
     def __init__(self, in_channels, out_channels, features):
-        super(ConvTranslationNet, self).__init__()
+        super().__init__()
         self.encoder = nn.ModuleList()
         self.decoder = nn.ModuleList()
         self.bottleneck = nn.Sequential(
@@ -22,9 +22,7 @@ class ConvTranslationNet(nn.Module):
         # Decoder path
         reversed_features = features[::-1]
         for feature in reversed_features:
-            self.decoder.append(
-                nn.ConvTranspose2d(feature * 2, feature, kernel_size=2, stride=2)
-            )
+            self.decoder.append(nn.ConvTranspose2d(feature * 2, feature, kernel_size=2, stride=2))
             self.decoder.append(self.conv_block(feature * 2, feature))
 
         # Final layer

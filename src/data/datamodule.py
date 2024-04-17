@@ -50,8 +50,7 @@ class DataModule(LightningDataModule):
         num_workers: int = 0,
         pin_memory: bool = False,
     ) -> None:
-        """
-        Initialise a `DataModule`.
+        """Initialise a `DataModule`.
 
         Args:
             data_dir (str): The data directory. Defaults to `"data/"`.
@@ -70,9 +69,7 @@ class DataModule(LightningDataModule):
             [
                 transforms.ToImage(),
                 transforms.ToDtype(torch.float32, scale=True),
-                transforms.Normalize(
-                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-                ),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
                 transforms.RandomResizedCrop(size=(100, 100), antialias=True),
             ]
         )
@@ -88,30 +85,28 @@ class DataModule(LightningDataModule):
         self.batch_size_per_device = batch_size
 
     def prepare_data(self) -> None:
-        """
-        Asserts that te raw and processed data directories exist. If not, it raises an error.
+        """Asserts that the raw and processed data directories exist.
+
+        If not, it raises an error.
         """
         # Asserts data exists
         raw_dir_exists = os.path.exists(self.raw_dir)
         processed_dir_exists = os.path.exists(self.processed_dir)
         assert (
             raw_dir_exists and processed_dir_exists
-        ), f"Data not found. Try running `git lfs pull`."
+        ), "Data not found. Try running `git lfs pull`."
 
     def setup(self, stage: Optional[str] = None) -> None:
-        """
-        Load data. Set variables: `self.data_train`, `self.data_val`, `self.data_test`.
+        """Load data. Set variables: `self.data_train`, `self.data_val`, `self.data_test`.
 
-        This method is called by Lightning before `trainer.fit()`,
-        `trainer.validate()`, `trainer.test()`, and `trainer.predict()`, so be
-        careful not to execute things like random split twice! Also, it is
-        called after `self.prepare_data()` and there is a barrier in between
-        which ensures that all the processes proceed to `self.setup()` once the
-        data is prepared and available for use.
+        This method is called by Lightning before `trainer.fit()`, `trainer.validate()`,
+        `trainer.test()`, and `trainer.predict()`, so be careful not to execute things like random
+        split twice! Also, it is called after `self.prepare_data()` and there is a barrier in
+        between which ensures that all the processes proceed to `self.setup()` once the data is
+        prepared and available for use.
 
-        Args
-            stage (Optional[str]): The stage being set up. Either `"fit"`,
-            `"validate"`, `"test"`, or `"predict"`.ge
+        Args     stage (Optional[str]): The stage being set up. Either `"fit"`,     `"validate"`,
+        `"test"`, or `"predict"`.ge
         """
         # Divide batch size by the number of devices.
         if self.trainer is not None:
@@ -119,9 +114,7 @@ class DataModule(LightningDataModule):
                 raise RuntimeError(
                     f"Batch size ({self.hparams.batch_size}) is not divisible by the number of devices ({self.trainer.world_size})."
                 )
-            self.batch_size_per_device = (
-                self.hparams.batch_size // self.trainer.world_size
-            )
+            self.batch_size_per_device = self.hparams.batch_size // self.trainer.world_size
 
         # Load and split datasets only if not loaded already
         if not self.data_train and not self.data_val and not self.data_test:
@@ -132,11 +125,9 @@ class DataModule(LightningDataModule):
             )
 
     def train_dataloader(self) -> DataLoader[Any]:
-        """
-        Create and return the train dataloader.
+        """Create and return the train dataloader.
 
-        Returns
-            train_loader (DataLoader): The train dataloader
+        Returns     train_loader (DataLoader): The train dataloader
         """
         return DataLoader(
             dataset=self.data_train,
@@ -147,11 +138,9 @@ class DataModule(LightningDataModule):
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
-        """
-        Create and return the validation dataloader.
+        """Create and return the validation dataloader.
 
-        Returns
-            val_loader (DataLoader): The validation dataloader
+        Returns     val_loader (DataLoader): The validation dataloader
         """
         return DataLoader(
             dataset=self.data_val,
@@ -162,11 +151,9 @@ class DataModule(LightningDataModule):
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
-        """
-        Create and return the test dataloader.
+        """Create and return the test dataloader.
 
-        Returns
-            test_loader (DataLoader): The test dataloader
+        Returns     test_loader (DataLoader): The test dataloader
         """
         return DataLoader(
             dataset=self.data_test,
@@ -177,31 +164,25 @@ class DataModule(LightningDataModule):
         )
 
     def teardown(self, stage: Optional[str] = None) -> None:
-        """
-        Lightning hook for cleaning up after `trainer.fit()`,
-        `trainer.validate()`, `trainer.test()`, and `trainer.predict()`.
+        """Lightning hook for cleaning up after `trainer.fit()`, `trainer.validate()`,
+        `trainer.test()`, and `trainer.predict()`.
 
-        stage (Optional[str]): The stage being torn down. Either `"fit"`,
-        `"validate"`, `"test"`, or `"predict"`.
+        stage (Optional[str]): The stage being torn down. Either `"fit"`, `"validate"`, `"test"`,
+        or `"predict"`.
         """
         pass
 
     def state_dict(self) -> Dict[Any, Any]:
-        """
-        Called when saving a checkpoint. Implement to generate and save the
-        datamodule state.
+        """Called when saving a checkpoint. Implement to generate and save the datamodule state.
 
-        Returns
-            A dictionary containing the datamodule state that you want to save.
+        Returns     A dictionary containing the datamodule state that you want to save.
         """
         return {}
 
     def load_state_dict(self, state_dict: Dict[str, Any]) -> None:
-        """
-        Called when loading a checkpoint. Implement to reload datamodule state
-        given datamodule `state_dict()`.
+        """Called when loading a checkpoint. Implement to reload datamodule state given datamodule
+        `state_dict()`.
 
-        Returns
-            state_dict (Dict[str, Any]): The datamodule state (from `state_dict()`
+        Returns     state_dict (Dict[str, Any]): The datamodule state (from `state_dict()`
         """
         pass

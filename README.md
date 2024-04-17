@@ -8,6 +8,7 @@
 ![Example of Image captured on Cinestill-800T](imgs/cinestill-800t.jpg)
 
 While halation and chromatic aberrations are sometimes considered as defects, artists often use these optical flaws for aesthetic purposes. Most films contain an anti-halation filter, but the Cinestill 800T does not. This produces a beautiful red halo around light sources, and has a Tungsten white balance, which creates a colour contrast between red and green tones. In this project, the goal is to recreate digitally the look of this specific film stock focusing on three aspects:
+
 - the *film grain*: this film stock has a high sensitivity and produces a lot of grain, which is also pleasing aesthetically
 - the *halo*: the halo is the main characteristic of this film stock
 - the *colour profile*: the colour profile is not the one of your digital camera.
@@ -18,10 +19,10 @@ This project trains various image-to-image deep learning models on a novel datas
 
 Here is a list of things that you likely want to do:
 
-* Check out the [demo]() of the model (*Not yet available*)
-* Find all project details in the full [report]() (*Not yet available*)
-* Inspect the experiment logs on [W&B]() (*Not yet available*)
-* Download the image pair dataset from [Zenodo]() or [Huggingface]() (*Not yet available*)
+- Check out the [demo](<>) of the model (*Not yet available*)
+- Find all project details in the full [report](<>) (*Not yet available*)
+- Inspect the experiment logs on [W&B](<>) (*Not yet available*)
+- Download the image pair dataset from [Zenodo](<>) or [Huggingface](<>) (*Not yet available*)
 
 ## ⚙️ Installation
 
@@ -71,6 +72,6 @@ python src/train.py trainer=gpu
 
 ## 🙌 Acknowledgements
 
-This work was kindly funded by the [Image and Visual Representation (IVLR) Lab ]() at EPFL as part of the [Computational Photography (CS-413)]() class and supervised by [Raphaël Wan-Li Marc Achddou](https://people.epfl.ch/raphael.achddou) and [Sabine Süsstrunk](https://people.epfl.ch/sabine.susstrunk). Thank you for making this project possible!
+This work was kindly funded by the [Image and Visual Representation (IVLR) Lab ](<>) at EPFL as part of the [Computational Photography (CS-413)](<>) class and supervised by [Raphaël Wan-Li Marc Achddou](https://people.epfl.ch/raphael.achddou) and [Sabine Süsstrunk](https://people.epfl.ch/sabine.susstrunk). Thank you for making this project possible!
 
 This repository is bootstrapped from this [Lightning & Hydra Template](https://github.com/ashleve/lightning-hydra-template).
