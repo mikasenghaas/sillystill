@@ -58,6 +58,16 @@ conda env create -f environment.yaml -n sillystill
 conda activate sillystill
 ```
 
+#### Pre-Commit
+
+Before contributing, please make sure that you install the Git hooks of `pre-commit` (e.g. it will be triggered on every git commit) by running the following command:
+
+```bash
+pre-commit install
+```
+
+To check if everything works as expected you can run `pre-commit run --all-files` which will run all hooks on the entire repository.
+
 ## 🤖 How to run
 
 Train model with default configuration
