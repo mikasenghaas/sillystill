@@ -1,10 +1,10 @@
-from torch.utils.data import Dataset
-import torchvision.transforms.v2 as transforms
-
-import torch
 from typing import Optional, Tuple
 
-from ...utils.load import load_metadata, load_image_pair
+import torch
+import torchvision.transforms.v2 as transforms
+from torch.utils.data import Dataset
+
+from ...utils.load import load_image_pair, load_metadata
 
 
 class ImagePairDataset(Dataset):
@@ -29,20 +29,20 @@ class ImagePairDataset(Dataset):
 
         # Load metadata
         self.meta = load_metadata()
-
-        # Load processed image pairs from the data directory
-        self.images = []
-        for idx in self.meta.keys():
-            if idx not in [9, 11, 40]:  # Skip these images
-                film, digital, _ = load_image_pair(
-                    idx, processing_state="processed", as_array=True
-                )
-                self.images.append((film, digital))
+        self.keys = list(set(self.meta.keys()) - {9, 11, 40})
+        self.idx_to_key = {idx: key for idx, key in enumerate(self.keys)}
 
     def __len__(self) -> int:
         """Returns the length of the dataset."""
-        return len(self.images)
+        return len(self.keys)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """Returns a sample from the dataset at the given index."""
-        return self.transform(self.images[idx])
+        key = self.idx_to_key[idx]
+        film, digital, _ = load_image_pair(
+            key, processing_state="processed", as_array=True
+        )
+
+        if self.transform:
+            return self.transform((film, digital))
+        return (film, digital)

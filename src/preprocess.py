@@ -1,10 +1,10 @@
+import cv2 as cv
 import rootutils
 from tqdm import tqdm
-import cv2 as cv
 
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
-from src.utils.load import load_metadata, load_image_pair, save_image_pair
+from src.utils.load import load_image_pair, load_metadata, save_image_pair
 from src.utils.preprocess import keypoint_align, luminance_align
 
 

@@ -2,8 +2,8 @@
 
 defaults:
   - _self_
-  - data: mnist # choose datamodule with `test_dataloader()` for evaluation
-  - model: mnist
+  - data: pairs # choose datamodule with `test_dataloader()` for evaluation
+  - model: translation
   - logger: null
   - trainer: default
   - paths: default

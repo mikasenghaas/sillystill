@@ -1,9 +1,9 @@
 import os
-import numpy as np
-import cv2 as cv
-from skimage.exposure import cumulative_distribution
-
 from typing import List, Tuple, Union
+
+import cv2 as cv
+import numpy as np
+from skimage.exposure import cumulative_distribution
 
 
 def _extract_features(

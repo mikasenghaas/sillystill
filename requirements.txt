@@ -33,4 +33,6 @@ autorootcwd     # set path to root directory
 pre-commit      # hooks for applying linters on commit
 rich            # beautiful text formatting in terminal
 pytest          # tests
+black           # code formatter
+isort           # import sorter
 # sh            # for running bash commands in some tests (linux/macos only)

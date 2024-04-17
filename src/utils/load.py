@@ -1,13 +1,12 @@
 import os
-from psutil import Process
-import yaml
+from typing import Dict, List, Literal, Optional, Tuple, Union, get_args
 
-from PIL import Image as PIL
-from PIL.Image import Image
 import numpy as np
 import pandas as pd
-
-from typing import Literal, Tuple, List, Dict, Optional, Union, get_args
+import yaml
+from PIL import Image as PIL
+from PIL.Image import Image
+from psutil import Process
 
 CameraType = Literal["film", "digital"]
 ProcessingStateType = Literal["raw", "processed"]

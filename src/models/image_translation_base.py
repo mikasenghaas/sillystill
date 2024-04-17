@@ -2,7 +2,7 @@ from typing import Tuple
 
 import torch
 from lightning import LightningModule
-from torchmetrics import MetricCollection, MeanMetric
+from torchmetrics import MeanMetric, MetricCollection
 
 
 class ImageTranslationBase(LightningModule):

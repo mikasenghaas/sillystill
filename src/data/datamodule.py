@@ -2,9 +2,9 @@ import os
 from typing import Any, Dict, Optional, Tuple
 
 import torch
+import torchvision.transforms.v2 as transforms
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset, random_split
-import torchvision.transforms.v2 as transforms
 
 from src.data.components.image_pair_dataset import ImagePairDataset
 
@@ -143,7 +143,6 @@ class DataModule(LightningDataModule):
             batch_size=self.batch_size_per_device,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
-            persistent_workers=True,
             shuffle=True,
         )
 
@@ -159,7 +158,6 @@ class DataModule(LightningDataModule):
             batch_size=self.batch_size_per_device,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
-            persistent_workers=True,
             shuffle=False,
         )
 

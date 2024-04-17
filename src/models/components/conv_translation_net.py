@@ -11,7 +11,7 @@ class ConvTranslationNet(nn.Module):
             nn.Conv2d(features[-1], features[-1] * 2, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
             nn.Conv2d(features[-1] * 2, features[-1], kernel_size=3, padding=1),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
         )
 
         # Encoder path
@@ -22,7 +22,9 @@ class ConvTranslationNet(nn.Module):
         # Decoder path
         reversed_features = features[::-1]
         for feature in reversed_features:
-            self.decoder.append(nn.ConvTranspose2d(feature * 2, feature, kernel_size=2, stride=2))
+            self.decoder.append(
+                nn.ConvTranspose2d(feature * 2, feature, kernel_size=2, stride=2)
+            )
             self.decoder.append(self.conv_block(feature * 2, feature))
 
         # Final layer
@@ -55,5 +57,5 @@ class ConvTranslationNet(nn.Module):
             nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
             nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
         )
