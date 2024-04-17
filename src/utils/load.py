@@ -6,7 +6,6 @@ import pandas as pd
 import yaml
 from PIL import Image as PIL
 from PIL.Image import Image
-from psutil import Process
 
 CameraType = Literal["film", "digital"]
 ProcessingStateType = Literal["raw", "processed"]
