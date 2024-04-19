@@ -19,6 +19,12 @@ matplotlib
 seaborn
 pandas
 
+# --------- unsplash --------- #
+requests 
+pillow
+pyunsplash 
+python-dotenv
+
 # --------- loggers --------- #
 # wandb
 # neptune-client
