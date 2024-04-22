@@ -186,3 +186,14 @@ class DataModule(LightningDataModule):
         Returns     state_dict (Dict[str, Any]): The datamodule state (from `state_dict()`
         """
         pass
+
+
+if __name__ == "__main__":
+    # Example usage
+    dataset = ImagePairDataset('./data/')
+    dm = DataModule(dataset=dataset)
+    dm.prepare_data()
+    dm.setup()
+    train_loader = dm.train_dataloader()
+    print(f"Train batches: {len(train_loader)}")
+    print(next(iter(train_loader)))
