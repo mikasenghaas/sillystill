@@ -1,59 +1,63 @@
 import torch
 from torch import nn
+from torch.nn import functional as F
 
 
 class ConvTranslationNet(nn.Module):
-    def __init__(self, in_channels, out_channels, features):
-        super().__init__()
-        self.encoder = nn.ModuleList()
-        self.decoder = nn.ModuleList()
-        self.bottleneck = nn.Sequential(
-            nn.Conv2d(features[-1], features[-1] * 2, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(features[-1] * 2, features[-1], kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-        )
-
-        # Encoder path
-        for feature in features:
-            self.encoder.append(self.conv_block(in_channels, feature))
+    def __init__(self, in_channels=3, out_channels=3, features=[32, 64, 128]):
+        super(ConvTranslationNet, self).__init__()
+        self.enc_blocks = nn.ModuleList()
+        self.dec_blocks = nn.ModuleList()
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        
+        # Create the encoder path
+        for feature in features[:-1]:
+            conv_block = self.conv_block(in_channels, feature)
+            self.enc_blocks.append(conv_block)
             in_channels = feature
 
-        # Decoder path
-        reversed_features = features[::-1]
-        for feature in reversed_features:
-            self.decoder.append(nn.ConvTranspose2d(feature * 2, feature, kernel_size=2, stride=2))
-            self.decoder.append(self.conv_block(feature * 2, feature))
+        # Create the bottleneck layer
+        self.bottleneck = self.conv_block(features[-2], features[-1])
 
-        # Final layer
-        self.final_layer = nn.Conv2d(features[0], out_channels, kernel_size=1)
+        # Create the decoder path
+        reversed_features = features[::-1]
+        for i in range(len(reversed_features) - 1):
+            upconv = nn.ConvTranspose2d(reversed_features[i], reversed_features[i + 1], kernel_size=2, stride=2)
+            conv_block = self.conv_block(2*reversed_features[i + 1], reversed_features[i + 1])
+            self.dec_blocks.append(nn.ModuleList([upconv, conv_block]))
+
+        # Final output layer
+        self.final_conv = nn.Conv2d(features[0], out_channels, kernel_size=3, padding=1)
+
+    def conv_block(self, in_channels, out_channels, kernel_size=3, padding=1):
+        block = nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, padding=padding),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(out_channels, out_channels, kernel_size=kernel_size, padding=padding),
+            nn.ReLU(inplace=True)
+        )
+        return block
 
     def forward(self, x):
-        skip_connections = []
-
-        # Encoder
-        for layer in self.encoder:
-            x = layer(x)
-            skip_connections.append(x)
-            x = nn.MaxPool2d(kernel_size=2, stride=2)(x)
+        skips = []
+        
+        # Encoder path
+        for block in self.enc_blocks:
+            x = block(x)
+            skips.append(x)
+            x = self.pool(x)
 
         # Bottleneck
         x = self.bottleneck(x)
 
-        # Decoder
-        skip_connections = skip_connections[::-1]
-        for idx in range(0, len(self.decoder), 2):
-            x = self.decoder[idx](x)
-            skip_connection = skip_connections[idx // 2]
-            x = torch.cat((skip_connection, x), dim=1)
-            x = self.decoder[idx + 1](x)
+        # Decoder path
+        skips = skips[::-1]
+        for (upconv, block), skip in zip(self.dec_blocks, skips):
+            x = upconv(x)
+            x = torch.cat([x, skip], dim=1)
+            x = block(x)
 
-        return self.final_layer(x)
-
-    def conv_block(self, in_channels, out_channels):
-        return nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-        )
+        # Output layer
+        x = self.final_conv(x)
+ 
+        return x

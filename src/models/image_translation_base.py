@@ -18,7 +18,7 @@ class ImageTranslationBase(LightningModule):
         self,
         net: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
-        # loss_fn: torch.nn.Module,
+        loss_fn: torch.nn.Module = torch.nn.MSELoss(),
         scheduler: torch.optim.lr_scheduler._LRScheduler = None,
         lr_monitor: str = "val/loss",
     ) -> None:
@@ -35,12 +35,14 @@ class ImageTranslationBase(LightningModule):
         self.save_hyperparameters(logger=False)  # store hyperparameters
 
         self.net = net
-        self.loss_fn = None  # TODO: Implement custom loss function
+
+        self.loss_fn = loss_fn
+
         self.metrics = MetricCollection(
             {
-                "train_loss": MeanMetric(),
-                "val_loss": MeanMetric(),
-                "test_loss": MeanMetric(),
+                "train/loss": MeanMetric(),
+                "val/loss": MeanMetric(),
+                "test/loss": MeanMetric(),
             }
         )
 
@@ -74,18 +76,18 @@ class ImageTranslationBase(LightningModule):
     def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         """Training step for processing one batch of data."""
         loss, _ = self.step(batch)
-        self.log("train_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         return loss
 
     def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         """Validation step for processing one batch of data."""
         loss, _ = self.step(batch)
-        self.log("val_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         """Test step for processing one batch of data."""
         loss, _ = self.step(batch)
-        self.log("test_loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
 
     def configure_optimizers(self):
         """Setup the optimizer and the LR scheduler."""
