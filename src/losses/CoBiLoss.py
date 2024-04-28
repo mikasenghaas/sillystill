@@ -201,7 +201,7 @@ class CoBiLoss(nn.Module):
 
         # Generate spatial coordinates
         coords = (
-            torch.stack(torch.meshgrid(torch.arange(h), torch.arange(w)), dim=-1)
+            torch.stack(torch.meshgrid(torch.arange(h), torch.arange(w), indexing="ij"), dim=-1)
             .to(device)
             .float()
         )
