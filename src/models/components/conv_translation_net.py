@@ -4,12 +4,12 @@ from torch.nn import functional as F
 
 
 class ConvTranslationNet(nn.Module):
-    def __init__(self, in_channels=3, out_channels=3, features=[32, 64, 128]):
-        super(ConvTranslationNet, self).__init__()
+    def __init__(self, in_channels=3, out_channels=3, features=[16, 32, 64]):
+        super().__init__()
         self.enc_blocks = nn.ModuleList()
         self.dec_blocks = nn.ModuleList()
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        
+
         # Create the encoder path
         for feature in features[:-1]:
             conv_block = self.conv_block(in_channels, feature)
@@ -40,7 +40,7 @@ class ConvTranslationNet(nn.Module):
 
     def forward(self, x):
         skips = []
-        
+
         # Encoder path
         for block in self.enc_blocks:
             x = block(x)

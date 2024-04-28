@@ -150,7 +150,7 @@ class CustomMNIST(Dataset):
     """
     Provides a custom MNIST dataset where the input and output are the same subject to specified test transform.
     """
-    def __init__(self, data_dir: str, subset_size = 100, do_test_transform=True):
+    def __init__(self, data_dir: str, subset_size = 100, do_test_transform=True, n = 64):
 
         # data transformations
         self.base_transforms = transforms.Compose([
@@ -158,9 +158,10 @@ class CustomMNIST(Dataset):
             # Adds green and blue channels filled with zeros
             self.gray_to_rgb,
             # Normalizes the image to have zero mean and unit variance
-            transforms.Normalize((0.1307,), (0.3081,)), 
+            transforms.Normalize((0.1307,), (0.3081,)),
+            # Resizes the image to the specified size
+            transforms.Resize((n, n)),
         ])
-
 
         self.do_test_transform = do_test_transform
     

@@ -2,4 +2,4 @@ _target_: src.models.components.conv_translation_net.ConvTranslationNet
 
 in_channels: 3
 out_channels: 3
-features: [64, 128, 256, 512]
+features: [16, 32, 64]

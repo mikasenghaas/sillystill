@@ -1,6 +1,7 @@
 defaults:
   - _self_
-  - net: conv_translation_net # Default to using the UNet configuration
+  - net: conv_translation_net
+  - loss_fn: cobi_loss
 
 _target_: src.models.image_translation_base.ImageTranslationBase
 
