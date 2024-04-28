@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torchvision.models import vgg19
 
 
@@ -24,12 +23,12 @@ class CoBiLoss(nn.Module):
     """
 
     def __init__(
-        self, alpha=0.5, patch_size=15, ws=0.1, epsilon=1e-5, bandwidth=0.1, verbose=False
+        self, alpha=0.5, patch_size=10, ws=0.1, epsilon=1e-5, bandwidth=0.1, verbose=False
     ):
         """Initialize a `CoBiLoss` module with optional verbosity.
 
         Args:
-            alpha (float, optional): Balancing factor between RGB and VGG feature losses, higher means more RGB. Defaults to `0.5`.
+            alpha (float, optional): Weighting factor between RGB and VGG feature losses, higher means more importance of RGB features. Defaults to `0.5`.
             patch_size (int, optional): Size of the patches extracted for RGB features. Defaults to `15`.
             ws (float, optional): Weighting factor for the spatial component in the loss. Defaults to `0.1`.
             epsilon (float, optional): Small value to avoid division by zero in normalization. Defaults to `1e-5`.
