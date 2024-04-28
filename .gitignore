@@ -143,6 +143,7 @@ dmypy.json
 .idea/
 
 # Data & Models
+data/MNIST
 *.h5
 *.tar
 *.tar.gz
