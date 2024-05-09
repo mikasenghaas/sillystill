@@ -10,15 +10,16 @@ from PIL import Image
 
 UNSPLASH_ACCESS_KEY = "soccs2fmeCHj1lY2rae7-nyKA2KfRlKN5edXOBWLC_g" 
 
-unsplash_git_lfs_path_film = '/Users/annamiraotoole/Documents/GitHub/sillystill/data/unsplash_film/'
-unsplash_git_lfs_path_digital = '/Users/annamiraotoole/Documents/GitHub/sillystill/data/unsplash_digital/'
+path_film_less_filtered = '/Users/annamiraotoole/Documents/GitHub/sillystill/data/unsplash_film_less_filtered/'
+path_film = '/Users/annamiraotoole/Documents/GitHub/sillystill/data/unsplash_film/'
+path_digital = '/Users/annamiraotoole/Documents/GitHub/sillystill/data/unsplash_digital/'
 
 # Initialize the Unsplash client
 pu = pyunsplash.PyUnsplash(api_key=UNSPLASH_ACCESS_KEY)
 
 # Define Functions
 
-def save_image(path: str, photo: pyunsplash.src.photos.Photo):
+def save_image(path: str, old_path: str, photo: pyunsplash.src.photos.Photo):
     """
     Save the image from the given Unsplash photo object to the specified path.
     
@@ -29,10 +30,17 @@ def save_image(path: str, photo: pyunsplash.src.photos.Photo):
     Returns:
         str: The full path and filename of the saved image.
     """
-    filename = path + 'unsplash_' + photo.body['slug'] + '.png'
+    filename = 'unsplash_' + photo.body['slug'] + '.png'
+    # Check if the file already exists
+
+    if os.path.exists(old_path + filename):
+        return filename
+    
+    full_filename = path + filename
+
     response = requests.get(photo.link_download, allow_redirects=True)
-    open(filename, 'wb').write(response.content)
-    return filename
+    open(full_filename, 'wb').write(response.content)
+    return full_filename
 
 # filter entries based on relevancy, returns boolean
 def filter_relevancy(entry: pyunsplash.src.photos.Photo) -> bool:
@@ -48,7 +56,7 @@ def filter_relevancy(entry: pyunsplash.src.photos.Photo) -> bool:
     """
     if entry.body["description"]:
         des = entry.body["description"].lower()
-        return 'cinestill' in des and '800' in des
+        return 'cinestill' in des
     else:
         return False
     
@@ -70,7 +78,7 @@ def get_film_photos(batch: int):
 
     for i in range(batch_size):
 
-        p = batch_size * batch + i + 65 # hardcoded because we already have 63 pages of photos saved
+        p = batch_size * batch + i + 43 # hardcoded because we already have 43 pages of less-filtered photos saved
 
         print("Getting film photos page", p)
     
@@ -83,7 +91,7 @@ def get_film_photos(batch: int):
         filtered_photos_lst = list(filtered_photos)
         print("After filtering, we have a total of", len(filtered_photos_lst), "relevant photos.")
         for entry in filtered_photos_lst:
-            save_image(unsplash_git_lfs_path_film, entry)
+            save_image(path_film_less_filtered, path_film, entry)
 
 
 def get_digital_photos():
@@ -99,7 +107,7 @@ def get_digital_photos():
         digital_photos = pu.photos(type_='random', count=1000, featured=True)
 
         for entry in digital_photos.entries:
-            save_image(unsplash_git_lfs_path_digital, entry)
+            save_image(path_digital, path_digital, entry)
 
 
 if __name__ == "__main__":
