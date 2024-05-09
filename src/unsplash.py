@@ -10,8 +10,8 @@ from PIL import Image
 
 UNSPLASH_ACCESS_KEY = "soccs2fmeCHj1lY2rae7-nyKA2KfRlKN5edXOBWLC_g" 
 
-unsplash_git_lfs_path_film = '../data/unsplash_film/'
-unsplash_git_lfs_path_digital = '../data/unsplash_digital/'
+unsplash_git_lfs_path_film = '/Users/annamiraotoole/Documents/GitHub/sillystill/data/unsplash_film/'
+unsplash_git_lfs_path_digital = '/Users/annamiraotoole/Documents/GitHub/sillystill/data/unsplash_digital/'
 
 # Initialize the Unsplash client
 pu = pyunsplash.PyUnsplash(api_key=UNSPLASH_ACCESS_KEY)
@@ -66,11 +66,13 @@ def get_film_photos(batch: int):
 
     # should get 30 batches of 3-7 photos each --> 90-210 photos
 
-    batch_size = 40
+    batch_size = 44
 
     for i in range(batch_size):
 
-        p = batch_size * batch + i + 20 # hardcoded 20 because we already have 20 pages of photos saved
+        p = batch_size * batch + i + 63 # hardcoded because we already have 63 pages of photos saved
+
+        print("Getting film photos page", p)
     
         # MAKE A REQUEST TO UNSPLASH API
         search_result_photos = pu.search(type_='photos', query='cinestill', page=p, per_page=10000)
@@ -90,6 +92,8 @@ def get_digital_photos():
     """
 
     for i in range(5):
+
+        print("Getting digital photos batch", i)
 
         # THIS CELL CAUSES A REQUEST TO UNSPLASH API
         digital_photos = pu.photos(type_='random', count=1000, featured=True)
