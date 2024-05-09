@@ -70,7 +70,7 @@ def get_film_photos(batch: int):
 
     for i in range(batch_size):
 
-        p = batch_size * batch + i + 63 # hardcoded because we already have 63 pages of photos saved
+        p = batch_size * batch + i + 65 # hardcoded because we already have 63 pages of photos saved
 
         print("Getting film photos page", p)
     
