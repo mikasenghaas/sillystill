@@ -1,25 +1,7 @@
 defaults:
   - _self_
-  - net: conv_translation_net
+  - net: unet
   - loss_fn: cobi
+  - default
 
-_target_: src.models.image_translation_base.ImageTranslationBase
-
-optimizer:
-  _target_: torch.optim.Adam
-  _partial_: true
-  lr: 0.0001
-  weight_decay: 0.001
-
-scheduler:
-  _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
-  _partial_: true
-  mode: min
-  factor: 0.1
-  patience: 5
-
-# Assuming that the model configuration needs the `compile` option as well
-# compile: false
-
-# Placeholder for the 'net' parameter that will be filled by the defaults
-net: ???
+_target_: src.models.translation.TranslationModule

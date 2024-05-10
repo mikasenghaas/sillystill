@@ -1,5 +1,0 @@
-_target_: src.models.components.resnet50.Resnet50
-
-pretrained: true
-channels: 3
-norm: instancenorm

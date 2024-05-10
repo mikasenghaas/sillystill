@@ -1,0 +1,5 @@
+_target_: src.models.net.resnet.ResNet
+
+pretrained: true
+channels: 3
+norm: instancenorm
