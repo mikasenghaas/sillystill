@@ -1,5 +1,6 @@
 from typing import Tuple
 
+import wandb
 import torch
 from lightning import LightningModule
 from torchmetrics import MeanMetric, MetricCollection
@@ -32,13 +33,13 @@ class TranslationModule(LightningModule):
             lr_monitor: Metric to monitor for learning rate scheduler (default: val/loss).
         """
         super().__init__()
+
         # Store hyperparameters
         self.save_hyperparameters(logger=False, ignore=["net", "loss_fn"])
-
         self.net = net
-
         self.loss_fn = loss_fn
 
+        # Initialise metrics
         self.metrics = MetricCollection(
             {
                 "train/loss": MeanMetric(),
@@ -48,7 +49,8 @@ class TranslationModule(LightningModule):
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass through the model.
+        """
+        Forward pass through the model.
 
         Args:
             x: Input tensor representing a batch of images, shape [batch_size, 3, n, n].
@@ -56,40 +58,57 @@ class TranslationModule(LightningModule):
         Returns:
             A tensor of transformed images, shape [batch_size, 3, n, n].
         """
-        # assert x.shape[1] == 3, "Input tensor should have 3 color channels"
         return self.net(x)
 
     def step(self, batch: Tuple[torch.Tensor, torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Perform a single step with the given batch, computing loss.
+        """
+        Perform a single step with the given batch, computing loss.
 
         Args:
-            batch: Tuple of (input_images, target_images). Both tensors should have the shape [batch_size, 3, n, n].
+            batch: Tuple of (input_images, target_images). Both tensors should
+            have the shape [batch_size, 3, n, n].
 
         Returns:
             Tuple of (loss, predicted_images)
         """
-        x, y = batch
-        # assert x.shape == y.shape, "Input and target images must have the same dimensions"
-        y_hat = self.forward(x)
-        loss = self.loss_fn(y_hat, y)
-        return loss, y_hat
+        film, digital = batch
+        film_predicted = self.forward(digital)
+        loss = self.loss_fn(film_predicted, film)
+        return loss, film, film_predicted
 
     def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         """Training step for processing one batch of data."""
-        loss, _ = self.step(batch)
+        loss, y, y_hat = self.step(batch)
+        
+        # Log training loss
         self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        
+        # Log images 
+        self._log_images(y, "train/target")
+        self._log_images(y_hat, "train/predicted")
+
         return loss
 
     def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         """Validation step for processing one batch of data."""
-        loss, _ = self.step(batch)
+        loss, y, y_hat = self.step(batch)
+
+        # Log validation loss
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
 
-    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
-        """Test step for processing one batch of data."""
-        loss, _ = self.step(batch)
-        self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        # Log images
+        self._log_images(y, "val/target")
+        self._log_images(y_hat, "val/predicted")
 
+    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], _: int):
+        """Test step for processing one batch of data."""
+        loss, _, _ = self.step(batch)
+        self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+  
+    def _log_images(self, images: torch.Tensor, key: str):
+        if hasattr(self.logger.experiment, "log"):
+            self.logger.experiment.log({key: [wandb.Image(img) for img in images]})
+    
     def configure_optimizers(self):
         """Setup the optimizer and the LR scheduler."""
         optimizer = self.hparams.optimizer(params=self.net.parameters())
