@@ -131,7 +131,7 @@ class PairedDataModule(LightningDataModule):
         """
         return DataLoader(
             dataset=self.data_val,
-            batch_size=self.batch_size_per_device,
+            batch_size=1,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             persistent_workers=True,
@@ -145,7 +145,7 @@ class PairedDataModule(LightningDataModule):
         """
         return DataLoader(
             dataset=self.data_test,
-            batch_size=self.batch_size_per_device,
+            batch_size=1,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             shuffle=False,
