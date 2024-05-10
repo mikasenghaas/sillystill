@@ -2,14 +2,11 @@ import os
 from typing import Any, Dict, Optional, Tuple
 
 import torch
-import torchvision.transforms.v2 as transforms
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset, random_split
 
-from .components.image_pair_dataset import ImagePairDataset
 
-
-class DataModule(LightningDataModule):
+class PairedDataModule(LightningDataModule):
     """`LightningDataModule` for the digital-film image pair dataset.
 
     A `LightningDataModule` implements 7 key methods:
@@ -63,16 +60,6 @@ class DataModule(LightningDataModule):
 
         # Save hyperparameters
         self.save_hyperparameters(logger=False)
-
-        # Define data transforms (TODO: Make these configurable)
-        self.transform = transforms.Compose(
-            [
-                transforms.ToImage(),
-                transforms.ToDtype(torch.float32, scale=True),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                transforms.RandomResizedCrop(size=(100, 100), antialias=True),
-            ]
-        )
 
         # Save paths
         self.raw_dir = os.path.join(data_dir, "raw")

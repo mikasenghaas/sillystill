@@ -1,3 +1,4 @@
-from .image_pair_dataset import ImagePairDataset
+from .paired import PairedDataset
+from .unpaired import UnpairedDataset
 
 __all__ = ["ImagePairDataset"]

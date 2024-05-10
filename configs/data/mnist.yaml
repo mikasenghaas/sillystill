@@ -1,4 +1,0 @@
-defaults:
-  - default
-
-_target_: src.data.mnist_identity.MNISTIdentity

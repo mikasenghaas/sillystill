@@ -28,7 +28,7 @@ class PairedDataset(Dataset):
                     transforms.ToImage(),
                     transforms.ToDtype(torch.float32, scale=True),
                     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                    transforms.RandomResizedCrop(size=(100, 100), antialias=True),
+                    transforms.RandomResizedCrop(size=(128, 128), antialias=True),
                 ]
             )
         else:

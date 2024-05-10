@@ -2,7 +2,7 @@
 
 defaults:
   - _self_
-  - data: pairs
+  - data: paired
   - model: translation
   - logger: null
   - callbacks: default
