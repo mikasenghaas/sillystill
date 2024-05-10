@@ -36,9 +36,9 @@ def extras(cfg: DictConfig) -> None:
         rich_utils.enforce_tags(cfg, save_to_file=True)
 
     # Pretty print config tree using Rich library
-    # if cfg.extras.get("print_config"):
-    #     log.info("Printing config tree with Rich! <cfg.extras.print_config=True>")
-    #     rich_utils.print_config_tree(cfg, resolve=True, save_to_file=True)
+    if cfg.extras.get("print_config"):
+        log.info("Printing config tree with Rich! <cfg.extras.print_config=True>")
+        rich_utils.print_config_tree(cfg, resolve=False, save_to_file=True)
 
 
 def task_wrapper(task_func: Callable) -> Callable:

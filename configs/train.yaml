@@ -10,9 +10,10 @@ defaults:
   - paths: default
   - hydra: default
   - extras: default
+  - experiment: null
 
-task_name: "train"
+task: "train"
+group: null
+name: null
 tags: ["dev"]
 seed: null
-train: true
-test: true

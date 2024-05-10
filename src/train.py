@@ -77,21 +77,19 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         log_hyperparameters(object_dict)
 
     # Train model
-    if cfg.get("train"):
-        log.info("Starting training!")
-        trainer.fit(model=model, datamodule=datamodule)
+    log.info("Starting training!")
+    trainer.fit(model=model, datamodule=datamodule)
 
     train_metrics = trainer.callback_metrics
     
     # Test model
-    if cfg.get("test"):
-        log.info("Starting testing!")
-        ckpt_path = trainer.checkpoint_callback.best_model_path
-        if ckpt_path == "":
-            log.warning("Best ckpt not found! Using current weights for testing...")
-            ckpt_path = None
-        trainer.test(model=model, datamodule=datamodule)
-        log.info(f"Best ckpt path: {ckpt_path}")
+    log.info("Starting testing!")
+    ckpt_path = trainer.checkpoint_callback.best_model_path
+    if ckpt_path == "":
+        log.warning("Best ckpt not found! Using current weights for testing...")
+        ckpt_path = None
+    trainer.test(model=model, datamodule=datamodule)
+    log.info(f"Best ckpt path: {ckpt_path}")
 
     test_metrics = trainer.callback_metrics
 
