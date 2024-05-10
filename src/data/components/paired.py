@@ -10,7 +10,7 @@ from ...utils.load import load_image_pair, load_metadata
 class PairedDataset(Dataset):
     """A PyTorch Dataset class for loading processed image pairs of digital and film images."""
 
-    def __init__(self, data_dir: str, transform: Optional[transforms.Compose] = None):
+    def __init__(self, data_dir: str, transforms: Optional[transforms.Compose] = None):
         """Initialises an `ImagePairDataset` instance. This dataset is used to load image pairs
         from the processed data directory. The dataset assumes that the filenames in both
         directories match for corresponding image pairs.
@@ -21,18 +21,7 @@ class PairedDataset(Dataset):
         """
         # Save hyperparameters
         self.data_dir = data_dir
-        if transform is None:
-            # Default data transforms (TODO: Make these configurable)
-            self.transform = transforms.Compose(
-                [
-                    transforms.ToImage(),
-                    transforms.ToDtype(torch.float32, scale=True),
-                    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                    transforms.RandomResizedCrop(size=(128, 128), antialias=True),
-                ]
-            )
-        else:
-            self.transform = transform
+        self.transforms = transforms
 
         # Load metadata
         self.meta = load_metadata()
@@ -48,6 +37,6 @@ class PairedDataset(Dataset):
         key = self.idx_to_key[idx]
         film, digital, _ = load_image_pair(key, processing_state="processed", as_array=True)
 
-        if self.transform:
-            return self.transform((film, digital))
+        if self.transforms:
+            return self.transforms((film, digital))
         return (film, digital)

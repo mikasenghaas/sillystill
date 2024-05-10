@@ -1,11 +1,12 @@
 from typing import Any, Dict, List, Optional, Tuple
 
 import hydra
+import torch
 import lightning as L
 import rootutils
 from lightning import Callback, LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 # Setup root
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
@@ -23,6 +24,8 @@ from src.utils import (
 # Setup logger
 log = RankedLogger(__name__, rank_zero_only=True)
 
+# Resolve torch data types
+OmegaConf.register_new_resolver("torch_dtype", lambda x: getattr(torch, x))
 
 @task_wrapper
 def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
@@ -43,7 +46,7 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         L.seed_everything(cfg.seed, workers=True)
 
     log.info(f"Instantiating datamodule <{cfg.data._target_}>")
-    datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
+    datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data, _recursive_=True)
 
     log.info(f"Instantiating model <{cfg.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(cfg.model)
@@ -100,16 +103,10 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
 
 @hydra.main(version_base="1.3", config_path="../configs", config_name="train.yaml")
 def main(cfg: DictConfig) -> Optional[float]:
-    """Main entry point for training.
-
-    :param cfg: DictConfig configuration composed by Hydra.
-    :return: Optional[float] with optimized metric value.
-    """
-    # apply extra utilities
-    # (e.g. ask for tags if none are provided in cfg, print cfg tree, etc.)
+    # Apply extra utilities
     extras(cfg)
 
-    # train the model
+    # Train the model
     metric_dict, _ = train(cfg)
 
     # safely retrieve metric value for hydra-based hyperparameter optimization
