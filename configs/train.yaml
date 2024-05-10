@@ -4,11 +4,11 @@ defaults:
   - _self_
   - data: pairs
   - model: translation
+  - logger: null
   - callbacks: default
   - trainer: gpu
   - paths: default
   - hydra: default
-  - wandb: default
   - extras: default
 
 task_name: "train"
