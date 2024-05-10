@@ -2,6 +2,7 @@ defaults:
   - default
 
 _target_: src.data.paired_module.PairedDataModule
+patch_size: 128
 
 dataset:
   _target_: src.data.components.paired.PairedDataset
@@ -18,5 +19,5 @@ dataset:
         mean: [0.485, 0.456, 0.406]
         std: [0.229, 0.224, 0.225] 
       - _target_: torchvision.transforms.v2.RandomResizedCrop
-        size: [128, 128]
+        size: ['${data.patch_size}', '${data.patch_size}']
         antialias: True

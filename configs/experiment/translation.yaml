@@ -1,0 +1,42 @@
+# @package _global_
+
+# To run: `python train.py -m experiment=translation`
+
+defaults:
+  - override /data: paired
+  - override /model: translation
+  - override /logger: wandb
+
+group: translation
+tags: ["translation"]
+seed: 42
+
+trainer:
+  min_epochs: 10
+  max_epochs: 50
+
+model:
+  optimizer:
+    lr: 1e-4
+    weight_decay: 1e-3
+  scheduler:
+    factor: 1e-1
+    patience: 5
+  net:
+    features: [16, 32, 64]
+
+data:
+  batch_size: 8
+  patch_size: 256
+  train_val_test_split: [0.7, 0.2, 0.1]
+
+hydra:
+  sweeper:
+    params:
+      # TODO: Search over model type + architecture (UNet vs. ResNet50, #Layer, etc.)
+      # TODO: Search over data augmentation
+      # TODO: Min./ max. Epochs (or: large max epochs and early stopping)
+      # TODO: Search over patch-size
+      model.optimizer.lr: 1e-4, 1e-5
+      data.batch_size: 4, 8, 16
+      data.patch_size: 64, 128, 256

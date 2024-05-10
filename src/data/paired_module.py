@@ -46,6 +46,7 @@ class PairedDataModule(LightningDataModule):
         batch_size: int = 8,
         num_workers: int = 0,
         pin_memory: bool = False,
+        **kwargs
     ) -> None:
         """Initialise a `DataModule`.
 
