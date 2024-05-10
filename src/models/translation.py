@@ -20,7 +20,7 @@ class TranslationModule(LightningModule):
         optimizer: torch.optim.Optimizer,
         loss_fn: torch.nn.Module = torch.nn.MSELoss(),
         scheduler: torch.optim.lr_scheduler._LRScheduler = None,
-        lr_monitor: str = "val/loss",
+        lr_monitor: str = "train/loss", # Check why we can't have val/loss
     ) -> None:
         """Initialize the base module.
 
