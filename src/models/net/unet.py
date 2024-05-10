@@ -3,7 +3,13 @@ from torch import nn
 from torch.nn import functional as F
 
 
-class ConvTranslationNet(nn.Module):
+class UNet(nn.Module):
+    """
+    A U-Net style network for use on its own or as part of the AutoTranslateNet.
+
+    Exposes an encode and decode method to allow for easy use in the AutoTranslateNet.
+    """
+    
     def __init__(self, in_channels=3, out_channels=3, features=[16, 32, 64]):
         super().__init__()
         self.enc_blocks = nn.ModuleList()
@@ -39,8 +45,8 @@ class ConvTranslationNet(nn.Module):
             nn.ReLU(inplace=True),
         )
         return block
-
-    def forward(self, x):
+    
+    def encode(self, x):
         skips = []
 
         # Encoder path
@@ -52,6 +58,9 @@ class ConvTranslationNet(nn.Module):
         # Bottleneck
         x = self.bottleneck(x)
 
+        return x, skips
+    
+    def decode(self, x, skips):
         # Decoder path
         skips = skips[::-1]
         for (upconv, block), skip in zip(self.dec_blocks, skips):
@@ -61,5 +70,11 @@ class ConvTranslationNet(nn.Module):
 
         # Output layer
         x = self.final_conv(x)
+
+        return x
+
+    def forward(self, x):
+        x, skips = self.encode(x)
+        x = self.decode(x, skips)
 
         return x

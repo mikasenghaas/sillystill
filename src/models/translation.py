@@ -5,7 +5,7 @@ from lightning import LightningModule
 from torchmetrics import MeanMetric, MetricCollection
 
 
-class ImageTranslationBase(LightningModule):
+class TranslationModule(LightningModule):
     """Base LightningModule for image-to-image translation tasks, such as transforming digital
     images to appear as if shot on CineStill800T film.
 
