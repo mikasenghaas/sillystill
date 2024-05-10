@@ -4,4 +4,4 @@ defaults:
   - loss_fn: mse
   - default
 
-_target_: src.models.translation.TranslationModule
+_target_: src.models.translation_module.TranslationModule

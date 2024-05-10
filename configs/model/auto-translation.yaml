@@ -4,4 +4,4 @@ defaults:
   - loss_fn: ???
   - default
 
-_target_: src.models.auto_translation.AutoTranslationModule
+_target_: src.models.autotranslation_module.AutoTranslationModule
