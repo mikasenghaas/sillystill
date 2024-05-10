@@ -14,3 +14,5 @@ defaults:
 task_name: "train"
 tags: ["dev"]
 seed: null
+train: true
+test: true
