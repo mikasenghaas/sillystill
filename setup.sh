@@ -2,12 +2,12 @@
 
 # Add the Git LFS repository using the script provided by packagecloud
 echo "Downloading Git LFS binaries"
-wget https://github.com/git-lfs/git-lfs/releases/download/v2.13.3/git-lfs-linux-amd64-v2.13.3.tar.gz
-tar -xzvf git-lfs-linux-amd64-v2.13.3.tar.gz
+wget https://github.com/git-lfs/git-lfs/releases/download/v3.5.1/git-lfs-linux-amd64-v3.5.1.tar.gz
+tar -xzvf git-lfs-linux-amd64-v3.5.1.tar.gz
 mkdir -p ~/bin
-mv git-lfs ~/bin/
-rm -rf git-lfs-linux-amd64-v2.13.3.tar.gz
-rm -rf man
+mv git-lfs-3.5.1/git-lfs ~/bin/
+rm -rf git-lfs-linux-amd64-v3.5.1.tar.gz
+rm -rf git-lfs-3.5.1rm -rf git-lfs-3.5.1
 export PATH=$HOME/bin:$PATH
 source ~/.bashrc
 
