@@ -32,7 +32,8 @@ class TranslationModule(LightningModule):
             lr_monitor: Metric to monitor for learning rate scheduler (default: val/loss).
         """
         super().__init__()
-        self.save_hyperparameters(logger=False)  # store hyperparameters
+        # Store hyperparameters
+        self.save_hyperparameters(logger=False, ignore=["net", "loss_fn"])
 
         self.net = net
 

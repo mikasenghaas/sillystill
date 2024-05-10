@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
-from torchvision.models import vgg19
+from torchvision.models import vgg19_bn
+from torchvision.models.vgg import VGG19_BN_Weights
 
 
 class CoBiLoss(nn.Module):
@@ -42,7 +43,7 @@ class CoBiLoss(nn.Module):
         self.epsilon = epsilon
         self.bandwidth = bandwidth
         self.verbose = verbose
-        self.vgg = vgg19(pretrained=True).features
+        self.vgg = vgg19_bn(weights=VGG19_BN_Weights.DEFAULT).features
         self.feature_layers = {"3": "conv1_2", "8": "conv2_2", "17": "conv3_2"}
         self.feature_weights = {"conv1_2": 0.4, "conv2_2": 0.4, "conv3_2": 0.2}
 
