@@ -4,11 +4,9 @@ import torch
 import torchvision.transforms.v2 as transforms
 from torch.utils.data import Dataset
 
-from ...utils.load import load_image_pair, load_metadata
 
-
-class ImagePairDataset(Dataset):
-    """A PyTorch Dataset class for loading processed image pairs of digital and film images."""
+class UnpairedDataset(Dataset):
+    """"""
 
     def __init__(self, data_dir: str, transform: Optional[transforms.Compose] = None):
         """Initialises an `ImagePairDataset` instance. This dataset is used to load image pairs
@@ -21,22 +19,33 @@ class ImagePairDataset(Dataset):
         """
         # Save hyperparameters
         self.data_dir = data_dir
-        self.transform = transform
+        if transform is None:
+            # Default data transforms (TODO: Make these configurable)
+            self.transform = transforms.Compose(
+                [
+                    transforms.ToImage(),
+                    transforms.ToDtype(torch.float32, scale=True),
+                    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                    transforms.RandomResizedCrop(size=(100, 100), antialias=True),
+                ]
+            )
+        else:
+            self.transform = transform
 
-        # Load metadata
-        self.meta = load_metadata()
-        self.keys = list(set(self.meta.keys()) - {9, 11, 40})
-        self.idx_to_key = {idx: key for idx, key in enumerate(self.keys)}
+        # TODO: Load all images paths (glob.glob(data_dir/*))
+        self.image_paths = []
 
     def __len__(self) -> int:
         """Returns the length of the dataset."""
-        return len(self.keys)
+        return len(self.image_paths)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """Returns a sample from the dataset at the given index."""
-        key = self.idx_to_key[idx]
-        film, digital, _ = load_image_pair(key, processing_state="processed", as_array=True)
+        path = self.image_paths[idx]
+
+        # Load image from path (src.utils.)
+        digital = ...
 
         if self.transform:
-            return self.transform((film, digital))
-        return (film, digital)
+            return self.transform(digital)
+        return digital
