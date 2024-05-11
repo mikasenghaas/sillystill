@@ -12,7 +12,7 @@ class PairedDataset(Dataset):
     """A PyTorch Dataset class for loading processed image pairs of digital and film images."""
 
     def __init__(
-        self, data_dir: str, patch_size: int, augmentations: Optional[List[Dict]] = None
+        self, data_dir: str, patch_size: int, augment: Optional[List[Dict]] = None
     ):
         """Initialises an `ImagePairDataset` instance. This dataset is used to load image pairs
         from the processed data directory. The dataset assumes that the filenames in both
@@ -35,12 +35,12 @@ class PairedDataset(Dataset):
         ]
 
         # Add data augmentation
-        for augmentation, active in augmentations.items():
+        for method, active in augment.items():
             if active:
-                if augmentation == "flip":
+                if method == "flip":
                     all_transforms.insert(3, transforms.RandomHorizontalFlip(p=0.2))
                     all_transforms.insert(3, transforms.RandomVerticalFlip(p=0.2))
-                elif augmentation == "rotate":
+                elif method == "rotate":
                     all_transforms.insert(
                         3,
                         transforms.RandomApply(
@@ -48,7 +48,7 @@ class PairedDataset(Dataset):
                             0.2,
                         ),
                     )
-                elif augmentation == "blur":
+                elif method == "blur":
                     all_transforms.insert(
                         3,
                         transforms.RandomApply(
@@ -60,7 +60,7 @@ class PairedDataset(Dataset):
                             0.2,
                         ),
                     )
-                elif augmentation == "brightness":
+                elif method == "brightness":
                     all_transforms.insert(
                         3,
                         transforms.RandomApply(
