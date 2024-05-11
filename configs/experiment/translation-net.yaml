@@ -1,0 +1,44 @@
+# @package _global_
+
+# To run: `python train.py -m experiment=translation`
+
+defaults:
+  - override /data: paired
+  - override /model: translation
+  - override /logger: wandb
+
+group: translation-net
+tags: ["translation", "unet", "mse", v1"]
+seed: 42
+
+trainer:
+  min_epochs: 10
+  max_epochs: 100
+
+model:
+  optimizer:
+    lr: 1e-4
+    weight_decay: 1e-3
+  scheduler:
+    factor: 1e-1
+    patience: 5
+  
+
+data:
+  batch_size: 8
+  train_val_test_split: [0.7, 0.2, 0.1]
+
+  dataset:
+    patch_size: 256
+
+    augment:
+      flip: False
+      rotate: False
+      blur: False
+      brightness: False
+
+hydra:
+  sweeper:
+    params:
+      model.net.start_dim: 32, 64, 128
+      model.net.num_layers: 3, 4

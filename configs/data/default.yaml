@@ -7,8 +7,8 @@ pin_memory: False
 dataset:
   patch_size: 128
 
-  augmentations:
-    flip: True
-    rotate: True
-    noise: True
-    brightness: True
+  augment:
+    flip: False
+    rotate: False
+    blur: False
+    brightness: False

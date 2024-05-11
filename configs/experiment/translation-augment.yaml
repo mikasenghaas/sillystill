@@ -7,8 +7,8 @@ defaults:
   - override /model: translation
   - override /logger: wandb
 
-group: translation
-tags: ["translation"]
+group: translation-augment
+tags: ["translation", "unet", "mse", v1"]
 seed: 42
 
 trainer:
@@ -23,20 +23,20 @@ model:
     factor: 1e-1
     patience: 5
   net:
-    features: [16, 32, 64]
+    start_dim: 64
+    num_layers: 4
 
 data:
   batch_size: 8
-  patch_size: 256
   train_val_test_split: [0.7, 0.2, 0.1]
+
+  dataset:
+    patch_size: 256
 
 hydra:
   sweeper:
     params:
-      # TODO: Search over model type + architecture (UNet vs. ResNet50, #Layer, etc.)
-      # TODO: Search over data augmentation
-      # TODO: Min./ max. Epochs (or: large max epochs and early stopping)
-      # TODO: Search over patch-size
-      model.optimizer.lr: 1e-4, 1e-5
-      data.batch_size: 4, 8, 16
-      data.patch_size: 64, 128, 256
+      data.dataset.augmentations.flip: False, True
+      data.dataset.augmentations.rotate: False, True
+      data.dataset.augmentations.blur: False, True
+      data.dataset.augmentations.brightness: False, True
