@@ -35,19 +35,16 @@ class PairedDataset(Dataset):
         ]
 
         # Add data augmentation
-        print(augmentations)
-        print(all_transforms)
         for augmentation, active in augmentations.items():
             if active:
                 if augmentation == "flip":
-                    all_transforms.insert(3, transforms.RandomHorizontalFlip(p=0.5))
+                    all_transforms.insert(3, transforms.RandomHorizontalFlip(p=0.2))
+                    all_transforms.insert(3, transforms.RandomVerticalFlip(p=0.2))
                 elif augmentation == "rotate":
                     all_transforms.insert(
                         3,
                         transforms.RandomApply(
-                            torch.nn.ModuleList(
-                                [transforms.RandomRotation(degrees=(0, 360))]
-                            ),
+                            [transforms.RandomRotation(degrees=(0, 360))],
                             0.2,
                         ),
                     )
@@ -55,28 +52,22 @@ class PairedDataset(Dataset):
                     all_transforms.insert(
                         3,
                         transforms.RandomApply(
-                            torch.nn.ModuleList(
-                                [
-                                    transforms.GaussianBlur(
-                                        kernel_size=(5, 9), sigma=(0.1, 5.0)
-                                    )
-                                ]
-                            ),
+                            [
+                                transforms.GaussianBlur(
+                                    kernel_size=(5, 9), sigma=(0.1, 5.0)
+                                )
+                            ],
                             0.2,
                         ),
                     )
-                elif augmentation == "brigthness":
+                elif augmentation == "brightness":
                     all_transforms.insert(
                         3,
                         transforms.RandomApply(
-                            torch.nn.ModuleList(
-                                [transforms.ColorJitter(brightness=0.5, hue=0.3)]
-                            ),
+                            [transforms.ColorJitter(brightness=(0.6, 1))],
                             0.2,
                         ),
                     )
-
-        print(all_transforms)
 
         # Add augmentation transform
         self.transforms = transforms.Compose(all_transforms)
