@@ -9,12 +9,18 @@ class UNet(nn.Module):
 
     Exposes an encode and decode method to allow for easy use in the AutoTranslateNet.
     """
-    
-    def __init__(self, in_channels=3, out_channels=3, features=[16, 32, 64]):
+
+    def __init__(self, start_dim: int = 64, num_layers: int = 3):
         super().__init__()
         self.enc_blocks = nn.ModuleList()
         self.dec_blocks = nn.ModuleList()
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        in_channels = 3
+        out_channels = 3
+
+        # Generate feature list
+        features = [start_dim * 2**i for i in range(num_layers)]
 
         # Create the encoder path
         for feature in features[:-1]:
@@ -31,7 +37,9 @@ class UNet(nn.Module):
             upconv = nn.ConvTranspose2d(
                 reversed_features[i], reversed_features[i + 1], kernel_size=2, stride=2
             )
-            conv_block = self.conv_block(2 * reversed_features[i + 1], reversed_features[i + 1])
+            conv_block = self.conv_block(
+                2 * reversed_features[i + 1], reversed_features[i + 1]
+            )
             self.dec_blocks.append(nn.ModuleList([upconv, conv_block]))
 
         # Final output layer
@@ -39,13 +47,17 @@ class UNet(nn.Module):
 
     def conv_block(self, in_channels, out_channels, kernel_size=3, padding=1):
         block = nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, padding=padding),
+            nn.Conv2d(
+                in_channels, out_channels, kernel_size=kernel_size, padding=padding
+            ),
             nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, kernel_size=kernel_size, padding=padding),
+            nn.Conv2d(
+                out_channels, out_channels, kernel_size=kernel_size, padding=padding
+            ),
             nn.ReLU(inplace=True),
         )
         return block
-    
+
     def encode(self, x):
         skips = []
 
@@ -59,7 +71,7 @@ class UNet(nn.Module):
         x = self.bottleneck(x)
 
         return x, skips
-    
+
     def decode(self, x, skips):
         # Decoder path
         skips = skips[::-1]
