@@ -7,8 +7,8 @@ defaults:
   - override /model: translation
   - override /logger: wandb
 
-group: translation-net
-tags: ["translation", "unet", "mse", v1"]
+group: translation-loss
+tags: ["translation", "unet", "v1"]
 seed: 42
 
 trainer:
@@ -22,6 +22,9 @@ model:
   scheduler:
     factor: 1e-1
     patience: 5
+  net:
+    start_dim: 64
+    num_layers: 3
 
 data:
   batch_size: 8
@@ -39,5 +42,4 @@ data:
 hydra:
   sweeper:
     params:
-      model.net.start_dim: 32, 64, 128
-      model.net.num_layers: 3, 4
+      model/loss_fn: cobi, mse
