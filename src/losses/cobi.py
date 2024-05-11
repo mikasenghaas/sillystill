@@ -179,7 +179,10 @@ class CoBiLoss(nn.Module):
         min_combined_measure, _ = torch.min(combined_measure, dim=2)  # Min across all j for each i
 
         # Average these minimum values across all vectors in the batch
-        loss = torch.mean(min_combined_measure)
+        score = torch.mean(min_combined_measure)
+
+        # Take negative log to get the loss
+        loss = -torch.log(1 - score)
 
         return loss
 
