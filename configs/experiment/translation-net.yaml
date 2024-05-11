@@ -8,7 +8,7 @@ defaults:
   - override /logger: wandb
 
 group: translation-net
-tags: ["translation", "unet", "mse", v1"]
+tags: ["translation", "unet", "mse", "v2"]
 seed: 42
 
 trainer:
