@@ -2,5 +2,5 @@ _target_: src.losses.auto_translate.AutoTranslateLoss
 
 reconstruction_weight: 1.0
 encoder_weight: 1.0
-paired_reconstruction_weight: 0.0
+paired_reconstruction_weight: 1.0
 do_penalise_film_transformation: False

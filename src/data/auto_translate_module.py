@@ -46,7 +46,7 @@ class AutoTranslateDataModule(LightningDataModule):
         self,
         dataset: Dataset,
         data_dir: str = "data/",
-        patch_size: int = 256,
+        patch_size: int = 128,
         train_val_test_split: Tuple[float, float, float] = (0.7, 0.2, 0.1),
         num_workers: int = 0,
         pin_memory: bool = False,
@@ -70,7 +70,7 @@ class AutoTranslateDataModule(LightningDataModule):
         self.raw_dir = os.path.join(data_dir, "raw")
         self.processed_dir = os.path.join(data_dir, "processed")
         self.digital_dir = os.path.join(data_dir, "unsplash_digital")
-        self.film_dir = os.path.join(data_dir, "unplash_film_less_filtered")
+        self.film_dir = os.path.join(data_dir, "unsplash_film_less_filtered")
 
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
@@ -114,8 +114,12 @@ class AutoTranslateDataModule(LightningDataModule):
         paired_dataset = PairedDataset(
             data_dir=self.processed_dir, patch_size=self.hparams.patch_size
         )
-        unpaired_digital_dataset = UnpairedDataset(data_dir=self.digital_dir)
-        unpaired_film_dataset = UnpairedDataset(data_dir=self.film_dir)
+        unpaired_digital_dataset = UnpairedDataset(
+            data_dir=self.digital_dir, patch_size=self.hparams.patch_size
+        )
+        unpaired_film_dataset = UnpairedDataset(
+            data_dir=self.film_dir, patch_size=self.hparams.patch_size
+        )
 
         # Split each of these into train, val, and test
         self.paired_train, self.paired_val, self.paired_test = random_split(

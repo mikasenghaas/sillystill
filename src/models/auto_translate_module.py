@@ -79,7 +79,16 @@ class AutoTranslationModule(LightningModule):
         """
         digital, film, paired = batch
 
-        paired_film_in = paired[:, 1]
+        digital_paired, film_paired = paired
+
+        # Remove artificial batch dimension
+        digital = digital.squeeze(0)
+        film = film.squeeze(0)
+        digital_paired = digital_paired.squeeze(0)
+        film_paired = film_paired.squeeze(0)
+        paired = (digital_paired, film_paired)
+
+        paired_film_in = paired[1]
 
         (
             digital_reconstructed,

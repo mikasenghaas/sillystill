@@ -36,10 +36,10 @@ class AutoTranslateNet(nn.Module):
             paired_encoder_representation: Latent space representations of the paired images over all encoder layers. List of tuples of tensors (digital_latent, film_latent), each tuple containing the latent space representation of the digital and film images, each shape [B_3, channels, n, n].
         """
 
-        paired_digital_in = paired[:, 0]
-        paired_film_in = paired[:, 1]
+        paired_digital_in = paired[0]
+        paired_film_in = paired[1]
 
-        # Get all digital/film images by concatenating the digital (B_1, 3, n, n) and paired images (B_3, 2, 3, n, n,)
+        # Get all digital/film images by concatenating the digital (B_1, 3, n, n) and paired images (B_3, 3, n, n,)
         all_digital = torch.cat([digital, paired_digital_in], dim=0)
         all_film = torch.cat([film, paired_film_in], dim=0)
 

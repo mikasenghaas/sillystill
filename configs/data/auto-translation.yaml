@@ -5,6 +5,6 @@ _target_: src.data.auto_translate_module.AutoTranslateDataModule
 
 data_dir: ${paths.data_dir}
 batch_size: 1
-patch_size: 256
+patch_size: 128
 
 dataset: None

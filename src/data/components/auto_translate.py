@@ -17,7 +17,7 @@ class AutoTranslateDataset(Dataset):
         film_dataset: UnpairedDataset,
         paired_dataset: PairedDataset,
         num_paired_per_batch: int = 4,
-        num_unpaired_per_batch: int = 12,
+        num_unpaired_per_batch: int = 6,
     ):
         """Initialises an `ImagePairDataset` instance. This dataset is used to load image pairs
         from the processed data directory. The dataset assumes that the filenames in both
@@ -39,28 +39,35 @@ class AutoTranslateDataset(Dataset):
         """Returns the length of the dataset."""
         no_digital_batches = len(self.digital_dataset) // self.num_unpaired_per_batch
         no_film_batches = len(self.film_dataset) // self.num_unpaired_per_batch
-        no_paired_batches = len(self.paired_dataset) // self.num_paired_per_batch
-        return max(no_digital_batches, no_film_batches, no_paired_batches)
+        num_paired_batches = len(self.paired_dataset) // self.num_paired_per_batch
+        return max(no_digital_batches, no_film_batches, num_paired_batches)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """Returns a sample from the dataset at the given index."""
 
-        # Get no_unpaired_per_batch unpaired digital images
+        # Get 3 random unpaired digital images
+        indices = torch.randint(0, len(self.digital_dataset), (self.num_unpaired_per_batch,))
         digital_images = []
         for i in range(self.num_unpaired_per_batch):
-            digital_images.append(self.digital_dataset[idx + i])
+            digital_images.append(self.digital_dataset[indices[i]])
         digital_images = torch.stack(digital_images)
 
         # Get no_unpaired_per_batch unpaired film images
+        indices = torch.randint(0, len(self.film_dataset), (self.num_unpaired_per_batch,))
         film_images = []
         for i in range(self.num_unpaired_per_batch):
-            film_images.append(self.film_dataset[idx + i])
+            film_images.append(self.film_dataset[indices[i]])
         film_images = torch.stack(film_images)
 
         # Get no_paired_per_batch paired images
-        paired_images = []
+        indices = torch.randint(0, len(self.paired_dataset), (self.num_paired_per_batch,))
+        digital_paired = []
+        film_paired = []
         for i in range(self.num_paired_per_batch):
-            paired_images.append(self.paired_dataset[idx + i])
-        paired_images = torch.stack(paired_images)
+            digital, film = self.paired_dataset[indices[i]]
+            digital_paired.append(digital)
+            film_paired.append(film)
+
+        paired_images = (torch.stack(digital_paired), torch.stack(film_paired))
 
         return digital_images, film_images, paired_images

@@ -18,7 +18,7 @@ class AutoTranslateLoss(nn.Module):
         self,
         reconstruction_weight=1.0,
         encoder_weight=1.0,
-        paired_reconstruction_weight=0.0,
+        paired_reconstruction_weight=1.0,
         do_penalise_film_transformation=False,
     ):
         super().__init__()
@@ -54,8 +54,8 @@ class AutoTranslateLoss(nn.Module):
             loss: The computed loss value.
         """
 
-        paired_digital_in = paired_in[:, 0]
-        paired_film_in = paired_in[:, 1]
+        paired_digital_in = paired_in[0]
+        paired_film_in = paired_in[1]
 
         all_digital_in = torch.cat([digital_in, paired_digital_in], dim=0)
         all_film_in = torch.cat([film_in, paired_film_in], dim=0)
