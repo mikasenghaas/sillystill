@@ -1,13 +1,11 @@
 import glob
-from typing import Optional, Tuple
+from typing import Tuple
 
 import torch
-import torchvision.transforms.v2 as transforms
 from torch.utils.data import Dataset
 
 from src.data.components.paired import PairedDataset
 from src.data.components.unpaired import UnpairedDataset
-from src.utils.load import _load_image_from_path
 
 
 class AutoTranslateDataset(Dataset):
