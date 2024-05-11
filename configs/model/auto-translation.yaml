@@ -1,7 +1,7 @@
 defaults:
   - _self_
-  - net: ???
-  - loss_fn: ???
+  - net: auto-translate
+  - loss_fn: auto-translate
   - default
 
-_target_: src.models.autotranslation_module.AutoTranslationModule
+_target_: src.models.auto_translate_module.AutoTranslationModule

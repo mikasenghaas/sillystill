@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Dict, List
+from typing import Dict, List, Optional, Tuple
 
 import hydra
 import torch
@@ -11,9 +11,7 @@ from ...utils.load import load_image_pair, load_metadata
 class PairedDataset(Dataset):
     """A PyTorch Dataset class for loading processed image pairs of digital and film images."""
 
-    def __init__(
-        self, data_dir: str, patch_size: int, augment: Optional[List[Dict]] = None
-    ):
+    def __init__(self, data_dir: str, patch_size: int, augment: Optional[List[Dict]] = None):
         """Initialises an `ImagePairDataset` instance. This dataset is used to load image pairs
         from the processed data directory. The dataset assumes that the filenames in both
         directories match for corresponding image pairs.
@@ -35,6 +33,13 @@ class PairedDataset(Dataset):
         ]
 
         # Add data augmentation
+        if augment is None:
+            augment = {
+                "flip": False,
+                "rotate": False,
+                "blur": False,
+                "brightness": False,
+            }
         for method, active in augment.items():
             if active:
                 if method == "flip":
@@ -52,11 +57,7 @@ class PairedDataset(Dataset):
                     all_transforms.insert(
                         3,
                         transforms.RandomApply(
-                            [
-                                transforms.GaussianBlur(
-                                    kernel_size=(5, 9), sigma=(0.1, 5.0)
-                                )
-                            ],
+                            [transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5.0))],
                             0.2,
                         ),
                     )
@@ -84,9 +85,7 @@ class PairedDataset(Dataset):
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """Returns a sample from the dataset at the given index."""
         key = self.idx_to_key[idx]
-        film, digital, _ = load_image_pair(
-            key, processing_state="processed", as_array=True
-        )
+        film, digital, _ = load_image_pair(key, processing_state="processed", as_array=True)
 
         if self.transforms:
             return self.transforms((film, digital))

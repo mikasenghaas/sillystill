@@ -1,0 +1,4 @@
+_target_: src.models.net.auto_translate.AutoTranslateNet
+
+start_dim: 32
+num_layers: 3

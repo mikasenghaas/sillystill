@@ -1,14 +1,23 @@
-from typing import Optional, Tuple
+import glob
+from typing import Dict, Optional, Tuple
 
 import torch
 import torchvision.transforms.v2 as transforms
 from torch.utils.data import Dataset
 
+from src.utils.load import _load_image_from_path
+
 
 class UnpairedDataset(Dataset):
-    """"""
+    """Dataset class for loading unpaired images, either digital or film."""
 
-    def __init__(self, data_dir: str, transform: Optional[transforms.Compose] = None):
+    def __init__(
+        self,
+        data_dir: str,
+        patch_size: int = 128,
+        transform: Optional[transforms.Compose] = None,
+        augment: Optional[Dict] = None,
+    ):
         """Initialises an `ImagePairDataset` instance. This dataset is used to load image pairs
         from the processed data directory. The dataset assumes that the filenames in both
         directories match for corresponding image pairs.
@@ -19,21 +28,57 @@ class UnpairedDataset(Dataset):
         """
         # Save hyperparameters
         self.data_dir = data_dir
-        if transform is None:
-            # Default data transforms (TODO: Make these configurable)
-            self.transform = transforms.Compose(
-                [
-                    transforms.ToImage(),
-                    transforms.ToDtype(torch.float32, scale=True),
-                    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                    transforms.RandomResizedCrop(size=(100, 100), antialias=True),
-                ]
-            )
-        else:
-            self.transform = transform
+        # Set base transforms (defaults)
+        all_transforms = [
+            transforms.ToImage(),
+            transforms.ToDtype(torch.uint8, scale=True),
+            transforms.RandomResizedCrop(size=(patch_size, patch_size), antialias=True),
+            transforms.ToDtype(torch.float32, scale=True),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ]
 
-        # TODO: Load all images paths (glob.glob(data_dir/*))
-        self.image_paths = []
+        # Add data augmentation
+        if augment is None:
+            augment = {
+                "flip": False,
+                "rotate": False,
+                "blur": False,
+                "brightness": False,
+            }
+        for method, active in augment.items():
+            if active:
+                if method == "flip":
+                    all_transforms.insert(3, transforms.RandomHorizontalFlip(p=0.2))
+                    all_transforms.insert(3, transforms.RandomVerticalFlip(p=0.2))
+                elif method == "rotate":
+                    all_transforms.insert(
+                        3,
+                        transforms.RandomApply(
+                            [transforms.RandomRotation(degrees=(0, 360))],
+                            0.2,
+                        ),
+                    )
+                elif method == "blur":
+                    all_transforms.insert(
+                        3,
+                        transforms.RandomApply(
+                            [transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5.0))],
+                            0.2,
+                        ),
+                    )
+                elif method == "brightness":
+                    all_transforms.insert(
+                        3,
+                        transforms.RandomApply(
+                            [transforms.ColorJitter(brightness=(0.6, 1))],
+                            0.2,
+                        ),
+                    )
+
+        # Add augmentation transform
+        self.transforms = transforms.Compose(all_transforms)
+
+        self.image_paths = glob.glob(f"{data_dir}/*")
 
     def __len__(self) -> int:
         """Returns the length of the dataset."""
@@ -41,11 +86,11 @@ class UnpairedDataset(Dataset):
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """Returns a sample from the dataset at the given index."""
-        path = self.image_paths[idx]
+        image_path = self.image_paths[idx]
 
         # Load image from path (src.utils.)
-        digital = ...
+        image = _load_image_from_path(image_path)
 
-        if self.transform:
-            return self.transform(digital)
-        return digital
+        if self.transforms is not None:
+            return self.transforms(image)
+        return image

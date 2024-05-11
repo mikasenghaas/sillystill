@@ -2,8 +2,8 @@
 
 defaults:
   - _self_
-  - data: paired
-  - model: translation
+  - data: auto-translation
+  - model: auto-translation
   - logger: null
   - callbacks: default
   - trainer: gpu

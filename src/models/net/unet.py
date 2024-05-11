@@ -1,11 +1,9 @@
 import torch
 from torch import nn
-from torch.nn import functional as F
 
 
 class UNet(nn.Module):
-    """
-    A U-Net style network for use on its own or as part of the AutoTranslateNet.
+    """A U-Net style network for use on its own or as part of the AutoTranslateNet.
 
     Exposes an encode and decode method to allow for easy use in the AutoTranslateNet.
     """
@@ -37,9 +35,7 @@ class UNet(nn.Module):
             upconv = nn.ConvTranspose2d(
                 reversed_features[i], reversed_features[i + 1], kernel_size=2, stride=2
             )
-            conv_block = self.conv_block(
-                2 * reversed_features[i + 1], reversed_features[i + 1]
-            )
+            conv_block = self.conv_block(2 * reversed_features[i + 1], reversed_features[i + 1])
             self.dec_blocks.append(nn.ModuleList([upconv, conv_block]))
 
         # Final output layer
@@ -47,13 +43,9 @@ class UNet(nn.Module):
 
     def conv_block(self, in_channels, out_channels, kernel_size=3, padding=1):
         block = nn.Sequential(
-            nn.Conv2d(
-                in_channels, out_channels, kernel_size=kernel_size, padding=padding
-            ),
+            nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, padding=padding),
             nn.ReLU(inplace=True),
-            nn.Conv2d(
-                out_channels, out_channels, kernel_size=kernel_size, padding=padding
-            ),
+            nn.Conv2d(out_channels, out_channels, kernel_size=kernel_size, padding=padding),
             nn.ReLU(inplace=True),
         )
         return block
@@ -90,3 +82,9 @@ class UNet(nn.Module):
         x = self.decode(x, skips)
 
         return x
+
+
+if __name__ == "__main__":
+    model = UNet(features=[16, 32, 64, 128, 256])
+    x = torch.randn(1, 3, 128, 128)
+    output = model(x)
