@@ -27,6 +27,7 @@ log = RankedLogger(__name__, rank_zero_only=True)
 # Resolve torch data types
 OmegaConf.register_new_resolver("torch_dtype", lambda x: getattr(torch, x))
 
+
 @task_wrapper
 def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
@@ -35,7 +36,7 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
 
     Args:
         cfg (DictConfig): Training configuration (composed by Hydra)
-    
+
     Returns:
         Tuple[Dict[str, Any], Dict[str, Any]]: Tuple containing two dictionaries:
             - metric_dict: Dictionary containing training and testing metrics.
@@ -46,7 +47,7 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         L.seed_everything(cfg.seed, workers=True)
 
     log.info(f"Instantiating datamodule <{cfg.data._target_}>")
-    datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data, _recursive_=True)
+    datamodule: LightningDataModule = hydra.utils.instantiate(cfg.data)
 
     log.info(f"Instantiating model <{cfg.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(cfg.model)
@@ -60,7 +61,9 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         logger = hydra.utils.instantiate(cfg.logger)
 
     log.info(f"Instantiating trainer <{cfg.trainer._target_}>")
-    trainer: Trainer = hydra.utils.instantiate(cfg.trainer, callbacks=callbacks, logger=logger)
+    trainer: Trainer = hydra.utils.instantiate(
+        cfg.trainer, callbacks=callbacks, logger=logger
+    )
 
     object_dict = {
         "cfg": cfg,
@@ -81,7 +84,7 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     trainer.fit(model=model, datamodule=datamodule)
 
     train_metrics = trainer.callback_metrics
-    
+
     # Test model
     log.info("Starting testing!")
     ckpt_path = trainer.checkpoint_callback.best_model_path
