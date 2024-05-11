@@ -1,0 +1,4 @@
+_target_: src.losses.simple_combined.SimpleCombinedLoss
+
+mse_weight: 1.0
+feature_weight: 1.0
