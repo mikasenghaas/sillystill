@@ -15,7 +15,7 @@ module load gcc python
 source ~/venvs/sillystill/bin/activate
 
 # Run Python script
-python src/train.py -m experiment=paired
+python src/train.py -m experiment=translation
 
 # Deactive venv
 deactivate
