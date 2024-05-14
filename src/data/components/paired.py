@@ -1,7 +1,6 @@
 from typing import Dict, List, Optional, Tuple
 
 import glob
-import hydra
 import torch
 import torchvision.transforms.v2 as transforms
 from torch.utils.data import Dataset
@@ -32,7 +31,7 @@ class PairedDataset(Dataset):
             data_dir2 (str): Data directory for the second set of images.
             patch_size (int): The size of the patches to extract.
             max_samples (int, optional): The maximum number of samples to load. Defaults to `None`.
-            transform (callable, optional): Optional transform to be applied on a sample
+            augment (List[Dict], optional): Optional transform to be applied on a sample
         """
         # Save hyperparameters
         self.image_dirs = image_dirs

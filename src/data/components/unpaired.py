@@ -1,5 +1,5 @@
 import glob
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional
 
 import torch
 import torchvision.transforms.v2 as transforms
