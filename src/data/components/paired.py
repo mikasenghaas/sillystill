@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional, Tuple
 
+import glob
 import hydra
 import torch
 import torchvision.transforms.v2 as transforms
@@ -9,19 +10,32 @@ from ...utils.load import load_image_pair, load_metadata
 
 
 class PairedDataset(Dataset):
-    """A PyTorch Dataset class for loading processed image pairs of digital and film images."""
+    """A PyTorch dataset class for loading processed image pairs of digital and film images."""
 
-    def __init__(self, data_dir: str, patch_size: int, augment: Optional[List[Dict]] = None):
-        """Initialises an `ImagePairDataset` instance. This dataset is used to load image pairs
-        from the processed data directory. The dataset assumes that the filenames in both
-        directories match for corresponding image pairs.
+    def __init__(
+        self,
+        data_dir1: str,
+        data_dir2: str,
+        patch_size: int,
+        max_samples: Optional[int] = None,
+        augment: Optional[List[Dict]] = None,
+    ):
+        """Initialises a `PairedDataset` instance. This dataset is used to load
+        image pairs from the processed data directory. The dataset assumes that
+        the filenames in both directories match for corresponding image pairs.
 
         Args:
-            data_dir (str): Data directory
+            data_dir1 (str): Data directory for the first set of images.
+            data_dir2 (str): Data directory for the second set of images.
+            patch_size (int): The size of the patches to extract.
+            max_samples (int, optional): The maximum number of samples to load. Defaults to `None`.
             transform (callable, optional): Optional transform to be applied on a sample
         """
         # Save hyperparameters
-        self.data_dir = data_dir
+        self.data_dir1 = data_dir1
+        self.data_dir2 = data_dir2
+        self.max_samples = max_samples
+        self.patch_size = patch_size
 
         # Set base transforms (defaults)
         all_transforms = [
@@ -57,7 +71,11 @@ class PairedDataset(Dataset):
                     all_transforms.insert(
                         3,
                         transforms.RandomApply(
-                            [transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5.0))],
+                            [
+                                transforms.GaussianBlur(
+                                    kernel_size=(5, 9), sigma=(0.1, 5.0)
+                                )
+                            ],
                             0.2,
                         ),
                     )
@@ -74,8 +92,17 @@ class PairedDataset(Dataset):
         self.transforms = transforms.Compose(all_transforms)
 
         # Load metadata
-        self.meta = load_metadata()
-        self.keys = list(set(self.meta.keys()) - {9, 11, 40})
+        self.image_paths1 = glob.glob(f"{data_dir1}/*")
+        self.image_paths2 = glob.glob(f"{data_dir2}/*")
+
+        assert len(self.image_paths1) == len(
+            self.image_paths2
+        ), "Mismatch in number of images"
+        assert set([path.split("/")[-1] for path in self.image_paths1]) == set(
+            [path.split("/")[-1] for path in self.image_paths2]
+        ), "Mismatch in image filenames"
+
+        # self.keys = list(set(self.meta.keys()) - {9, 11, 40})
         self.idx_to_key = {idx: key for idx, key in enumerate(self.keys)}
 
     def __len__(self) -> int:
@@ -85,7 +112,9 @@ class PairedDataset(Dataset):
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """Returns a sample from the dataset at the given index."""
         key = self.idx_to_key[idx]
-        film, digital, _ = load_image_pair(key, processing_state="processed", as_array=True)
+        film, digital, _ = load_image_pair(
+            key, processing_state="processed", as_array=True
+        )
 
         if self.transforms:
             return self.transforms((film, digital))

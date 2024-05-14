@@ -6,54 +6,22 @@ from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset, random_split
 
 
-class PairedDataModule(LightningDataModule):
-    """`LightningDataModule` for the digital-film image pair dataset.
-
-    A `LightningDataModule` implements 7 key methods:
-
-    ```python
-        def prepare_data(self):
-        # Things to do on 1 GPU/TPU (not on every GPU/TPU in DDP).
-        # Download data, pre-process, split, save to disk, etc...
-
-        def setup(self, stage):
-        # Things to do on every process in DDP.
-        # Load data, set variables, etc...
-
-        def train_dataloader(self):
-        # return train dataloader
-
-        def val_dataloader(self):
-        # return validation dataloader
-
-        def test_dataloader(self):
-        # return test dataloader
-
-        def predict_dataloader(self):
-        # return predict dataloader
-
-        def teardown(self, stage):
-        # Called on every process in DDP.
-        # Clean up after fit or test.
-    ```
-    """
+class DigitalFilmData(LightningDataModule):
+    """Lightning Datamodule for the paired digital-film image pair dataset."""
 
     def __init__(
         self,
-        dataset: Dataset,
-        data_dir: str = "data/",
-        train_val_test_split: Tuple[float, float, float] = (0.7, 0.2, 0.1),
-        batch_size: int = 8,
+        data_split: Tuple[float, float, float] = (0.7, 0.2, 0.1),
+        batch_size: int = 4,
         num_workers: int = 0,
         pin_memory: bool = False,
-        **kwargs
+        **kwargs,
     ) -> None:
-        """Initialise a `DataModule`.
+        """Initialise a `DigitalFilmDataModule`.
 
         Args:
-            data_dir (str): The data directory. Defaults to `"data/"`.
             data_split (Tuple[float, float, float]): The train, validation and test split. Defaults to `(55_000, 5_000, 10_000)`.
-            batch_size (int): The batch size. Defaults to `64`.
+            batch_size (int): The batch size. Defaults to `4`.
             num_workers (int): The number of workers. Defaults to `0`.
             pin_memory (bool): Whether to pin memory. Defaults to `False`.
         """
@@ -63,9 +31,10 @@ class PairedDataModule(LightningDataModule):
         self.save_hyperparameters(logger=False)
 
         # Save paths
-        self.raw_dir = os.path.join(data_dir, "raw")
-        self.processed_dir = os.path.join(data_dir, "processed")
+        # self.raw_dir = os.path.join(data_dir, "raw")
+        # self.processed_dir = os.path.join(data_dir, "processed")
 
+        self.data: Optional[Dataset] = None
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
         self.data_test: Optional[Dataset] = None
@@ -73,7 +42,8 @@ class PairedDataModule(LightningDataModule):
         self.batch_size_per_device = batch_size
 
     def prepare_data(self) -> None:
-        """Asserts that the raw and processed data directories exist.
+        """
+        Asserts that the raw and processed data directories exist.
 
         If not, it raises an error.
         """
@@ -102,7 +72,12 @@ class PairedDataModule(LightningDataModule):
                 raise RuntimeError(
                     f"Batch size ({self.hparams.batch_size}) is not divisible by the number of devices ({self.trainer.world_size})."
                 )
-            self.batch_size_per_device = self.hparams.batch_size // self.trainer.world_size
+            self.batch_size_per_device = (
+                self.hparams.batch_size // self.trainer.world_size
+            )
+
+        # Load data
+        data = 
 
         # Load and split datasets only if not loaded already
         if not self.data_train and not self.data_val and not self.data_test:
