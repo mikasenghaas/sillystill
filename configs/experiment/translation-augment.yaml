@@ -36,7 +36,7 @@ data:
 hydra:
   sweeper:
     params:
-      data.dataset.augmentations.flip: False, True
-      data.dataset.augmentations.rotate: False, True
-      data.dataset.augmentations.blur: False, True
-      data.dataset.augmentations.brightness: False, True
+      data.dataset.augment.flip: False, True
+      data.dataset.augment.rotate: False, True
+      data.dataset.augment.blur: False, True
+      data.dataset.augment.brightness: False, True
