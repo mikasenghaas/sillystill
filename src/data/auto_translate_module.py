@@ -10,36 +10,9 @@ from src.data.components.paired import PairedDataset
 from src.data.components.unpaired import UnpairedDataset
 
 
-class AutoTranslateDataModule(LightningDataModule):
-    """`LightningDataModule` for the digital-film image pair dataset.
-
-    A `LightningDataModule` implements 7 key methods:
-
-    ```python
-        def prepare_data(self):
-        # Things to do on 1 GPU/TPU (not on every GPU/TPU in DDP).
-        # Download data, pre-process, split, save to disk, etc...
-
-        def setup(self, stage):
-        # Things to do on every process in DDP.
-        # Load data, set variables, etc...
-
-        def train_dataloader(self):
-        # return train dataloader
-
-        def val_dataloader(self):
-        # return validation dataloader
-
-        def test_dataloader(self):
-        # return test dataloader
-
-        def predict_dataloader(self):
-        # return predict dataloader
-
-        def teardown(self, stage):
-        # Called on every process in DDP.
-        # Clean up after fit or test.
-    ```
+class CombinedDataModule(LightningDataModule):
+    """
+    Lightning data module for the digital-film image pair dataset.
     """
 
     def __init__(
@@ -108,7 +81,9 @@ class AutoTranslateDataModule(LightningDataModule):
                 raise RuntimeError(
                     f"Batch size ({self.hparams.batch_size}) is not divisible by the number of devices ({self.trainer.world_size})."
                 )
-            self.batch_size_per_device = self.hparams.batch_size // self.trainer.world_size
+            self.batch_size_per_device = (
+                self.hparams.batch_size // self.trainer.world_size
+            )
 
         # Instantiate paired and unpaired datasets
         paired_dataset = PairedDataset(
