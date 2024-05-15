@@ -6,11 +6,11 @@ defaults:
   - override /data: paired
   - override /model: translation
   - override /model/net: unet
-  - override /model/loss: mse
+  - override /model/loss: simple-combined
   - override /logger: wandb
 
-group: unet-mse
-tags: ["mse", "unet"]
+group: unet-combined
+tags: ["unet", "combined"]
 seed: 42
 
 trainer:
@@ -25,8 +25,6 @@ model:
   scheduler:
     factor: 1e-1
     patience: 5
-  net:
-    hidden_channels: [32, 64, 128, 256]
 
 data:
   batch_size: 1
@@ -43,5 +41,6 @@ hydra:
   sweeper:
     params:
       model.optimizer.lr: 1e-4, 1e-3
-      model.net.hidden_channels: "choice([64, 128], [64, 128, 256])"
+      model.net.hidden_channels: "choice([64,128], [64, 128, 256])"
       data.patch_size: 128, 256
+      model.loss.mse_weight: 0.5, 1.0

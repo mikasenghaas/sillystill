@@ -1,6 +1,6 @@
 # @package _global_
 
-# To run: `python train.py -m experiment=translation`-loss
+# To run: `python train.py -m experiment={filename}`
 
 defaults:
   - override /data: paired
@@ -31,12 +31,11 @@ data:
   patch_size: 128
   data_split: [0.7, 0.2, 0.1]
 
-  dataset:
-    augment:
-      flip: False
-      rotate: False
-      blur: False
-      brightness: False
+  augment:
+    flip: False
+    rotate: False
+    blur: False
+    brightness: False
 
 hydra:
   sweeper:
