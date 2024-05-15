@@ -2,7 +2,7 @@
 
 model_checkpoint:
   _target_: lightning.pytorch.callbacks.ModelCheckpoint
-  dirpath: logs/checkpoints
+  dirpath: ${paths.output_dir}/checkpoints/
   filename: best
   monitor: val/loss
   mode: "min"
