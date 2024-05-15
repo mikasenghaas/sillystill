@@ -1,39 +1,40 @@
 from typing import Dict, List, Optional, Tuple
 
 import glob
-import hydra
 import torch
 import torchvision.transforms.v2 as transforms
 from torch.utils.data import Dataset
 
-from ...utils.load import load_image_pair, load_metadata
+from ...utils.load import _load_image_from_path, load_image_pair, load_metadata
 
 
 class PairedDataset(Dataset):
-    """A PyTorch dataset class for loading processed image pairs of digital and film images."""
+    """A PyTorch dataset class for loading image pairs from two directories."""
 
     def __init__(
         self,
-        data_dir1: str,
-        data_dir2: str,
-        patch_size: int,
+        image_dirs: Tuple[str, str],
+        patch_size: int = 128,
         max_samples: Optional[int] = None,
         augment: Optional[List[Dict]] = None,
     ):
-        """Initialises a `PairedDataset` instance. This dataset is used to load
-        image pairs from the processed data directory. The dataset assumes that
-        the filenames in both directories match for corresponding image pairs.
+        """
+        Initialises a `PairedDataset` instance. This dataset is used to load
+        image pairs from two data directories. The dataset assumes that the
+        filenames in both directories match for corresponding image pairs
+        and are in the same format. Data augmentation can be applied to the
+        images when loading. The dataset can be truncated to a maximum number
+        of samples, if required.
 
         Args:
             data_dir1 (str): Data directory for the first set of images.
             data_dir2 (str): Data directory for the second set of images.
             patch_size (int): The size of the patches to extract.
             max_samples (int, optional): The maximum number of samples to load. Defaults to `None`.
-            transform (callable, optional): Optional transform to be applied on a sample
+            augment (List[Dict], optional): Optional transform to be applied on a sample
         """
         # Save hyperparameters
-        self.data_dir1 = data_dir1
-        self.data_dir2 = data_dir2
+        self.image_dirs = image_dirs
         self.max_samples = max_samples
         self.patch_size = patch_size
 
@@ -92,9 +93,10 @@ class PairedDataset(Dataset):
         self.transforms = transforms.Compose(all_transforms)
 
         # Load metadata
-        self.image_paths1 = glob.glob(f"{data_dir1}/*")
-        self.image_paths2 = glob.glob(f"{data_dir2}/*")
+        self.image_paths1 = sorted(glob.glob(f"{image_dirs[0]}/*"))
+        self.image_paths2 = sorted(glob.glob(f"{image_dirs[1]}/*"))
 
+        # Assertions
         assert len(self.image_paths1) == len(
             self.image_paths2
         ), "Mismatch in number of images"
@@ -102,20 +104,29 @@ class PairedDataset(Dataset):
             [path.split("/")[-1] for path in self.image_paths2]
         ), "Mismatch in image filenames"
 
+        # TODO: Get rid of samples that should not be included
         # self.keys = list(set(self.meta.keys()) - {9, 11, 40})
-        self.idx_to_key = {idx: key for idx, key in enumerate(self.keys)}
+        # self.idx_to_key = {idx: key for idx, key in enumerate(self.keys)}
+
+        # Truncate dataset to max number of samples
+        if self.max_samples:
+            self.image_paths1 = self.image_paths1[: self.max_samples]
+            self.image_paths2 = self.image_paths2[: self.max_samples]
 
     def __len__(self) -> int:
         """Returns the length of the dataset."""
-        return len(self.keys)
+        return len(self.image_paths1)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """Returns a sample from the dataset at the given index."""
-        key = self.idx_to_key[idx]
-        film, digital, _ = load_image_pair(
-            key, processing_state="processed", as_array=True
-        )
+        # Get image paths
+        image_path1 = self.image_paths1[idx]
+        image_path2 = self.image_paths2[idx]
+
+        # Load image pair
+        image1 = _load_image_from_path(image_path1, as_array=True)
+        image2 = _load_image_from_path(image_path2, as_array=True)
 
         if self.transforms:
-            return self.transforms((film, digital))
-        return (film, digital)
+            return self.transforms((image1, image2))
+        return (image1, image2)

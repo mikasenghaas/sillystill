@@ -1,14 +1,11 @@
-data_dir: ${paths.data_dir}
+data_split: [0.7, 0.2, 0.1]
 batch_size: 8
-train_val_test_split: [0.7, 0.2, 0.1]
+patch_size: 128
+max_samples: null
+augment:
+  flip: False
+  rotate: False
+  blur: False
+  brightness: False
 num_workers: 1
 pin_memory: False
-
-dataset:
-  patch_size: 256
-
-  augment:
-    flip: False
-    rotate: False
-    blur: False
-    brightness: False

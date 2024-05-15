@@ -1,0 +1,163 @@
+import os
+from typing import Any, Dict, Optional, Tuple, List
+
+import torch
+from lightning import LightningDataModule
+from torch.utils.data import DataLoader, Dataset, random_split
+
+from src.data.components import CombinedDataset, PairedDataset, UnpairedDataset
+
+
+class CombinedDigitalFilmDataModule(LightningDataModule):
+    """Lightning data module for the digital-film image pair dataset."""
+
+    def __init__(
+        self,
+        data_split: Tuple[float, float, float] = (0.7, 0.2, 0.1),
+        patch_size: int = 128,
+        num_paired_per_batch: int = 4,
+        num_unpaired_per_batch: int = 6,
+        augment: Optional[List[Dict]] = None,
+        num_workers: int = 1,
+        pin_memory: bool = True,
+        **kwargs,
+    ) -> None:
+        """Initialise a `CombinedDigitalFilmDataModule`.
+
+        Args:
+            data_split (Tuple[float, float, float]): The train, validation and test split.
+            patch_size (int): The patch size. Defaults to `128`.
+            max_samples (int, optional): The maximum number of samples to load. Defaults to `None`.
+            augment (Optional[List[Dict]]): The data augmentation to apply. Defaults to `None`.
+            num_workers (int): The number of workers to use for data loading. Defaults to `1`.
+            pin_memory (bool): Whether to pin memory. Defaults to `True`.
+        """
+        super().__init__()
+
+        # Save hyperparameters
+        self.save_hyperparameters(logger=False)
+
+        self.data_train: Optional[Dataset] = None
+        self.data_val: Optional[Dataset] = None
+        self.data_test: Optional[Dataset] = None
+
+    def prepare_data(self) -> None:
+        """Asserts that the raw and processed data directories exist.
+
+        If not, it raises an error.
+        """
+        # Initialise paths
+        self.film_paired_dir = os.path.join("data", "paired", "processed", "film")
+        self.digital_paired_dir = os.path.join("data", "paired", "processed", "digital")
+
+        self.film_unpaired_dir = os.path.join("data", "unpaired", "film")
+        self.digital_unpaired_dir = os.path.join("data", "unpaired", "digital")
+
+        # Asserts data exists
+        assert (
+            os.path.exists(self.film_paired_dir)
+            and os.path.exists(self.digital_paired_dir)
+            and os.path.exists(self.film_unpaired_dir)
+            and os.path.exists(self.digital_unpaired_dir)
+        ), "Data not found. Try running `git lfs pull`."
+
+    def setup(self, stage: Optional[str] = None) -> None:
+        """Load data. Set variables: `self.data_train`, `self.data_val`, `self.data_test`.
+
+        This method is called by Lightning before `trainer.fit()`, `trainer.validate()`,
+        `trainer.test()`, and `trainer.predict()`, so be careful not to execute things like random
+        split twice! Also, it is called after `self.prepare_data()` and there is a barrier in
+        between which ensures that all the processes proceed to `self.setup()` once the data is
+        prepared and available for use.
+
+        Args     stage (Optional[str]): The stage being set up. Either `"fit"`,     `"validate"`,
+        `"test"`, or `"predict"`.ge
+        """
+        if not self.data_train and not self.data_val and not self.data_test:
+            # Instantiate paired and unpaired datasets
+            paired_dataset = PairedDataset(
+                image_dirs=(self.film_paired_dir, self.digital_paired_dir),
+                patch_size=self.hparams.patch_size,
+                augment=self.hparams.augment,
+            )
+            unpaired_digital_dataset = UnpairedDataset(
+                image_dir=self.digital_unpaired_dir,
+                patch_size=self.hparams.patch_size,
+                augment=self.hparams.augment,
+            )
+            unpaired_film_dataset = UnpairedDataset(
+                image_dir=self.film_unpaired_dir,
+                patch_size=self.hparams.patch_size,
+                augment=self.hparams.augment,
+            )
+
+            # Split each of these into train, val, and test
+            self.paired_train, self.paired_val, self.paired_test = random_split(
+                dataset=paired_dataset,
+                lengths=self.hparams.data_split,
+                generator=torch.Generator().manual_seed(42),
+            )
+            self.digital_train, self.digital_val, self.digital_test = random_split(
+                dataset=unpaired_digital_dataset,
+                lengths=self.hparams.data_split,
+                generator=torch.Generator().manual_seed(42),
+            )
+            self.film_train, self.film_val, self.film_test = random_split(
+                dataset=unpaired_film_dataset,
+                lengths=self.hparams.data_split,
+                generator=torch.Generator().manual_seed(42),
+            )
+
+            # Instantiate the AutoTranslateDatasets
+            self.data_train = CombinedDataset(
+                digital_dataset=self.digital_train,
+                film_dataset=self.film_train,
+                paired_dataset=self.paired_train,
+                num_paired_per_batch=self.hparams.num_paired_per_batch,
+                num_unpaired_per_batch=self.hparams.num_unpaired_per_batch,
+            )
+            self.data_val = CombinedDataset(
+                digital_dataset=self.digital_val,
+                film_dataset=self.film_val,
+                paired_dataset=self.paired_val,
+                num_paired_per_batch=self.hparams.num_paired_per_batch,
+                num_unpaired_per_batch=self.hparams.num_unpaired_per_batch,
+            )
+            self.data_test = CombinedDataset(
+                digital_dataset=self.digital_test,
+                film_dataset=self.film_test,
+                paired_dataset=self.paired_test,
+                num_paired_per_batch=self.hparams.num_paired_per_batch,
+                num_unpaired_per_batch=self.hparams.num_unpaired_per_batch,
+            )
+
+    def train_dataloader(self) -> DataLoader[Any]:
+        """Create and return the train dataloader."""
+        return DataLoader(
+            dataset=self.data_train,
+            batch_size=1,
+            num_workers=self.hparams.num_workers,
+            pin_memory=self.hparams.pin_memory,
+            shuffle=True,
+        )
+
+    def val_dataloader(self) -> DataLoader[Any]:
+        """Create and return the validation dataloader."""
+        return DataLoader(
+            dataset=self.data_val,
+            batch_size=1,
+            num_workers=self.hparams.num_workers,
+            pin_memory=self.hparams.pin_memory,
+            persistent_workers=True,
+            shuffle=False,
+        )
+
+    def test_dataloader(self) -> DataLoader[Any]:
+        """Create and return the test dataloader."""
+        return DataLoader(
+            dataset=self.data_test,
+            batch_size=1,
+            num_workers=self.hparams.num_workers,
+            pin_memory=self.hparams.pin_memory,
+            shuffle=False,
+        )

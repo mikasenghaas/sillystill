@@ -1,5 +1,5 @@
 import glob
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional
 
 import torch
 import torchvision.transforms.v2 as transforms
@@ -9,25 +9,32 @@ from src.utils.load import _load_image_from_path
 
 
 class UnpairedDataset(Dataset):
-    """Dataset class for loading unpaired images, either digital or film."""
+    """Dataset class for loading images from a single directory."""
 
     def __init__(
         self,
-        data_dir: str,
+        image_dir: str,
         patch_size: int = 128,
-        transform: Optional[transforms.Compose] = None,
         augment: Optional[Dict] = None,
+        max_samples: Optional[int] = None,
     ):
-        """Initialises an `ImagePairDataset` instance. This dataset is used to load image pairs
-        from the processed data directory. The dataset assumes that the filenames in both
-        directories match for corresponding image pairs.
+        """
+        Initialises a `UnpairedDataset` instance. This dataset is used to load images from
+        a single image directory and apply data augmentation if required. The dataset can be
+        truncated to a maximum number of samples, if required.
 
         Args:
             data_dir (str): Data directory
             transform (callable, optional): Optional transform to be applied on a sample
         """
         # Save hyperparameters
-        self.data_dir = data_dir
+        self.image_dir = image_dir
+        self.max_samples = max_samples
+        self.patch_size = patch_size
+
+        # Load image paths
+        self.image_paths = sorted(glob.glob(f"{image_dir}/*"))
+
         # Set base transforms (defaults)
         all_transforms = [
             transforms.ToImage(),
@@ -62,7 +69,11 @@ class UnpairedDataset(Dataset):
                     all_transforms.insert(
                         3,
                         transforms.RandomApply(
-                            [transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5.0))],
+                            [
+                                transforms.GaussianBlur(
+                                    kernel_size=(5, 9), sigma=(0.1, 5.0)
+                                )
+                            ],
                             0.2,
                         ),
                     )
@@ -78,18 +89,15 @@ class UnpairedDataset(Dataset):
         # Add augmentation transform
         self.transforms = transforms.Compose(all_transforms)
 
-        self.image_paths = glob.glob(f"{data_dir}/*")
-
     def __len__(self) -> int:
         """Returns the length of the dataset."""
         return len(self.image_paths)
 
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx: int) -> torch.Tensor:
         """Returns a sample from the dataset at the given index."""
         image_path = self.image_paths[idx]
 
-        # Load image from path (src.utils.)
-        image = _load_image_from_path(image_path)
+        image = _load_image_from_path(image_path, as_array=True)
 
         if self.transforms is not None:
             return self.transforms(image)
