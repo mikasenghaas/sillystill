@@ -17,3 +17,4 @@ group: null
 name: null
 tags: ["dev"]
 seed: null
+test: true

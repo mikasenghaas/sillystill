@@ -19,7 +19,8 @@ class PairedDigitalFilmDataModule(LightningDataModule):
         max_samples: Optional[int] = None,
         augment: Optional[List[Dict]] = None,
         num_workers: int = 1,
-        pin_memory: bool = True,
+        persistent_workers: bool = False,
+        pin_memory: bool = False,
         **kwargs,
     ) -> None:
         """
@@ -89,41 +90,34 @@ class PairedDigitalFilmDataModule(LightningDataModule):
             )
 
     def train_dataloader(self) -> DataLoader[Any]:
-        """Create and return the train dataloader.
-
-        Returns     train_loader (DataLoader): The train dataloader
-        """
+        """Create and return the train dataloader"""
         return DataLoader(
             dataset=self.data_train,
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
+            persistent_workers=self.hparams.persistent_workers,
             shuffle=True,
         )
 
     def val_dataloader(self) -> DataLoader[Any]:
-        """Create and return the validation dataloader.
-
-        Returns     val_loader (DataLoader): The validation dataloader
-        """
+        """Create and return the validation dataloader"""
         return DataLoader(
             dataset=self.data_val,
             batch_size=1,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
-            persistent_workers=True,
+            persistent_workers=self.hparams.persistent_workers,
             shuffle=False,
         )
 
     def test_dataloader(self) -> DataLoader[Any]:
-        """Create and return the test dataloader.
-
-        Returns     test_loader (DataLoader): The test dataloader
-        """
+        """Create and return the test dataloader"""
         return DataLoader(
             dataset=self.data_test,
             batch_size=1,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
+            persistent_workers=self.hparams.persistent_workers,
             shuffle=False,
         )

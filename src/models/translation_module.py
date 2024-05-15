@@ -116,17 +116,22 @@ class TranslationModule(LightningModule):
             fig, axs = plt.subplots(
                 nrows=3, ncols=batch_size, figsize=(4 * batch_size, 8)
             )
+            if axs.ndim == 1:
+                axs = axs[:, None]
             fig.tight_layout(pad=1.0)
             for i in range(batch_size):
-                axs[0, i].imshow(undo_transforms(digital[i]).numpy())
-                axs[1, i].imshow(undo_transforms(film[i]).numpy())
-                axs[2, i].imshow(undo_transforms(film_predicted[i]).numpy())
+                axs[0, i].imshow(undo_transforms(digital[i].cpu()).numpy())
+                axs[1, i].imshow(undo_transforms(film[i].cpu()).numpy())
+                axs[2, i].imshow(undo_transforms(film_predicted[i].cpu()).numpy())
             axs[0, 0].set_ylabel("Digital")
             axs[1, 0].set_ylabel("Film (Ground Truth)")
             axs[2, 0].set_ylabel("Film (Predicted)")
 
             # Log to W&B
             self.logger.experiment.log({key: wandb.Image(fig)})
+
+            # Close figure
+            plt.close()
 
     def configure_optimizers(self):
         """Setup the optimizer and the LR scheduler."""

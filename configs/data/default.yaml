@@ -8,4 +8,5 @@ augment:
   blur: False
   brightness: False
 num_workers: 1
+persistent_workers: False
 pin_memory: False
