@@ -4,10 +4,16 @@ import wandb
 import torch
 import torch.nn as nn
 from lightning import LightningModule
-from torchmetrics import MeanMetric, MetricCollection
+from torchmetrics import (
+    MeanMetric,
+    MetricCollection,
+    StructuralSimilarityIndexMeasure as SSIM,
+    PeakSignalNoiseRatio as PSNR,
+)
 
 from matplotlib import pyplot as plt
 from ..utils.utils import undo_transforms
+from ..eval.ssim import SSIMMetric
 
 
 class TranslationModule(LightningModule):
@@ -41,13 +47,15 @@ class TranslationModule(LightningModule):
         self.loss = loss
 
         # Initialise metrics
-        self.metrics = MetricCollection(
+        metrics = MetricCollection(
             {
-                "train/loss": MeanMetric(),
-                "val/loss": MeanMetric(),
-                "test/loss": MeanMetric(),
+                "ssim": SSIM(),
+                "psnr": PSNR(),
             }
         )
+        self.train_metrics = metrics.clone(prefix="train/")
+        self.val_metrics = metrics.clone(prefix="val/")
+        self.test_metrics = metrics.clone(prefix="test/")
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -84,8 +92,10 @@ class TranslationModule(LightningModule):
         """Training step for processing one batch of data."""
         loss, film, digital, film_predicted = self.step(batch)
 
-        # Log training loss and images
+        # Log training loss, metrics and images
         self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        train_metrics = self.train_metrics(film_predicted, film)
+        self.log_dict(train_metrics, on_step=False, on_epoch=True, prog_bar=True)
         self._log_batch(film, digital, film_predicted, key="train/images")
 
         return loss
@@ -96,12 +106,18 @@ class TranslationModule(LightningModule):
 
         # Log validation loss and images
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        val_metrics = self.val_metrics(film_predicted, film)
+        self.log_dict(val_metrics, on_step=False, on_epoch=True, prog_bar=True)
         self._log_batch(film, digital, film_predicted, key="val/images")
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], _: int):
         """Test step for processing one batch of data."""
-        loss, _, _, _ = self.step(batch)
+        loss, film, _, film_predicted = self.step(batch)
+
+        # Log test loss and metrics
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        test_metrics = self.test_metrics(film_predicted, film)
+        self.log_dict(test_metrics, on_step=False, on_epoch=True, prog_bar=True)
 
     def _log_batch(
         self,
