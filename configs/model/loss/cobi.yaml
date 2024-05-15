@@ -1,4 +1,4 @@
-_target_: src.losses.cobi.CoBiLoss
+_target_: src.models.loss.CoBiLoss
 
 alpha: 0.5
 patch_size: 10

@@ -1,4 +1,4 @@
-_target_: src.losses.auto_translate.AutoTranslateLoss
+_target_: src.models.loss.AutoTranslateLoss
 
 reconstruction_weight: 1.0
 encoder_weight: 1.0

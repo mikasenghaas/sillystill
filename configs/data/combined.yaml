@@ -3,5 +3,5 @@ defaults:
   - default
 
 _target_: src.data.CombinedDigitalFilmDataModule
-num_paired_per_batch: int = 4,
-num_unpaired_per_batch: int = 6,
+num_paired_per_batch: 4
+num_unpaired_per_batch: 6

@@ -1,0 +1,4 @@
+_target_: src.models.net.FFNet
+
+input_output_size: 49152 # 3*128*128
+hidden_dims: [20000, 10000]
