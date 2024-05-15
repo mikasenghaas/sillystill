@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 from lightning import LightningModule
 from torchmetrics import (
-    MeanMetric,
     MetricCollection,
     StructuralSimilarityIndexMeasure as SSIM,
     PeakSignalNoiseRatio as PSNR,
@@ -13,7 +12,6 @@ from torchmetrics import (
 
 from matplotlib import pyplot as plt
 from ..utils.utils import undo_transforms
-from ..eval.ssim import SSIMMetric
 
 
 class TranslationModule(LightningModule):
@@ -96,7 +94,8 @@ class TranslationModule(LightningModule):
         self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         train_metrics = self.train_metrics(film_predicted, film)
         self.log_dict(train_metrics, on_step=False, on_epoch=True, prog_bar=True)
-        self._log_batch(film, digital, film_predicted, key="train/images")
+        if batch_idx == 0:
+            self._log_images(film, digital, film_predicted, key="train/images")
 
         return loss
 
@@ -108,18 +107,21 @@ class TranslationModule(LightningModule):
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         val_metrics = self.val_metrics(film_predicted, film)
         self.log_dict(val_metrics, on_step=False, on_epoch=True, prog_bar=True)
-        self._log_batch(film, digital, film_predicted, key="val/images")
+        if batch_idx == 0:
+            self._log_images(film, digital, film_predicted, key="val/images")
 
-    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], _: int):
+    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         """Test step for processing one batch of data."""
-        loss, film, _, film_predicted = self.step(batch)
+        loss, film, digital, film_predicted = self.step(batch)
 
         # Log test loss and metrics
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         test_metrics = self.test_metrics(film_predicted, film)
         self.log_dict(test_metrics, on_step=False, on_epoch=True, prog_bar=True)
 
-    def _log_batch(
+        self._log_images(film, digital, film_predicted, key="val/images")
+
+    def _log_images(
         self,
         film: torch.Tensor,
         digital: torch.Tensor,
