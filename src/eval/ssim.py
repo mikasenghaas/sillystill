@@ -1,13 +1,14 @@
 from torch import Tensor
 from torchmetrics import Metric
+from ignite.metrics import SSIM
 
-class SSIMPetric(Metric):
+class SSIMMetric(Metric):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        pass
-
+        self.ssim = SSIM(data_range=1.0)
+    
     def update(self, preds: Tensor, target: Tensor) -> None:
-        pass
-
+        self.ssim.update(output=(preds, target))
+    
     def compute(self) -> Tensor:
-        pass
+        return self.ssim.compute()
