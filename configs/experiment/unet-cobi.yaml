@@ -1,0 +1,46 @@
+# @package _global_
+
+# To run: `python train.py -m experiment=translation`-loss
+
+defaults:
+  - override /data: paired
+  - override /model: translation
+  - override /model/net: unet
+  - override /model/loss: cobi
+  - override /logger: wandb
+
+group: unet-cobi
+tags: ["cobi", "unet"]
+seed: 42
+
+trainer:
+  min_epochs: 10
+  max_epochs: 100
+  accumulate_grad_batches: 8
+
+model:
+  optimizer:
+    lr: 1e-4
+    weight_decay: 1e-3
+  scheduler:
+    factor: 1e-1
+    patience: 5
+
+data:
+  batch_size: 1
+  patch_size: 128
+  data_split: [0.7, 0.2, 0.1]
+
+  dataset:
+    augment:
+      flip: False
+      rotate: False
+      blur: False
+      brightness: False
+
+hydra:
+  sweeper:
+    params:
+      model.optimizer.lr: 1e-3, 1e-2
+      model.net.hidden_channels: "choice([64, 128, 256], [32, 64, 128, 256])"
+      model.loss.alpha: 0.25, 0.5, 0.75

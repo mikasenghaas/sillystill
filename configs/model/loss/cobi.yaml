@@ -1,7 +1,7 @@
 _target_: src.models.loss.CoBiLoss
 
 alpha: 0.5
-patch_size: 10
+patch_size: 15
 ws: 0.1
 epsilon: 1e-5
 bandwidth: 0.1

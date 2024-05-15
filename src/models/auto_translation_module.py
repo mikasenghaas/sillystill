@@ -90,7 +90,7 @@ class AutoTranslationModule(LightningModule):
             digital_to_film,
             film_to_digital,
             paired_encoder_representations,
-        ) = self(digital, film, paired)
+        ) = self(film, digital, paired)
 
         # Compute the loss
         loss = self.loss(

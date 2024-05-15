@@ -40,7 +40,7 @@ class TranslationModule(LightningModule):
         super().__init__()
 
         # Store hyperparameters
-        self.save_hyperparameters(logger=False, ignore=["net", "loss"])
+        self.save_hyperparameters(logger=False)
         self.net = net
         self.loss = loss
 
@@ -147,6 +147,9 @@ class TranslationModule(LightningModule):
 
             # Log to W&B
             self.logger.experiment.log({key: wandb.Image(fig)})
+            self.logger.experiment.log(
+                {"predicted_film": [wandb.Image(img) for img in film_predicted]}
+            )
 
             # Close figure
             plt.close()
