@@ -3,7 +3,7 @@ import torch
 from torch import nn
 
 
-class Conv(nn.Module):
+class ConvNet(nn.Module):
     """
     A simple convolutional encoder-decoder neural network (without skip connections)
     """

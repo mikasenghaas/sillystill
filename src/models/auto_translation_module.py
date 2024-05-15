@@ -4,20 +4,19 @@ import torch
 from lightning import LightningModule
 from torchmetrics import MeanMetric, MetricCollection
 
-from src.losses.auto_translate import AutoTranslateLoss
-from src.models.net.auto_translate import AutoTranslateNet
+from .loss.auto_translate import AutoTranslateLoss
+from .net.auto_translate import AutoTranslateNet
 
 
 class AutoTranslationModule(LightningModule):
     """
-    Base module for auto-translation models as seen in "Semi-Supervised Raw-to-Raw Mapping": https://arxiv.org/pdf/2106.13883
+    Base module for auto-translation models as seen in "Semi-Supervised
+    Raw-to-Raw Mapping": https://arxiv.org/pdf/2106.13883
     """
 
     def __init__(
         self,
-        net: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
-        loss_fn: torch.nn.Module = torch.nn.MSELoss(),
         scheduler: torch.optim.lr_scheduler._LRScheduler = None,
         lr_monitor: str = "val/loss",
     ) -> None:
@@ -26,16 +25,14 @@ class AutoTranslationModule(LightningModule):
         Args:
             net: The neural network model to use for image transformation.
             optimizer: Optimizer function.
-            loss_fn: Loss function used for training.
+            loss: Loss function used for training.
             scheduler: Learning rate scheduler (optional).
             lr_monitor: Metric to monitor for learning rate scheduler (default: val/loss).
         """
         super().__init__()
-        self.save_hyperparameters(logger=False)  # store hyperparameters
-
-        self.net = net
-
-        self.loss_fn = loss_fn
+        self.save_hyperparameters(logger=False, ignore=["net", "loss"])
+        self.net = AutoTranslateNet()
+        self.loss = AutoTranslateLoss()
 
         self.metrics = MetricCollection(
             {
@@ -46,7 +43,7 @@ class AutoTranslationModule(LightningModule):
         )
 
     def forward(
-        self, digital: torch.Tensor, film: torch.Tensor, paired: torch.Tensor
+        self, film: torch.Tensor, digital: torch.Tensor, paired: torch.Tensor
     ) -> torch.Tensor:
         """Forward pass through the model.
 
@@ -62,8 +59,7 @@ class AutoTranslationModule(LightningModule):
             film_to_digital: Transformed film images from the paired digital, shape [B_2, 3, n, n].
             paired_encoder_representation: Latent space representations of the paired images over all encoder layers. List of tuples of tensors (digital_latent, film_latent), each tuple containing the latent space representation of the digital and film images, each shape [B_3, channels, n, n].
         """
-        # assert x.shape[1] == 3, "Input tensor should have 3 color channels"
-        return self.net(digital, film, paired)
+        return self.net(film, digital, paired)
 
     def step(
         self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
@@ -77,19 +73,17 @@ class AutoTranslationModule(LightningModule):
             loss: The computed loss value.
             digital_transformed: Transformed digital images from the paired film, shape [B_1, 3, n, n].
         """
-        digital, film, paired = batch
-
-        digital_paired, film_paired = paired
+        # Unpack the batch
+        film, digital, paired = batch
+        film_paired, digital_paired = paired
 
         # Remove artificial batch dimension
-        digital = digital.squeeze(0)
-        film = film.squeeze(0)
-        digital_paired = digital_paired.squeeze(0)
+        film, digital = film.squeeze(0), digital.squeeze(0)
         film_paired = film_paired.squeeze(0)
-        paired = (digital_paired, film_paired)
+        digital_paired = digital_paired.squeeze(0)
+        paired = (film_paired, digital_paired)
 
-        paired_film_in = paired[1]
-
+        # Forward pass through the model
         (
             digital_reconstructed,
             film_reconstructed,
@@ -98,7 +92,8 @@ class AutoTranslationModule(LightningModule):
             paired_encoder_representations,
         ) = self(digital, film, paired)
 
-        loss = self.loss_fn(
+        # Compute the loss
+        loss = self.loss(
             digital,
             film,
             paired,
@@ -108,7 +103,8 @@ class AutoTranslationModule(LightningModule):
             film_to_digital,
             paired_encoder_representations,
         )
-        return loss, paired_film_in, digital_to_film
+
+        return loss, film_paired, digital_to_film
 
     def training_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor], batch_idx: int
@@ -125,7 +121,9 @@ class AutoTranslationModule(LightningModule):
         loss, _, _ = self.step(batch)
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
 
-    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor], batch_idx: int):
+    def test_step(
+        self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor], batch_idx: int
+    ):
         """Test step for processing one batch of data."""
         loss, _, _ = self.step(batch)
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
@@ -147,10 +145,7 @@ class AutoTranslationModule(LightningModule):
 if __name__ == "__main__":
     # Test the AutoTranslateNet
     model = AutoTranslationModule(
-        loss_fn=AutoTranslateLoss(),
-        net=AutoTranslateNet(),
-        optimizer=torch.optim.Adam,
-        scheduler=torch.optim.lr_scheduler.StepLR,
+        net=AutoTranslateNet(), optimizer=torch.optim.Adam, scheduler=None
     )
     batch = (
         torch.randn(2, 3, 256, 256),

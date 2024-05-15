@@ -5,7 +5,7 @@ from torch import nn
 from src.models.net.unet import UNet
 
 
-class AutoTranslate(nn.Module):
+class AutoTranslateNet(nn.Module):
     """
     The AutoTranslateNet is an implementation of the network seen in
     'Semi-Supervised Raw-to-Raw mapping' https://arxiv.org/pdf/2106.13883
@@ -30,7 +30,7 @@ class AutoTranslate(nn.Module):
         self.film_autoencoder = UNet(input_output_channels, hidden_channels)
 
     def forward(
-        self, digital: torch.Tensor, film: torch.Tensor, paired: torch.Tensor
+        self, film: torch.Tensor, digital: torch.Tensor, paired: torch.Tensor
     ) -> Tuple[
         torch.Tensor,
         torch.Tensor,
@@ -54,19 +54,19 @@ class AutoTranslate(nn.Module):
             paired_encoder_representation: Latent space representations of the paired images over all encoder layers. List of tuples of tensors (digital_latent, film_latent), each tuple containing the latent space representation of the digital and film images, each shape [B_3, channels, n, n].
         """
         # Split the paired images into digital and film images
-        paired_film, paired_digital = paired
+        film_paired, digital_paired = paired
 
         # Get all digital/film images
-        all_film = torch.cat([film, paired_film], dim=0)
-        all_digital = torch.cat([digital, paired_digital], dim=0)
+        all_film = torch.cat([film, film_paired], dim=0)
+        all_digital = torch.cat([digital, digital_paired], dim=0)
 
         # Auto-encode the digital and film images
         digital_reconstructed = self.digital_autoencoder(all_digital)
         film_reconstructed = self.film_autoencoder(all_film)
 
         # Encode the paired images separately
-        digital_latent, digital_skips = self.digital_autoencoder.encode(paired_digital)
-        film_latent, film_skips = self.film_autoencoder.encode(paired_film)
+        digital_latent, digital_skips = self.digital_autoencoder.encode(digital_paired)
+        film_latent, film_skips = self.film_autoencoder.encode(film_paired)
 
         # Transform the paired images by using the decoder of the other domain
         digital_to_film = self.film_autoencoder.decode(digital_latent, digital_skips)
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     film = torch.rand(4, 3, 256, 256)
     paired = (torch.rand(4, 3, 256, 256), torch.rand(4, 3, 256, 256))
 
-    model = AutoTranslate()
+    model = AutoTranslateNet()
     (
         digital_reconstructed,
         film_reconstructed,

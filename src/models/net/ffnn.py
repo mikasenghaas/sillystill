@@ -3,7 +3,7 @@ import torch
 from torch import nn
 
 
-class FFNN(nn.Module):
+class FFNet(nn.Module):
     """A simple FFNN encoder-decoder network."""
 
     def __init__(

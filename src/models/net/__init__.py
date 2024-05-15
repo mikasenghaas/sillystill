@@ -1,6 +1,11 @@
-from .ffnn import FFNN
+from .ffnn import FFNet
 from .unet import UNet
-from .conv import Conv
-from .auto_translate import AutoTranslate
+from .conv import ConvNet
+from .auto_translate import AutoTranslateNet
 
-__all__ = ["FFNN", "UNet", "Conv", "AutoTranslate"]
+__all__ = [
+    "FFNet",
+    "UNet",
+    "ConvNet",
+    "AutoTranslateNet",
+]
