@@ -8,10 +8,10 @@ from torchmetrics import (
     MetricCollection,
     StructuralSimilarityIndexMeasure as SSIM,
     PeakSignalNoiseRatio as PSNR,
-    FrechetInceptionDistance as FID,
-    LearnedPerceptualImagePatchSimilarity as LPIPS,
-    QualityWithNoReference as QNR,
 )
+from torchmetrics.image.fid import FrechetInceptionDistance as FID
+from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPIPS
+from torchmetrics.image.qnr import QualityWithNoReference as QNR
 
 from matplotlib import pyplot as plt
 from ..utils.utils import undo_transforms
