@@ -1,5 +1,7 @@
 from typing import Any, Dict, List, Optional, Tuple
 
+import os
+import numpy as np
 import hydra
 import torch
 import lightning as L
@@ -7,11 +9,17 @@ import rootutils
 from lightning import Callback, LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig, OmegaConf
+from tqdm import tqdm
+
+from matplotlib import pyplot as plt
+
+import wandb
 
 # Setup root
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
 # Import utilities
+from src.data.components.paired import PairedDataset
 from src.utils import (
     RankedLogger,
     extras,
@@ -85,8 +93,8 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
 
     train_metrics = trainer.callback_metrics
 
-    # Test model
     if cfg.get("test"):
+        # Test model
         log.info("Starting testing!")
         ckpt_path = trainer.checkpoint_callback.best_model_path
         if ckpt_path == "":
@@ -94,6 +102,30 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
             ckpt_path = None
         trainer.test(model=model, datamodule=datamodule)
         log.info(f"Best ckpt path: {ckpt_path}")
+
+    if cfg.get("inference"):
+        # Test inference
+        log.info("Starting inference")
+        film_paired_dir = os.path.join("data", "paired", "processed", "film")
+        digital_paired_dir = os.path.join("data", "paired", "processed", "digital")
+        paired_image_data = PairedDataset((film_paired_dir, digital_paired_dir))
+
+        for film, digital in tqdm(paired_image_data):
+            model.eval()
+            with torch.no_grad():
+                film_predicted = model.predict(digital, downsample=2)
+
+            # Plot
+            fig, axs = plt.subplots(ncols=3, figsize=(30, 10))
+            axs[0].imshow(np.array(digital))
+            axs[1].imshow(np.array(film))
+            axs[2].imshow(np.array(film_predicted))
+            axs[0].set_xlabel("Digital")
+            axs[1].set_xlabel("Film (Ground Truth)")
+            axs[2].set_xlabel("Film (Predicted)")
+
+            # Log to W&B
+            logger.experiment.log({"inference": wandb.Image(fig)})
 
     test_metrics = trainer.callback_metrics
 

@@ -1,9 +1,9 @@
 from typing import Tuple, Optional
 
+import numpy as np
 import wandb
 import torch
 import torch.nn as nn
-from lightning import LightningModule
 from torchmetrics import MetricCollection
 from torchmetrics.image import (
     StructuralSimilarityIndexMeasure as SSIM,
@@ -12,12 +12,16 @@ from torchmetrics.image import (
 from torchmetrics.image.fid import FrechetInceptionDistance as FID
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPIPS
 from torchmetrics.image.qnr import QualityWithNoReference as QNR
+from PIL.Image import Image as PILImage
+from torchvision.transforms.v2.functional import to_pil_image
 
 from matplotlib import pyplot as plt
-from ..utils.utils import undo_transforms
+
+from src.utils.utils import undo_transforms
+from .base_module import BaseModule
 
 
-class TranslationModule(LightningModule):
+class TranslationModule(BaseModule):
     """
     LightningModule for image-to-image translation tasks, such as transforming
     digital images to appear as if shot on CineStill800T film.
@@ -27,8 +31,10 @@ class TranslationModule(LightningModule):
         self,
         net: nn.Module,
         loss: nn.Module,
-        optimizer: torch.optim.Optimizer,
-        scheduler: torch.optim.lr_scheduler._LRScheduler = None,
+        augment: float = 0.0,
+        training_patch_size: int = 128,
+        optimizer: torch.optim.Optimizer = torch.optim.Adam,
+        scheduler: torch.optim.lr_scheduler._LRScheduler = torch.optim.lr_scheduler.ReduceLROnPlateau,
         lr_monitor: str = "train/loss",  # Check why we can't have val/loss
     ) -> None:
         """Initialises `TranslationModule`.
@@ -40,7 +46,13 @@ class TranslationModule(LightningModule):
             scheduler: Learning rate scheduler (optional).
             lr_monitor: Metric to monitor for learning rate scheduler (default: val/loss).
         """
-        super().__init__()
+        super().__init__(
+            augment=augment,
+            training_patch_size=training_patch_size,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            lr_monitor=lr_monitor,
+        )
 
         # Store hyperparameters
         self.save_hyperparameters(logger=False)
@@ -63,7 +75,9 @@ class TranslationModule(LightningModule):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward pass through the model.
+        Forward pass through the model. The input is expected to be a normalised
+        tensor representing a batch of images. Use `self.transform_test` to prepare
+        images for input.
 
         Args:
             x: Input tensor representing a batch of images, shape [batch_size, 3, n, n].
@@ -73,28 +87,12 @@ class TranslationModule(LightningModule):
         """
         return self.net(x)
 
-    def step(
-        self, batch: Tuple[torch.Tensor, torch.Tensor]
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """
-        Perform a single step with the given batch, computing loss.
-
-        Args:
-            batch: Tuple of (input_images, target_images). Both tensors should
-            have the shape [batch_size, 3, n, n].
-
-        Returns:
-            Tuple of (loss, predicted_images)
-        """
-        film, digital = batch
+    def training_step(self, batch: torch.Tensor, batch_idx: int):
+        """Training step for processing one batch of data."""
+        # Forward pass
+        film, digital = self.train_transform(batch)
         film_predicted = self.forward(digital)
         loss = self.loss(film_predicted, film)
-
-        return loss, film, digital, film_predicted
-
-    def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
-        """Training step for processing one batch of data."""
-        loss, film, digital, film_predicted = self.step(batch)
 
         # Log training loss, metrics and images
         self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
@@ -105,9 +103,12 @@ class TranslationModule(LightningModule):
 
         return loss
 
-    def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
+    def validation_step(self, batch: torch.Tensor, batch_idx: int):
         """Validation step for processing one batch of data."""
-        loss, film, digital, film_predicted = self.step(batch)
+        # Forward pass
+        film, digital = self.val_transform(batch)
+        film_predicted = self.forward(digital)
+        loss = self.loss(film_predicted, film)
 
         # Log validation loss and images
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
@@ -116,16 +117,34 @@ class TranslationModule(LightningModule):
         if batch_idx == 0:
             self._log_images(film, digital, film_predicted, key="val/images")
 
-    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
+    def test_step(self, batch: torch.Tensor, batch_idx: int):
         """Test step for processing one batch of data."""
-        loss, film, digital, film_predicted = self.step(batch)
+        # Forward pass
+        film, digital = self.test_transform(batch, downsample=2)
+        film_predicted = self.forward(digital)
+        loss = self.loss(film_predicted, film)
 
         # Log test loss and metrics
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         test_metrics = self.test_metrics(film_predicted, film)
         self.log_dict(test_metrics, on_step=False, on_epoch=True, prog_bar=True)
 
-        self._log_images(film, digital, film_predicted, key="val/images")
+        self._log_images(film, digital, film_predicted, key="test/images")
+
+    def predict(self, digital: PILImage, downsample=1) -> PILImage:
+        """Predicts the output of the model for a given input."""
+        assert isinstance(digital, PILImage), "Input must be a PIL image."
+
+        # Prepare input
+        input = self.infer_transform(digital, downsample=downsample).unsqueeze(0)
+
+        # Forward pass
+        output = self.forward(input)
+
+        # Prepare output
+        film_predicted = self.undo_transform(output).squeeze(0)
+
+        return to_pil_image(film_predicted)
 
     def _log_images(
         self,
@@ -134,41 +153,33 @@ class TranslationModule(LightningModule):
         film_predicted: torch.Tensor,
         key: Optional[str] = None,
     ):
-        if hasattr(self.logger.experiment, "log"):
-            # Create figure
-            batch_size = film.size(0)
-            fig, axs = plt.subplots(
-                nrows=3, ncols=batch_size, figsize=(4 * batch_size, 8)
-            )
-            if axs.ndim == 1:
-                axs = axs[:, None]
-            fig.tight_layout(pad=1.0)
-            for i in range(batch_size):
-                axs[0, i].imshow(undo_transforms(digital[i].cpu()).numpy())
-                axs[1, i].imshow(undo_transforms(film[i].cpu()).numpy())
-                axs[2, i].imshow(undo_transforms(film_predicted[i].cpu()).numpy())
-            axs[0, 0].set_ylabel("Digital")
-            axs[1, 0].set_ylabel("Film (Ground Truth)")
-            axs[2, 0].set_ylabel("Film (Predicted)")
+        film, digital, film_predicted = self.undo_transform(
+            torch.cat(
+                [film.unsqueeze(0), digital.unsqueeze(0), film_predicted.unsqueeze(0)],
+                dim=0,
+            ),
+        )
 
-            # Log to W&B
-            self.logger.experiment.log({key: wandb.Image(fig)})
-            self.logger.experiment.log(
-                {"predicted_film": [wandb.Image(img) for img in film_predicted]}
-            )
+        if self.logger:
+            if hasattr(self.logger.experiment, "log"):
+                # Create figure
+                batch_size = film.size(0)
+                fig, axs = plt.subplots(
+                    nrows=3, ncols=batch_size, figsize=(4 * batch_size, 8)
+                )
+                if axs.ndim == 1:
+                    axs = axs[:, None]
+                fig.tight_layout(pad=1.0)
+                for i in range(batch_size):
+                    axs[0, i].imshow(np.array(self.to_image(digital[i])))
+                    axs[1, i].imshow(np.array(self.to_image(film[i])))
+                    axs[2, i].imshow(np.array(self.to_image(film_predicted[i])))
+                axs[0, 0].set_ylabel("Digital")
+                axs[1, 0].set_ylabel("Film (Ground Truth)")
+                axs[2, 0].set_ylabel("Film (Predicted)")
 
-            # Close figure
-            plt.close()
+                # Log to W&B
+                self.logger.experiment.log({key: wandb.Image(fig)})
 
-    def configure_optimizers(self):
-        """Setup the optimizer and the LR scheduler."""
-        optimizer = self.hparams.optimizer(params=self.net.parameters())
-        if self.hparams.scheduler:
-            scheduler = {
-                "scheduler": self.hparams.scheduler(optimizer),
-                "monitor": self.hparams.lr_monitor,
-                "interval": "epoch",
-                "frequency": 1,
-            }
-            return [optimizer], [scheduler]
-        return optimizer
+                # Close figure
+                plt.close()

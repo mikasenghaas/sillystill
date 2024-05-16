@@ -1,8 +1,8 @@
-import glob
 from typing import Tuple
 
 import torch
 from torch.utils.data import Dataset
+import torchvision.transforms.v2 as T
 
 from src.data.components.paired import PairedDataset
 from src.data.components.unpaired import UnpairedDataset
@@ -36,6 +36,8 @@ class CombinedDataset(Dataset):
         self.num_paired_per_batch = num_paired_per_batch
         self.num_unpaired_per_batch = num_unpaired_per_batch
 
+        self.transform = T.Compose([T.ToImage(), T.Resize((2433, 3637))])
+
     def __len__(self) -> int:
         """Returns the length of the dataset."""
         no_digital_batches = len(self.digital_dataset) // self.num_unpaired_per_batch
@@ -47,7 +49,7 @@ class CombinedDataset(Dataset):
         self, idx: int
     ) -> Tuple[torch.Tensor, torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         """Returns a sample from the dataset at the given index."""
-        # Get 3 random unpaired digital images
+        # Get `num_unpaired_per_batch` random unpaired digital images
         indices = torch.randint(
             0, len(self.digital_dataset), (self.num_unpaired_per_batch,)
         )

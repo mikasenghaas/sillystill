@@ -4,6 +4,8 @@ from typing import Any, Dict, Optional, Tuple, List
 import torch
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset, random_split
+import torchvision.transforms.v2 as T
+from PIL.Image import Image as PILImage
 
 from .components.paired import PairedDataset
 
@@ -14,11 +16,8 @@ class PairedDigitalFilmDataModule(LightningDataModule):
     def __init__(
         self,
         data_split: Tuple[float, float, float] = (0.7, 0.2, 0.1),
-        batch_size: int = 4,  # Only for train split (else, 1)
-        patch_size: int = 128,
-        max_samples: Optional[int] = None,
-        augment: Optional[List[Dict]] = None,
-        num_workers: int = 1,
+        batch_size: int = 1,
+        num_workers: int = 0,
         persistent_workers: bool = False,
         pin_memory: bool = False,
         **kwargs,
@@ -31,9 +30,6 @@ class PairedDigitalFilmDataModule(LightningDataModule):
         Args:
             data_split (Tuple[float, float, float]): The train, validation and test split.
             batch_size (int): The batch size. Defaults to `4`.
-            patch_size (int): The patch size. Defaults to `128`.
-            max_samples (int, optional): The maximum number of samples to load. Defaults to `None`.
-            augment (Optional[List[Dict]]): The data augmentation to apply. Defaults to `None`.
         """
         super().__init__()
 
@@ -74,12 +70,7 @@ class PairedDigitalFilmDataModule(LightningDataModule):
         `"test"`, or `"predict"`.ge
         """
         # Load paired dataset
-        self.dataset = PairedDataset(
-            image_dirs=(self.film_paired_dir, self.digital_paired_dir),
-            patch_size=self.hparams.patch_size,
-            max_samples=self.hparams.max_samples,
-            augment=self.hparams.augment,
-        )
+        self.dataset = PairedDataset((self.film_paired_dir, self.digital_paired_dir))
 
         # Load and split datasets only if not loaded already
         if not self.data_train and not self.data_val and not self.data_test:
@@ -93,6 +84,7 @@ class PairedDigitalFilmDataModule(LightningDataModule):
         """Create and return the train dataloader"""
         return DataLoader(
             dataset=self.data_train,
+            collate_fn=self.dataset.collate,
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
@@ -104,6 +96,7 @@ class PairedDigitalFilmDataModule(LightningDataModule):
         """Create and return the validation dataloader"""
         return DataLoader(
             dataset=self.data_val,
+            collate_fn=self.dataset.collate,
             batch_size=1,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
@@ -115,6 +108,7 @@ class PairedDigitalFilmDataModule(LightningDataModule):
         """Create and return the test dataloader"""
         return DataLoader(
             dataset=self.data_test,
+            collate_fn=self.dataset.collate,
             batch_size=1,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,

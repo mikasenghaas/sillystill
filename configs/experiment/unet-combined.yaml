@@ -25,22 +25,16 @@ model:
   scheduler:
     factor: 1e-1
     patience: 5
+  augment: 0.0
 
 data:
   batch_size: 1
-  patch_size: 128
   data_split: [0.7, 0.2, 0.1]
-
-  augment:
-    flip: False
-    rotate: False
-    blur: False
-    brightness: False
 
 hydra:
   sweeper:
     params:
       model.optimizer.lr: 1e-4, 1e-3
       model.net.hidden_channels: "choice([64,128], [64, 128, 256])"
-      data.patch_size: 128, 256
+      model.training_patch_size: 128, 256
       model.loss.mse_weight: 0.5, 1.0

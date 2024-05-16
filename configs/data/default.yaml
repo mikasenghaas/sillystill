@@ -1,12 +1,5 @@
 data_split: [0.7, 0.2, 0.1]
-batch_size: 8
-patch_size: 128
-max_samples: null
-augment:
-  flip: False
-  rotate: False
-  blur: False
-  brightness: False
-num_workers: 1
+batch_size: 1
+num_workers: 0
 persistent_workers: False
 pin_memory: False
