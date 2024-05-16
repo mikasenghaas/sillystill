@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional, Tuple, List
 import torch
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset, random_split
+import torchvision.transforms.v2 as T
 
 from .components.paired import PairedDataset
 
@@ -82,6 +83,7 @@ class PairedDigitalFilmDataModule(LightningDataModule):
         """Create and return the train dataloader"""
         return DataLoader(
             dataset=self.data_train,
+            collate_fn=self.collate_batch,
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
@@ -93,6 +95,7 @@ class PairedDigitalFilmDataModule(LightningDataModule):
         """Create and return the validation dataloader"""
         return DataLoader(
             dataset=self.data_val,
+            collate_fn=self.collate_batch,
             batch_size=1,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
@@ -104,9 +107,37 @@ class PairedDigitalFilmDataModule(LightningDataModule):
         """Create and return the test dataloader"""
         return DataLoader(
             dataset=self.data_test,
+            collate_fn=self.collate_batch,
             batch_size=1,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
             persistent_workers=self.hparams.persistent_workers,
             shuffle=False,
         )
+
+    def collate_batch(self, batch: torch.Tensor) -> torch.Tensor:
+        """
+        Collates a batch of images into a single tensor. This is required
+        because the `DataLoader` collates the batch into a list of tensors.
+
+        Args:
+            batch (torch.Tensor): The batch of images
+
+        Returns:
+            torch.Tensor: The collated batch of images
+        """
+        transform = T.Compose([T.ToImage(), T.Resize((2433, 3637))])
+
+        # Process batch
+        for i, (film, digital) in enumerate(batch):
+            film = transform(film)
+            digital = transform(digital)
+            batch[i] = torch.cat([film.unsqueeze(0), digital.unsqueeze(0)], dim=0)
+
+        # Stack the batch
+        batch = torch.stack(batch, dim=0)
+
+        # Permute dimensions
+        batch = batch.permute(1, 0, 2, 3, 4)
+
+        return batch

@@ -7,22 +7,18 @@ import torch.nn as nn
 from lightning import LightningModule
 from torchmetrics import MetricCollection
 import torchvision.transforms.v2 as T
+import torchvision.transforms.v2.functional as F
 from torchmetrics.image import (
     StructuralSimilarityIndexMeasure as SSIM,
     PeakSignalNoiseRatio as PSNR,
 )
+from PIL.Image import Image
 
 from torchmetrics.image.fid import FrechetInceptionDistance as FID
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPIPS
 from torchmetrics.image.qnr import QualityWithNoReference as QNR
 
-from matplotlib import pyplot as plt
-from ..utils.utils import undo_transforms
-from .transforms import (
-    get_transform_from_model_input,
-    get_transform_to_model_input,
-    get_transform_augment,
-)
+from .transforms import Unnormalize
 
 
 class BaseModule(LightningModule):
@@ -35,22 +31,61 @@ class BaseModule(LightningModule):
         self,
         augment: float,
         training_patch_size: int,
-        optimizer: torch.optim.Optimizer,
-        scheduler: Optional[torch.optim.lr_scheduler._LRScheduler],
-        lr_monitor: str,  # Check why we can't have val/loss
+        optimizer: torch.optim.Optimizer = torch.optim.Adam,
+        scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
+        lr_monitor: str = "train/loss",  # Check why we can't have val/loss
     ) -> None:
         """Initialises `BaseModel`."""
         super().__init__()
 
+        # Save hyperparameters
         self.training_patch_size = training_patch_size
-        self.transform_to_model_input = get_transform_to_model_input()
-        self.transform_from_model_input = get_transform_from_model_input()
-        self.augment = get_transform_augment(augment)
+
+        # Initialise transforms
+        self.transform = T.Compose(
+            [
+                T.ToImage(),
+                T.ToDtype(torch.float32, scale=True),
+                T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ]
+        )
+        self.undo_transform = Unnormalize(
+            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+        )
+        self.augment = T.Compose(
+            [
+                T.RandomHorizontalFlip(p=augment),
+                T.RandomVerticalFlip(p=augment),
+                T.RandomApply(
+                    [
+                        T.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5.0)),
+                        T.ColorJitter(brightness=(0.6, 1)),
+                    ],
+                    augment,
+                ),
+            ]
+        )
 
     def undo_transform(self, x: torch.Tensor) -> torch.Tensor:
-        return self.transform_from_model_input(x)
+        """
+        Takes a tensor and applies the inverse of the transformations applied
+        to it in the `transform` method (except for cropping, resizing).
+        """
+        return self.undo_transform(x)
 
-    def transform_train(self, x: torch.Tensor) -> torch.Tensor:
+    def train_transform(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Takes a tensor and applies a series of transformations to it to prepare
+        it for training. Crucially, it crops the image to a patch of size
+        `training_patch_size`. If augmentation is enabled, it also applies
+        random transformations to the image.
+
+        Args:
+            x (torch.Tensor): The input tensor to transform ([..., H, W])
+
+        Returns:
+            torch.Tensor: The transformed tensor
+        """
         transform_train = T.Compose(
             [
                 self.augment,
@@ -61,7 +96,38 @@ class BaseModule(LightningModule):
 
         return transform_train(x)
 
-    def transform_test(self, x: torch.Tensor) -> torch.Tensor:
+    def val_transform(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Applies a series of transformations to the input tensor to prepare it
+        for validation. This includes resizing the image to the nearest multiple
+        of 4.
+
+        Args:
+            x (torch.Tensor): The input tensor to transform ([..., H, W])
+
+        Returns:
+            torch.Tensor: The transformed tensor
+        """
+        transform_val = T.Compose(
+            [
+                self.transform_to_model_input,
+                T.RandomResizedCrop(self.training_patch_size),
+            ]
+        )
+        return transform_val(x)
+
+    def test_transform(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Applies a series of transformations to the input tensor to prepare it
+        for testing. This includes resizing the image to the nearest multiple
+        of 4.
+
+        Args:
+            x (torch.Tensor): The input tensor to transform ([..., H, W])
+
+        Returns:
+            torch.Tensor: The transformed tensor
+        """
         transform_test = T.Compose(
             [
                 self.transform_to_model_input,
@@ -72,8 +138,23 @@ class BaseModule(LightningModule):
         )
         return transform_test(x)
 
-    def get_valid_dim(self, dim: int) -> int:
-        return dim // 4 * 4
+    def to_image(self, x: torch.Tensor) -> Image:
+        return F.to_pil_image(x)
+
+    def get_valid_dim(self, dim: int, downsample: int = 1) -> int:
+        """
+        Returns the nearest multiple of 4 that is less than or equal to the
+        input dimension. This is required because of the network architecture.
+
+        NOTE: This should better be defined in the `src.models.net` modules.
+
+        Args:
+            dim (int): The input dimension
+
+        Returns:
+            int: The nearest multiple of 4 that is less than or equal to the input
+        """
+        return int((dim / downsample) // 4 * 4)
 
     def configure_optimizers(self):
         """Setup the optimizer and the LR scheduler."""

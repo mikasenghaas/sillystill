@@ -32,7 +32,8 @@ class PairedDataset(Dataset):
         """
         # Save hyperparameters
         self.image_dirs = image_dirs
-        self.transform = T.Compose([T.ToImage(), T.Resize((2433, 3637))])
+        # self.to_image = T.ToImage()
+        # self.resize = T.Resize((2433, 3637))
 
         # Load image paths
         self.image_paths1 = sorted(glob.glob(f"{image_dirs[0]}/*"))
@@ -60,4 +61,10 @@ class PairedDataset(Dataset):
         image1 = _load_image_from_path(image_path1)
         image2 = _load_image_from_path(image_path2)
 
-        return self.transform((image1, image2))
+        # image1 = self.to_image(image1)
+        # image2 = self.to_image(image2)
+
+        # # Concatenate to tensor
+        # film_and_digital = torch.cat((image1.unsqueeze(0), image2.unsqueeze(0)), dim=0)
+
+        return image1, image2

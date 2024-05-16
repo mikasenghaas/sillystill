@@ -1,5 +1,6 @@
 from typing import Tuple, Optional
 
+import numpy as np
 import wandb
 import torch
 import torch.nn as nn
@@ -11,6 +12,7 @@ from torchmetrics.image import (
 from torchmetrics.image.fid import FrechetInceptionDistance as FID
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPIPS
 from torchmetrics.image.qnr import QualityWithNoReference as QNR
+from PIL.Image import Image
 
 from matplotlib import pyplot as plt
 
@@ -72,7 +74,9 @@ class TranslationModule(BaseModule):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward pass through the model.
+        Forward pass through the model. The input is expected to be a normalised
+        tensor representing a batch of images. Use `self.transform_test` to prepare
+        images for input.
 
         Args:
             x: Input tensor representing a batch of images, shape [batch_size, 3, n, n].
@@ -82,12 +86,10 @@ class TranslationModule(BaseModule):
         """
         return self.net(x)
 
-    def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
+    def training_step(self, batch: torch.Tensor, batch_idx: int):
         """Training step for processing one batch of data."""
         # Forward pass
-        film, digital = batch
-        film = self.transform_train(film)
-        digital = self.transform_train(digital)
+        film, digital = self.train_transform(batch)
         film_predicted = self.forward(digital)
         loss = self.loss(film_predicted, film)
 
@@ -100,12 +102,10 @@ class TranslationModule(BaseModule):
 
         return loss
 
-    def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
+    def validation_step(self, batch: torch.Tensor, batch_idx: int):
         """Validation step for processing one batch of data."""
         # Forward pass
-        film, digital = batch
-        film = self.transform_test(film)
-        digital = self.transform_test(digital)
+        film, digital = self.val_transform(batch)
         film_predicted = self.forward(digital)
         loss = self.loss(film_predicted, film)
 
@@ -116,12 +116,10 @@ class TranslationModule(BaseModule):
         if batch_idx == 0:
             self._log_images(film, digital, film_predicted, key="val/images")
 
-    def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
+    def test_step(self, batch: torch.Tensor, batch_idx: int):
         """Test step for processing one batch of data."""
         # Forward pass
-        film, digital = batch
-        film = self.transform_test(film)
-        digital = self.transform_test(digital)
+        film, digital = self.test_transform(batch)
         film_predicted = self.forward(digital)
         loss = self.loss(film_predicted, film)
 
@@ -132,10 +130,13 @@ class TranslationModule(BaseModule):
 
         self._log_images(film, digital, film_predicted, key="val/images")
 
-    def predict(self, x: torch.Tensor) -> torch.Tensor:
+    def predict(self, digital: torch.Tensor) -> Image:
         """Predicts the output of the model for a given input."""
-        x = self.transform_test(x)
-        return self.forward(x)
+        film_predicted = self.forward(self.test_transform(digital))
+        film_predicted = self.undo_transform(film_predicted)
+        film_predicted = self.to_image(film_predicted)
+
+        return film_predicted
 
     def _log_images(
         self,
@@ -144,6 +145,13 @@ class TranslationModule(BaseModule):
         film_predicted: torch.Tensor,
         key: Optional[str] = None,
     ):
+        film, digital, film_predicted = self.undo_transform(
+            torch.cat(
+                [film.unsqueeze(0), digital.unsqueeze(0), film_predicted.unsqueeze(0)],
+                dim=0,
+            ),
+        )
+
         if self.logger:
             if hasattr(self.logger.experiment, "log"):
                 # Create figure
@@ -155,18 +163,15 @@ class TranslationModule(BaseModule):
                     axs = axs[:, None]
                 fig.tight_layout(pad=1.0)
                 for i in range(batch_size):
-                    axs[0, i].imshow(undo_transforms(digital[i].cpu()).numpy())
-                    axs[1, i].imshow(undo_transforms(film[i].cpu()).numpy())
-                    axs[2, i].imshow(undo_transforms(film_predicted[i].cpu()).numpy())
+                    axs[0, i].imshow(np.array(self.to_image(digital[i])))
+                    axs[1, i].imshow(np.array(self.to_image(film[i])))
+                    axs[2, i].imshow(np.array(self.to_image(film_predicted[i])))
                 axs[0, 0].set_ylabel("Digital")
                 axs[1, 0].set_ylabel("Film (Ground Truth)")
                 axs[2, 0].set_ylabel("Film (Predicted)")
 
                 # Log to W&B
                 self.logger.experiment.log({key: wandb.Image(fig)})
-                self.logger.experiment.log(
-                    {"predicted_film": [wandb.Image(img) for img in film_predicted]}
-                )
 
                 # Close figure
                 plt.close()
