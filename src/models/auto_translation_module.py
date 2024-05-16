@@ -107,39 +107,44 @@ class AutoTranslationModule(LightningModule):
             paired_encoder_representations,
         )
 
-        overall_loss, component_losses = loss
-
-        return overall_loss, film_paired, digital_to_film, component_losses
+        return loss, film_paired, digital_to_film
 
     def training_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor], batch_idx: int
     ):
         """Training step for processing one batch of data."""
-        loss, _, _, component_losses = self.step(batch)
-        reconstruction_loss, encoder_loss, paired_reconstruction_loss = component_losses
-
-        # Log individual component losses
-        self.log("train/reconstruction_loss", reconstruction_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/encoder_loss", encoder_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/paired_reconstruction_loss", paired_reconstruction_loss, on_step=False, on_epoch=True, prog_bar=True)
-
-        # Log main loss
-        self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
-        return loss
+        loss_dict, _, _ = self.step(batch)
+        self.log_dict(
+            self.prepend_dict(loss_dict, "train"),
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+        )
+        return loss_dict["loss"]
 
     def validation_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor], batch_idx: int
     ):
         """Validation step for processing one batch of data."""
-        loss, _, _, _ = self.step(batch)
-        self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        loss_dict, _, _ = self.step(batch)
+        self.log_dict(
+            self.prepend_dict(loss_dict, "val"),
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+        )
 
     def test_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor], batch_idx: int
     ):
         """Test step for processing one batch of data."""
-        loss, _, _, _ = self.step(batch)
-        self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        loss_dict, _, _ = self.step(batch)
+        self.log_dict(
+            self.prepend_dict(loss_dict, "test"),
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+        )
 
     def configure_optimizers(self):
         """Setup the optimizer and the LR scheduler."""
@@ -153,6 +158,10 @@ class AutoTranslationModule(LightningModule):
             }
             return [optimizer], [scheduler]
         return optimizer
+
+    def prepend_dict(self, dict: dict, prefix: str):
+        """Prepend a prefix to the keys of a dictionary."""
+        return {f"{prefix}/{k}": v for k, v in dict.items()}
 
 
 if __name__ == "__main__":
