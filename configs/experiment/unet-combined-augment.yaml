@@ -13,11 +13,6 @@ group: unet-combined-augment
 tags: ["unet", "combined", "augment"]
 seed: 42
 
-trainer:
-  min_epochs: 10
-  max_epochs: 150
-  accumulate_grad_batches: 8
-
 model:
   optimizer:
     lr: 1e-3 # From unet-combined
@@ -29,11 +24,7 @@ model:
     hidden_channels: [64,128,256] # From unet-combined
   loss:
     mse_weight: 0.5 # From unet-combined
-  patch_size: 128 # From unet-combined
-
-data:
-  batch_size: 1
-  data_split: [0.7, 0.2, 0.1]
+  training_patch_size: 128 # From unet-combined
 
 hydra:
   sweeper:
