@@ -1,14 +1,20 @@
 from typing import Tuple
 
 import torch
-from lightning import LightningModule
+import torch.nn as nn
 from torchmetrics import MeanMetric, MetricCollection
+from torchmetrics import MetricCollection
+from torchmetrics.image import (
+    StructuralSimilarityIndexMeasure as SSIM,
+    PeakSignalNoiseRatio as PSNR,
+)
 
 from .loss.auto_translate import AutoTranslateLoss
 from .net.auto_translate import AutoTranslateNet
+from .base_module import BaseModule
 
 
-class AutoTranslationModule(LightningModule):
+class AutoTranslationModule(BaseModule):
     """
     Base module for auto-translation models as seen in "Semi-Supervised
     Raw-to-Raw Mapping": https://arxiv.org/pdf/2106.13883
@@ -16,10 +22,12 @@ class AutoTranslationModule(LightningModule):
 
     def __init__(
         self,
-        net: torch.nn.Module,
-        loss: torch.nn.Module,
-        optimizer: torch.optim.Optimizer,
-        scheduler: torch.optim.lr_scheduler._LRScheduler = None,
+        net: nn.Module,
+        loss: nn.Module,
+        augment: float = 0.0,
+        training_patch_size: int = 128,
+        optimizer: torch.optim.Optimizer = torch.optim.Adam,
+        scheduler: torch.optim.lr_scheduler._LRScheduler = torch.optim.lr_scheduler.ReduceLROnPlateau,
         lr_monitor: str = "val/loss",
     ) -> None:
         """Initialize the base module.
@@ -36,13 +44,15 @@ class AutoTranslationModule(LightningModule):
         self.net = net
         self.loss = loss
 
-        self.metrics = MetricCollection(
+        metrics = MetricCollection(
             {
-                "train/loss": MeanMetric(),
-                "val/loss": MeanMetric(),
-                "test/loss": MeanMetric(),
+                "ssim": SSIM(),
+                "psnr": PSNR(),
             }
         )
+        self.train_metrics = metrics.clone(prefix="train/")
+        self.val_metrics = metrics.clone(prefix="val/")
+        self.test_metrics = metrics.clone(prefix="test/")
 
     def forward(
         self, film: torch.Tensor, digital: torch.Tensor, paired: torch.Tensor
@@ -119,9 +129,27 @@ class AutoTranslationModule(LightningModule):
         reconstruction_loss, encoder_loss, paired_reconstruction_loss = component_losses
 
         # Log individual component losses
-        self.log("train/reconstruction_loss", reconstruction_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/encoder_loss", encoder_loss, on_step=False, on_epoch=True, prog_bar=True)
-        self.log("train/paired_reconstruction_loss", paired_reconstruction_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log(
+            "train/reconstruction_loss",
+            reconstruction_loss,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+        )
+        self.log(
+            "train/encoder_loss",
+            encoder_loss,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+        )
+        self.log(
+            "train/paired_reconstruction_loss",
+            paired_reconstruction_loss,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+        )
 
         # Log main loss
         self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True)

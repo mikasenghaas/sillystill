@@ -50,18 +50,15 @@ class CombinedDataset(Dataset):
     ) -> Tuple[torch.Tensor, torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         """Returns a sample from the dataset at the given index."""
         # Get `num_unpaired_per_batch` random unpaired digital images
-        indices = torch.randint(
-            0, len(self.digital_dataset), (self.num_unpaired_per_batch,)
-        )
+        n, k = len(self.digital_dataset), self.num_unpaired_per_batch
+        indices = torch.randint(0, n, k)
         digital_images = []
         for i in range(self.num_unpaired_per_batch):
             digital_images.append(self.digital_dataset[indices[i]])
         digital_images = torch.stack(digital_images)
 
         # Get no_unpaired_per_batch unpaired film images
-        indices = torch.randint(
-            0, len(self.film_dataset), (self.num_unpaired_per_batch,)
-        )
+        indices = torch.randint(0, len(self.film_dataset), self.num_unpaired_per_batch)
         film_images = []
         for i in range(self.num_unpaired_per_batch):
             film_images.append(self.film_dataset[indices[i]])
