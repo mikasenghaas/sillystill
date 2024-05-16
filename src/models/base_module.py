@@ -1,18 +1,10 @@
-from typing import Tuple, Optional
+from typing import Optional
 
-import wandb
 import torch
-import numpy as np
-import torch.nn as nn
 from lightning import LightningModule
-from torchmetrics import MetricCollection
 import torchvision.transforms.v2 as T
 import torchvision.transforms.v2.functional as F
-from torchmetrics.image import (
-    StructuralSimilarityIndexMeasure as SSIM,
-    PeakSignalNoiseRatio as PSNR,
-)
-from PIL.Image import Image
+from PIL.Image import Image as PILImage
 
 from torchmetrics.image.fid import FrechetInceptionDistance as FID
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPIPS
@@ -49,9 +41,6 @@ class BaseModule(LightningModule):
                 T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ]
         )
-        self.undo_transform = Unnormalize(
-            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-        )
         self.augment = T.Compose(
             [
                 T.RandomHorizontalFlip(p=augment),
@@ -68,10 +57,18 @@ class BaseModule(LightningModule):
 
     def undo_transform(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Takes a tensor and applies the inverse of the transformations applied
-        to it in the `transform` method (except for cropping, resizing).
+        Unnormalizes the input tensor to convert it back to an image.
+
+        Args:
+            x (torch.Tensor): The input tensor to unnormalize
+
+        Returns:
+            torch.Tensor: The unnormalized tensor
         """
-        return self.undo_transform(x)
+        undo_transform = Unnormalize(
+            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+        )
+        return undo_transform(x)
 
     def train_transform(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -89,7 +86,7 @@ class BaseModule(LightningModule):
         transform_train = T.Compose(
             [
                 self.augment,
-                self.transform_to_model_input,
+                self.transform,
                 T.RandomResizedCrop(self.training_patch_size),
             ]
         )
@@ -110,7 +107,7 @@ class BaseModule(LightningModule):
         """
         transform_val = T.Compose(
             [
-                self.transform_to_model_input,
+                self.transform,
                 T.RandomResizedCrop(self.training_patch_size),
             ]
         )
@@ -128,17 +125,12 @@ class BaseModule(LightningModule):
         Returns:
             torch.Tensor: The transformed tensor
         """
-        transform_test = T.Compose(
-            [
-                self.transform_to_model_input,
-                T.Resize(
-                    (self.get_valid_dim(x.shape[-2]), self.get_valid_dim(x.shape[-1]))
-                ),
-            ]
-        )
+        height = self.get_valid_dim(x.shape[-2])
+        width = self.get_valid_dim(x.shape[-1])
+        transform_test = T.Compose([self.transform, T.Resize((height, width))])
         return transform_test(x)
 
-    def to_image(self, x: torch.Tensor) -> Image:
+    def to_image(self, x: torch.Tensor) -> PILImage:
         return F.to_pil_image(x)
 
     def get_valid_dim(self, dim: int, downsample: int = 1) -> int:
