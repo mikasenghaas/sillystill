@@ -16,6 +16,8 @@ class AutoTranslationModule(LightningModule):
 
     def __init__(
         self,
+        net: torch.nn.Module,
+        loss: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         scheduler: torch.optim.lr_scheduler._LRScheduler = None,
         lr_monitor: str = "val/loss",
@@ -31,8 +33,8 @@ class AutoTranslationModule(LightningModule):
         """
         super().__init__()
         self.save_hyperparameters(logger=False, ignore=["net", "loss"])
-        self.net = AutoTranslateNet()
-        self.loss = AutoTranslateLoss()
+        self.net = net
+        self.loss = loss
 
         self.metrics = MetricCollection(
             {
@@ -72,6 +74,7 @@ class AutoTranslationModule(LightningModule):
         Returns Tuple of:
             loss: The computed loss value.
             digital_transformed: Transformed digital images from the paired film, shape [B_1, 3, n, n].
+            component_losses (reconstruction_loss, encoder_loss, paired_loss): Tuple of the individual loss components.
         """
         # Unpack the batch
         film, digital, paired = batch
@@ -104,13 +107,15 @@ class AutoTranslationModule(LightningModule):
             paired_encoder_representations,
         )
 
-        return loss, film_paired, digital_to_film
+        overall_loss, component_losses = loss
+
+        return overall_loss, film_paired, digital_to_film, component_losses
 
     def training_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor], batch_idx: int
     ):
         """Training step for processing one batch of data."""
-        loss, _, _ = self.step(batch)
+        loss, _, _, _ = self.step(batch)
         self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         return loss
 
@@ -118,14 +123,14 @@ class AutoTranslationModule(LightningModule):
         self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor], batch_idx: int
     ):
         """Validation step for processing one batch of data."""
-        loss, _, _ = self.step(batch)
+        loss, _, _, _ = self.step(batch)
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
 
     def test_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor], batch_idx: int
     ):
         """Test step for processing one batch of data."""
-        loss, _, _ = self.step(batch)
+        loss, _, _, _ = self.step(batch)
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
 
     def configure_optimizers(self):

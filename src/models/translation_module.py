@@ -52,9 +52,9 @@ class TranslationModule(LightningModule):
             {
                 "ssim": SSIM(),
                 "psnr": PSNR(),
-                "fid": FID(),
-                "lpips": LPIPS(),
-                "qnr": QNR(),  # not sure if this is the same thing as NIQE
+                # "fid": FID(),
+                # "lpips": LPIPS(),
+                # "qnr": QNR(),  # not sure if this is the same thing as NIQE
             }
         )
         self.train_metrics = metrics.clone(prefix="train/")

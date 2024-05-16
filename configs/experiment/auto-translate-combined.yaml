@@ -1,0 +1,48 @@
+# @package _global_
+
+# To run: `python train.py -m experiment={filename}`
+
+defaults:
+  - override /data: combined
+  - override /model: auto-translation
+  - override /model/net: auto-translate
+  - override /model/loss: auto-translate
+  - override /logger: wandb
+
+group: auto-translate-combined
+tags: ["auto-translate", "combindd"]
+seed: 42
+
+trainer:
+  min_epochs: 10
+  max_epochs: 100
+  accumulate_grad_batches: 8
+
+model:
+  optimizer:
+    lr: 1e-4
+    weight_decay: 1e-3
+  scheduler:
+    factor: 1e-1
+    patience: 5
+  net:
+    hidden_channels: [32, 64, 128, 256]
+
+data:
+  num_paired_per_batch: 4
+  num_unpaired_per_batch: 6
+  patch_size: 128
+  data_split: [0.7, 0.2, 0.1]
+
+  augment:
+    flip: False
+    rotate: False
+    blur: False
+    brightness: False
+
+# hydra:
+#   sweeper:
+#     params:
+#       model.optimizer.lr: 1e-4, 1e-3
+#       model.net.hidden_channels: "choice([64, 128], [64, 128, 256])"
+#       data.patch_size: 128, 256

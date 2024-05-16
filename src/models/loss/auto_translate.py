@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torch import nn
+from src.models.loss.simple_combined import SimpleCombinedLoss
 
 
 class AutoTranslateLoss(nn.Module):
@@ -19,12 +20,24 @@ class AutoTranslateLoss(nn.Module):
         reconstruction_weight=1.0,
         encoder_weight=1.0,
         paired_reconstruction_weight=1.0,
+        paired_loss_fn=SimpleCombinedLoss(),
         do_penalise_film_transformation=False,
     ):
+        """
+        Instantiate the loss function.
+
+        Args:
+            reconstruction_weight (float): Weight for the reconstruction loss.
+            encoder_weight (float): Weight for the encoder loss.
+            paired_reconstruction_weight (float): Weight for the paired reconstruction loss.
+            paired_loss_fn (nn.Module): Loss function for the paired images.
+            do_penalise_film_transformation (bool): Whether to penalise the transformation of the film->digital images.
+        """
         super().__init__()
         self.reconstruction_weight = reconstruction_weight
         self.encoder_weight = encoder_weight
         self.paired_reconstruction_weight = paired_reconstruction_weight
+        self.paired_loss_fn = paired_loss_fn
         self.do_penalise_film_transformation = do_penalise_film_transformation
 
     def forward(
@@ -52,6 +65,7 @@ class AutoTranslateLoss(nn.Module):
 
         Returns:
             loss: The computed loss value.
+            (reconstruction loss, encoder_loss, paired_reconstruction_loss): Tuple of the individual loss components.
         """
 
         paired_digital_in = paired_in[0]
@@ -71,10 +85,10 @@ class AutoTranslateLoss(nn.Module):
         encoder_loss /= len(paired_encoder_representations)
 
         # Paired transformation loss
-        paired_digital_loss = F.mse_loss(digital_transformed, paired_digital_in)
+        paired_digital_loss = self.paired_loss_fn(paired_digital_in, digital_transformed)
         paired_film_loss = 0
         if self.do_penalise_film_transformation:
-            paired_film_loss = F.mse_loss(film_transformed, paired_film_in)
+            paired_film_loss = self.paired_loss_fn(paired_film_in, film_transformed)
 
         # Compute total loss
         loss = (
@@ -82,4 +96,4 @@ class AutoTranslateLoss(nn.Module):
             + self.encoder_weight * encoder_loss
             + self.paired_reconstruction_weight * (paired_digital_loss + paired_film_loss)
         )
-        return loss
+        return loss, (digital_loss + film_loss, encoder_loss, paired_digital_loss + paired_film_loss)
