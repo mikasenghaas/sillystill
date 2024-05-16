@@ -6,7 +6,7 @@ defaults:
   - override /data: paired
   - override /model: translation
   - override /model/net: conv
-  - override /model/loss: combined
+  - override /model/loss: simple-combined
   - override /logger: wandb
 
 group: conv-combined
