@@ -115,7 +115,15 @@ class AutoTranslationModule(LightningModule):
         self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor], batch_idx: int
     ):
         """Training step for processing one batch of data."""
-        loss, _, _, _ = self.step(batch)
+        loss, _, _, component_losses = self.step(batch)
+        reconstruction_loss, encoder_loss, paired_reconstruction_loss = component_losses
+
+        # Log individual component losses
+        self.log("train/reconstruction_loss", reconstruction_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train/encoder_loss", encoder_loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log("train/paired_reconstruction_loss", paired_reconstruction_loss, on_step=False, on_epoch=True, prog_bar=True)
+
+        # Log main loss
         self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
         return loss
 

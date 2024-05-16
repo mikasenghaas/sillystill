@@ -10,7 +10,7 @@ defaults:
   - override /logger: wandb
 
 group: auto-translate-combined
-tags: ["auto-translate", "combindd"]
+tags: ["auto-translate", "combined"]
 seed: 42
 
 trainer:
@@ -26,7 +26,7 @@ model:
     factor: 1e-1
     patience: 5
   net:
-    hidden_channels: [32, 64, 128, 256]
+    hidden_channels: [64, 128, 256]
 
 data:
   num_paired_per_batch: 4
