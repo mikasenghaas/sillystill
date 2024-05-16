@@ -39,7 +39,13 @@ class AutoTranslationModule(BaseModule):
             scheduler: Learning rate scheduler (optional).
             lr_monitor: Metric to monitor for learning rate scheduler (default: val/loss).
         """
-        super().__init__()
+        super().__init__(
+            augment=augment,
+            training_patch_size=training_patch_size,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            lr_monitor=lr_monitor,
+        )
         self.save_hyperparameters(logger=False, ignore=["net", "loss"])
         self.net = net
         self.loss = loss
@@ -74,7 +80,7 @@ class AutoTranslationModule(BaseModule):
         return self.net(film, digital, paired)
 
     def step(
-        self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
+        self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor], transforms
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Perform a single step with the given batch, computing loss.
 
@@ -88,13 +94,17 @@ class AutoTranslationModule(BaseModule):
         """
         # Unpack the batch
         film, digital, paired = batch
-        film_paired, digital_paired = paired
 
         # Remove artificial batch dimension
-        film, digital = film.squeeze(0), digital.squeeze(0)
-        film_paired = film_paired.squeeze(0)
-        digital_paired = digital_paired.squeeze(0)
-        paired = (film_paired, digital_paired)
+        film, digital, paired = film.squeeze(0), digital.squeeze(0), paired.squeeze(0)
+
+        # Apply transforms
+        film = transforms(film)
+        digital = transforms(digital)
+        paired = transforms(paired)
+
+        # Unpack the paired images
+        film_paired, _ = paired
 
         # Forward pass through the model
         (
@@ -125,7 +135,7 @@ class AutoTranslationModule(BaseModule):
         self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor], batch_idx: int
     ):
         """Training step for processing one batch of data."""
-        loss, _, _, component_losses = self.step(batch)
+        loss, _, _, component_losses = self.step(batch, self.train_transforms)
         reconstruction_loss, encoder_loss, paired_reconstruction_loss = component_losses
 
         # Log individual component losses
@@ -159,14 +169,14 @@ class AutoTranslationModule(BaseModule):
         self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor], batch_idx: int
     ):
         """Validation step for processing one batch of data."""
-        loss, _, _, _ = self.step(batch)
+        loss, _, _, _ = self.step(batch, self.val_transforms)
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
 
     def test_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor], batch_idx: int
     ):
         """Test step for processing one batch of data."""
-        loss, _, _, _ = self.step(batch)
+        loss, _, _, _ = self.step(batch, self.test_transforms)
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
 
     def configure_optimizers(self):

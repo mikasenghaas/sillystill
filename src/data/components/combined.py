@@ -45,35 +45,31 @@ class CombinedDataset(Dataset):
         num_paired_batches = len(self.paired_dataset) // self.num_paired_per_batch
         return max(no_digital_batches, no_film_batches, num_paired_batches)
 
-    def __getitem__(
-        self, idx: int
-    ) -> Tuple[torch.Tensor, torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """Returns a sample from the dataset at the given index."""
-        # Get `num_unpaired_per_batch` random unpaired digital images
+        # Tensor: [B1, C, H, W]
         n, k = len(self.digital_dataset), self.num_unpaired_per_batch
-        indices = torch.randint(0, n, k)
+        indices = torch.randint(0, n, (k,))
         digital_images = []
         for i in range(self.num_unpaired_per_batch):
             digital_images.append(self.digital_dataset[indices[i]])
-        digital_images = torch.stack(digital_images)
+        digital_images = self.digital_dataset.collate(digital_images)
 
-        # Get no_unpaired_per_batch unpaired film images
-        indices = torch.randint(0, len(self.film_dataset), self.num_unpaired_per_batch)
+        # Tensor: [B1, C, H, W]
+        n, k = len(self.film_dataset), self.num_unpaired_per_batch
+        indices = torch.randint(0, n, (k,))
         film_images = []
         for i in range(self.num_unpaired_per_batch):
             film_images.append(self.film_dataset[indices[i]])
-        film_images = torch.stack(film_images)
+        film_images = self.film_dataset.collate(film_images)
 
-        # Get no_paired_per_batch paired images
-        indices = torch.randint(
-            0, len(self.paired_dataset), (self.num_paired_per_batch,)
-        )
-        digital_paired, film_paired = [], []
+        # Tensor: [2, B2, C, H, W]
+        n, k = len(self.paired_dataset), self.num_paired_per_batch
+        indices = torch.randint(0, n, (k,))
+        film_digital_paired = []
         for i in range(self.num_paired_per_batch):
             film, digital = self.paired_dataset[indices[i]]
-            film_paired.append(film)
-            digital_paired.append(digital)
-
-        paired_images = (torch.stack(film_paired), torch.stack(digital_paired))
+            film_digital_paired.append((film, digital))
+        paired_images = self.paired_dataset.collate(film_digital_paired)
 
         return film_images, digital_images, paired_images

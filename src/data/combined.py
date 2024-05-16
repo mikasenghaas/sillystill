@@ -6,6 +6,7 @@ from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset, random_split
 
 from src.data.components import CombinedDataset, PairedDataset, UnpairedDataset
+from src.data.components.subset import CustomSubset
 
 
 class CombinedDigitalFilmDataModule(LightningDataModule):
@@ -91,6 +92,27 @@ class CombinedDigitalFilmDataModule(LightningDataModule):
                 lengths=self.hparams.data_split,
                 generator=torch.Generator().manual_seed(42),
             )
+
+            # Create custom subsets (to keep `collate method`)
+            self.paired_train = CustomSubset(paired_dataset, self.paired_train.indices)
+            self.paired_val = CustomSubset(paired_dataset, self.paired_val.indices)
+            self.paired_test = CustomSubset(paired_dataset, self.paired_test.indices)
+
+            self.digital_train = CustomSubset(
+                unpaired_digital_dataset, self.digital_train.indices
+            )
+            self.digital_val = CustomSubset(
+                unpaired_digital_dataset, self.digital_val.indices
+            )
+            self.digital_test = CustomSubset(
+                unpaired_digital_dataset, self.digital_test.indices
+            )
+
+            self.film_train = CustomSubset(
+                unpaired_film_dataset, self.film_train.indices
+            )
+            self.film_val = CustomSubset(unpaired_film_dataset, self.film_val.indices)
+            self.film_test = CustomSubset(unpaired_film_dataset, self.film_test.indices)
 
             # Instantiate the AutoTranslateDatasets
             self.data_train = CombinedDataset(
