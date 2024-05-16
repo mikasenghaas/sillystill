@@ -12,7 +12,8 @@ from torchmetrics.image import (
 from torchmetrics.image.fid import FrechetInceptionDistance as FID
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPIPS
 from torchmetrics.image.qnr import QualityWithNoReference as QNR
-from PIL.Image import Image
+from PIL.Image import Image as PILImage
+from torchvision.transforms.v2.functional import to_pil_image
 
 from matplotlib import pyplot as plt
 
@@ -54,7 +55,7 @@ class TranslationModule(BaseModule):
         )
 
         # Store hyperparameters
-        self.save_hyperparameters(logger=False, ignore=("net", "loss"))
+        self.save_hyperparameters(logger=False)
         self.net = net
         self.loss = loss
 
@@ -119,7 +120,7 @@ class TranslationModule(BaseModule):
     def test_step(self, batch: torch.Tensor, batch_idx: int):
         """Test step for processing one batch of data."""
         # Forward pass
-        film, digital = self.test_transform(batch)
+        film, digital = self.test_transform(batch, downsample=2)
         film_predicted = self.forward(digital)
         loss = self.loss(film_predicted, film)
 
@@ -130,13 +131,20 @@ class TranslationModule(BaseModule):
 
         self._log_images(film, digital, film_predicted, key="val/images")
 
-    def predict(self, digital: torch.Tensor) -> Image:
+    def predict(self, digital: PILImage, downsample=2) -> PILImage:
         """Predicts the output of the model for a given input."""
-        film_predicted = self.forward(self.test_transform(digital))
-        film_predicted = self.undo_transform(film_predicted)
-        film_predicted = self.to_image(film_predicted)
+        assert isinstance(digital, PILImage), "Input must be a PIL image."
 
-        return film_predicted
+        # Prepare input
+        input = self.infer_transform(digital, downsample=downsample).unsqueeze(0)
+
+        # Forward pass
+        output = self.forward(input)
+
+        # Prepare output
+        film_predicted = self.undo_transform(output).squeeze(0)
+
+        return to_pil_image(film_predicted)
 
     def _log_images(
         self,

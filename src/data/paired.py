@@ -96,7 +96,7 @@ class PairedDigitalFilmDataModule(LightningDataModule):
         """Create and return the validation dataloader"""
         return DataLoader(
             dataset=self.data_val,
-            collate_fn=self.datasetcollate,
+            collate_fn=self.dataset.collate,
             batch_size=1,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,

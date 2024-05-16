@@ -1,3 +1,4 @@
+from turtle import down
 from typing import Optional
 
 import torch
@@ -113,7 +114,7 @@ class BaseModule(LightningModule):
         )
         return transform_val(x)
 
-    def test_transform(self, x: torch.Tensor) -> torch.Tensor:
+    def test_transform(self, x: torch.Tensor, downsample: int = 1) -> torch.Tensor:
         """
         Applies a series of transformations to the input tensor to prepare it
         for testing. This includes resizing the image to the nearest multiple
@@ -125,17 +126,23 @@ class BaseModule(LightningModule):
         Returns:
             torch.Tensor: The transformed tensor
         """
-        height = self.get_valid_dim(x.shape[-2])
-        width = self.get_valid_dim(x.shape[-1])
+        height = self.get_valid_dim(x.shape[-2], downsample=downsample)
+        width = self.get_valid_dim(x.shape[-1], downsample=downsample)
         transform_test = T.Compose([self.transform, T.Resize((height, width))])
         return transform_test(x)
+
+    def infer_transform(self, img: PILImage, downsample: int = 1) -> None:
+        height = self.get_valid_dim(img.size[1], downsample=downsample)
+        width = self.get_valid_dim(img.size[0], downsample=downsample)
+        transform_test = T.Compose([self.transform, T.Resize((height, width))])
+        return transform_test(img)
 
     def to_image(self, x: torch.Tensor) -> PILImage:
         return F.to_pil_image(x)
 
     def get_valid_dim(self, dim: int, downsample: int = 1) -> int:
         """
-        Returns the nearest multiple of 4 that is less than or equal to the
+        Returns the nearest multiple of 8 that is less than or equal to the
         input dimension. This is required because of the network architecture.
 
         NOTE: This should better be defined in the `src.models.net` modules.
@@ -146,7 +153,9 @@ class BaseModule(LightningModule):
         Returns:
             int: The nearest multiple of 4 that is less than or equal to the input
         """
-        return int((dim / downsample) // 4 * 4)
+        adjusted_dim = dim // downsample
+        valid_dim = (adjusted_dim // 8) * 8
+        return valid_dim
 
     def configure_optimizers(self):
         """Setup the optimizer and the LR scheduler."""
