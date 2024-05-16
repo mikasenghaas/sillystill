@@ -3,7 +3,6 @@ from typing import Tuple, Optional
 import wandb
 import torch
 import torch.nn as nn
-from lightning import LightningModule
 from torchmetrics import MetricCollection
 from torchmetrics.image import (
     StructuralSimilarityIndexMeasure as SSIM,
@@ -14,10 +13,12 @@ from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPI
 from torchmetrics.image.qnr import QualityWithNoReference as QNR
 
 from matplotlib import pyplot as plt
-from ..utils.utils import undo_transforms
+
+from src.utils.utils import undo_transforms
+from .base_module import BaseModule
 
 
-class TranslationModule(LightningModule):
+class TranslationModule(BaseModule):
     """
     LightningModule for image-to-image translation tasks, such as transforming
     digital images to appear as if shot on CineStill800T film.
@@ -27,8 +28,10 @@ class TranslationModule(LightningModule):
         self,
         net: nn.Module,
         loss: nn.Module,
-        optimizer: torch.optim.Optimizer,
-        scheduler: torch.optim.lr_scheduler._LRScheduler = None,
+        augment: float = 0.0,
+        training_patch_size: int = 128,
+        optimizer: torch.optim.Optimizer = torch.optim.Adam,
+        scheduler: torch.optim.lr_scheduler._LRScheduler = torch.optim.lr_scheduler.ReduceLROnPlateau,
         lr_monitor: str = "train/loss",  # Check why we can't have val/loss
     ) -> None:
         """Initialises `TranslationModule`.
@@ -40,10 +43,16 @@ class TranslationModule(LightningModule):
             scheduler: Learning rate scheduler (optional).
             lr_monitor: Metric to monitor for learning rate scheduler (default: val/loss).
         """
-        super().__init__()
+        super().__init__(
+            augment=augment,
+            training_patch_size=training_patch_size,
+            optimizer=optimizer,
+            scheduler=scheduler,
+            lr_monitor=lr_monitor,
+        )
 
         # Store hyperparameters
-        self.save_hyperparameters(logger=False)
+        self.save_hyperparameters(logger=False, ignore=("net", "loss"))
         self.net = net
         self.loss = loss
 
@@ -52,9 +61,9 @@ class TranslationModule(LightningModule):
             {
                 "ssim": SSIM(),
                 "psnr": PSNR(),
-                "fid": FID(),
-                "lpips": LPIPS(),
-                "qnr": QNR(),  # not sure if this is the same thing as NIQE
+                # "fid": FID(),
+                # "lpips": LPIPS(),
+                # "qnr": QNR(),  # not sure if this is the same thing as NIQE
             }
         )
         self.train_metrics = metrics.clone(prefix="train/")
@@ -73,28 +82,14 @@ class TranslationModule(LightningModule):
         """
         return self.net(x)
 
-    def step(
-        self, batch: Tuple[torch.Tensor, torch.Tensor]
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """
-        Perform a single step with the given batch, computing loss.
-
-        Args:
-            batch: Tuple of (input_images, target_images). Both tensors should
-            have the shape [batch_size, 3, n, n].
-
-        Returns:
-            Tuple of (loss, predicted_images)
-        """
-        film, digital = batch
-        film_predicted = self.forward(digital)
-        loss = self.loss(film_predicted, film)
-
-        return loss, film, digital, film_predicted
-
     def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         """Training step for processing one batch of data."""
-        loss, film, digital, film_predicted = self.step(batch)
+        # Forward pass
+        film, digital = batch
+        film = self.transform_train(film)
+        digital = self.transform_train(digital)
+        film_predicted = self.forward(digital)
+        loss = self.loss(film_predicted, film)
 
         # Log training loss, metrics and images
         self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
@@ -107,7 +102,12 @@ class TranslationModule(LightningModule):
 
     def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         """Validation step for processing one batch of data."""
-        loss, film, digital, film_predicted = self.step(batch)
+        # Forward pass
+        film, digital = batch
+        film = self.transform_test(film)
+        digital = self.transform_test(digital)
+        film_predicted = self.forward(digital)
+        loss = self.loss(film_predicted, film)
 
         # Log validation loss and images
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
@@ -118,7 +118,12 @@ class TranslationModule(LightningModule):
 
     def test_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         """Test step for processing one batch of data."""
-        loss, film, digital, film_predicted = self.step(batch)
+        # Forward pass
+        film, digital = batch
+        film = self.transform_test(film)
+        digital = self.transform_test(digital)
+        film_predicted = self.forward(digital)
+        loss = self.loss(film_predicted, film)
 
         # Log test loss and metrics
         self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
@@ -127,6 +132,11 @@ class TranslationModule(LightningModule):
 
         self._log_images(film, digital, film_predicted, key="val/images")
 
+    def predict(self, x: torch.Tensor) -> torch.Tensor:
+        """Predicts the output of the model for a given input."""
+        x = self.transform_test(x)
+        return self.forward(x)
+
     def _log_images(
         self,
         film: torch.Tensor,
@@ -134,41 +144,29 @@ class TranslationModule(LightningModule):
         film_predicted: torch.Tensor,
         key: Optional[str] = None,
     ):
-        if hasattr(self.logger.experiment, "log"):
-            # Create figure
-            batch_size = film.size(0)
-            fig, axs = plt.subplots(
-                nrows=3, ncols=batch_size, figsize=(4 * batch_size, 8)
-            )
-            if axs.ndim == 1:
-                axs = axs[:, None]
-            fig.tight_layout(pad=1.0)
-            for i in range(batch_size):
-                axs[0, i].imshow(undo_transforms(digital[i].cpu()).numpy())
-                axs[1, i].imshow(undo_transforms(film[i].cpu()).numpy())
-                axs[2, i].imshow(undo_transforms(film_predicted[i].cpu()).numpy())
-            axs[0, 0].set_ylabel("Digital")
-            axs[1, 0].set_ylabel("Film (Ground Truth)")
-            axs[2, 0].set_ylabel("Film (Predicted)")
+        if self.logger:
+            if hasattr(self.logger.experiment, "log"):
+                # Create figure
+                batch_size = film.size(0)
+                fig, axs = plt.subplots(
+                    nrows=3, ncols=batch_size, figsize=(4 * batch_size, 8)
+                )
+                if axs.ndim == 1:
+                    axs = axs[:, None]
+                fig.tight_layout(pad=1.0)
+                for i in range(batch_size):
+                    axs[0, i].imshow(undo_transforms(digital[i].cpu()).numpy())
+                    axs[1, i].imshow(undo_transforms(film[i].cpu()).numpy())
+                    axs[2, i].imshow(undo_transforms(film_predicted[i].cpu()).numpy())
+                axs[0, 0].set_ylabel("Digital")
+                axs[1, 0].set_ylabel("Film (Ground Truth)")
+                axs[2, 0].set_ylabel("Film (Predicted)")
 
-            # Log to W&B
-            self.logger.experiment.log({key: wandb.Image(fig)})
-            self.logger.experiment.log(
-                {"predicted_film": [wandb.Image(img) for img in film_predicted]}
-            )
+                # Log to W&B
+                self.logger.experiment.log({key: wandb.Image(fig)})
+                self.logger.experiment.log(
+                    {"predicted_film": [wandb.Image(img) for img in film_predicted]}
+                )
 
-            # Close figure
-            plt.close()
-
-    def configure_optimizers(self):
-        """Setup the optimizer and the LR scheduler."""
-        optimizer = self.hparams.optimizer(params=self.net.parameters())
-        if self.hparams.scheduler:
-            scheduler = {
-                "scheduler": self.hparams.scheduler(optimizer),
-                "monitor": self.hparams.lr_monitor,
-                "interval": "epoch",
-                "frequency": 1,
-            }
-            return [optimizer], [scheduler]
-        return optimizer
+                # Close figure
+                plt.close()
