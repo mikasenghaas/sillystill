@@ -4,8 +4,8 @@ import wandb
 import torch
 import torch.nn as nn
 from lightning import LightningModule
-from torchmetrics import (
-    MetricCollection,
+from torchmetrics import MetricCollection
+from torchmetrics.image import (
     StructuralSimilarityIndexMeasure as SSIM,
     PeakSignalNoiseRatio as PSNR,
 )
@@ -54,7 +54,7 @@ class TranslationModule(LightningModule):
                 "psnr": PSNR(),
                 "fid": FID(),
                 "lpips": LPIPS(),
-                "qnr": QNR(), # not sure if this is the same thing as NIQE
+                "qnr": QNR(),  # not sure if this is the same thing as NIQE
             }
         )
         self.train_metrics = metrics.clone(prefix="train/")
