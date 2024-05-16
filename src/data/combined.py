@@ -14,24 +14,14 @@ class CombinedDigitalFilmDataModule(LightningDataModule):
     def __init__(
         self,
         data_split: Tuple[float, float, float] = (0.7, 0.2, 0.1),
-        patch_size: int = 128,
         num_paired_per_batch: int = 4,
         num_unpaired_per_batch: int = 6,
-        augment: Optional[List[Dict]] = None,
-        num_workers: int = 1,
+        num_workers: int = 0,
+        persistent_workers: bool = False,
         pin_memory: bool = True,
         **kwargs,
     ) -> None:
-        """Initialise a `CombinedDigitalFilmDataModule`.
-
-        Args:
-            data_split (Tuple[float, float, float]): The train, validation and test split.
-            patch_size (int): The patch size. Defaults to `128`.
-            max_samples (int, optional): The maximum number of samples to load. Defaults to `None`.
-            augment (Optional[List[Dict]]): The data augmentation to apply. Defaults to `None`.
-            num_workers (int): The number of workers to use for data loading. Defaults to `1`.
-            pin_memory (bool): Whether to pin memory. Defaults to `True`.
-        """
+        """Initialise a `CombinedDigitalFilmDataModule`."""
         super().__init__()
 
         # Save hyperparameters
@@ -76,19 +66,13 @@ class CombinedDigitalFilmDataModule(LightningDataModule):
         if not self.data_train and not self.data_val and not self.data_test:
             # Instantiate paired and unpaired datasets
             paired_dataset = PairedDataset(
-                image_dirs=(self.film_paired_dir, self.digital_paired_dir),
-                patch_size=self.hparams.patch_size,
-                augment=self.hparams.augment,
+                image_dirs=(self.film_paired_dir, self.digital_paired_dir)
             )
             unpaired_digital_dataset = UnpairedDataset(
                 image_dir=self.digital_unpaired_dir,
-                patch_size=self.hparams.patch_size,
-                augment=self.hparams.augment,
             )
             unpaired_film_dataset = UnpairedDataset(
                 image_dir=self.film_unpaired_dir,
-                patch_size=self.hparams.patch_size,
-                augment=self.hparams.augment,
             )
 
             # Split each of these into train, val, and test
@@ -138,6 +122,7 @@ class CombinedDigitalFilmDataModule(LightningDataModule):
             batch_size=1,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
+            persistent_workers=self.hparams.persistent_workers,
             shuffle=True,
         )
 
@@ -148,7 +133,7 @@ class CombinedDigitalFilmDataModule(LightningDataModule):
             batch_size=1,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
-            persistent_workers=True,
+            persistent_workers=self.hparams.persistent_workers,
             shuffle=False,
         )
 
@@ -159,5 +144,6 @@ class CombinedDigitalFilmDataModule(LightningDataModule):
             batch_size=1,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
+            persistent_workers=self.hparams.persistent_workers,
             shuffle=False,
         )
