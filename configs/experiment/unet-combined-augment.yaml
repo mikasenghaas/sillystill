@@ -1,0 +1,44 @@
+# @package _global_
+
+# To run: `python train.py -m experiment={filename}`
+
+defaults:
+  - override /data: paired
+  - override /model: translation
+  - override /model/net: unet
+  - override /model/loss: simple-combined
+  - override /logger: wandb
+
+group: unet-combined-augment
+tags: ["unet", "combined", "augment"]
+seed: 42
+
+trainer:
+  min_epochs: 10
+  max_epochs: 150
+  accumulate_grad_batches: 8
+
+model:
+  optimizer:
+    lr: 1e-3 # From unet-combined
+    weight_decay: 1e-3
+  scheduler:
+    factor: 1e-1
+    patience: 5
+  net:
+    hidden_channels: [64,128,256] # From unet-combined
+  loss:
+    mse_weight: 0.5 # From unet-combined
+
+data:
+  batch_size: 1
+  patch_size: 128 # From unet-combined
+  data_split: [0.7, 0.2, 0.1]
+
+hydra:
+  sweeper:
+    params:
+      data.augment.flip: False, True
+      data.augment.rotate: False, True
+      data.augment.blur: False, True
+      data.augment.brightness: False, True
