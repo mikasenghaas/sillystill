@@ -1,4 +1,3 @@
-from turtle import down
 from typing import Optional
 
 import torch

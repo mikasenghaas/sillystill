@@ -129,9 +129,9 @@ class TranslationModule(BaseModule):
         test_metrics = self.test_metrics(film_predicted, film)
         self.log_dict(test_metrics, on_step=False, on_epoch=True, prog_bar=True)
 
-        self._log_images(film, digital, film_predicted, key="val/images")
+        self._log_images(film, digital, film_predicted, key="test/images")
 
-    def predict(self, digital: PILImage, downsample=2) -> PILImage:
+    def predict(self, digital: PILImage, downsample=1) -> PILImage:
         """Predicts the output of the model for a given input."""
         assert isinstance(digital, PILImage), "Input must be a PIL image."
 
