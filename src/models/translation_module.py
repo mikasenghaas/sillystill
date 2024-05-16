@@ -8,6 +8,9 @@ from torchmetrics import (
     MetricCollection,
     StructuralSimilarityIndexMeasure as SSIM,
     PeakSignalNoiseRatio as PSNR,
+    FrechetInceptionDistance as FID,
+    LearnedPerceptualImagePatchSimilarity as LPIPS,
+    QualityWithNoReference as QNR,
 )
 
 from matplotlib import pyplot as plt
@@ -49,6 +52,9 @@ class TranslationModule(LightningModule):
             {
                 "ssim": SSIM(),
                 "psnr": PSNR(),
+                "fid": FID(),
+                "lpips": LPIPS(),
+                "qnr": QNR(), # not sure if this is the same thing as NIQE
             }
         )
         self.train_metrics = metrics.clone(prefix="train/")
