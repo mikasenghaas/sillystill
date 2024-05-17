@@ -1,4 +1,0 @@
-_target_: src.models.loss.SimpleCombinedLoss
-
-mse_weight: 1.0
-feature_weight: 1.0

@@ -4,8 +4,9 @@ from torchvision.models import vgg19_bn
 from torchvision.models.vgg import VGG19_BN_Weights
 
 
-class SimpleCombinedLoss(nn.Module):
-    """Returns a loss value for the simple combined model.
+class MSEVGGLoss(nn.Module):
+    """
+    Returns a loss value for the combination of MSE and VGG loss.
 
     Consists of two components:
     - MSE Reconstruction loss for the digital and film images

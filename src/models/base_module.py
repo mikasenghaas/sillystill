@@ -6,11 +6,7 @@ import torchvision.transforms.v2 as T
 import torchvision.transforms.v2.functional as F
 from PIL.Image import Image as PILImage
 
-from torchmetrics.image.fid import FrechetInceptionDistance as FID
-from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPIPS
-from torchmetrics.image.qnr import QualityWithNoReference as QNR
-
-from .transforms import Unnormalize
+from . import transforms as CT
 
 
 class BaseModule(LightningModule):
@@ -25,50 +21,27 @@ class BaseModule(LightningModule):
         training_patch_size: int,
         optimizer: torch.optim.Optimizer = torch.optim.Adam,
         scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
-        lr_monitor: str = "train/loss",  # Check why we can't have val/loss
+        lr_monitor: str = "val/loss",
     ) -> None:
         """Initialises `BaseModel`."""
         super().__init__()
 
         # Save hyperparameters
         self.training_patch_size = training_patch_size
-
-        # Initialise transforms
-        self.transform = T.Compose(
-            [
-                T.ToImage(),
-                T.ToDtype(torch.float32, scale=True),
-                T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            ]
-        )
-        self.augment = T.Compose(
-            [
-                T.RandomHorizontalFlip(p=augment),
-                T.RandomVerticalFlip(p=augment),
-                T.RandomApply(
-                    [
-                        T.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5.0)),
-                        T.ColorJitter(brightness=(0.6, 1)),
-                    ],
-                    augment,
-                ),
-            ]
-        )
+        self.augment = augment
 
     def undo_transform(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Unnormalizes the input tensor to convert it back to an image.
+        Takes a tensor and undoes the transformations necessary to convert it
+        back to an image. This includes converting the tensor to a PIL image.
 
-        Args:
-            x (torch.Tensor): The input tensor to unnormalize
-
-        Returns:
-            torch.Tensor: The unnormalized tensor
+        NOTE: The T.ToPILImage() function only works on single images [C, H, W]
+        and hence this function should be used on a single image at a time.
         """
-        undo_transform = Unnormalize(
-            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-        )
-        return undo_transform(x)
+        assert x.ndim == 3, f"Expected 3D tensor, got {x.ndim}D tensor"
+        assert x.shape[0] == 3, f"Expected 3 channels, got {x.shape[0]} channels"
+
+        return CT.FromModelInput()(x)
 
     def train_transform(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -85,8 +58,8 @@ class BaseModule(LightningModule):
         """
         transform_train = T.Compose(
             [
-                self.augment,
-                self.transform,
+                CT.Augment(self.augment),
+                CT.ToModelInput(),
                 T.RandomResizedCrop(self.training_patch_size),
             ]
         )
@@ -107,7 +80,7 @@ class BaseModule(LightningModule):
         """
         transform_val = T.Compose(
             [
-                self.transform,
+                CT.ToModelInput(),
                 T.RandomResizedCrop(self.training_patch_size),
             ]
         )
@@ -127,17 +100,14 @@ class BaseModule(LightningModule):
         """
         height = self.get_valid_dim(x.shape[-2], downsample=downsample)
         width = self.get_valid_dim(x.shape[-1], downsample=downsample)
-        transform_test = T.Compose([self.transform, T.Resize((height, width))])
+        transform_test = T.Compose([CT.ToModelInput(), T.Resize((height, width))])
         return transform_test(x)
 
     def infer_transform(self, img: PILImage, downsample: int = 1) -> None:
         height = self.get_valid_dim(img.size[1], downsample=downsample)
         width = self.get_valid_dim(img.size[0], downsample=downsample)
-        transform_test = T.Compose([self.transform, T.Resize((height, width))])
+        transform_test = T.Compose([CT.ToModelInput(), T.Resize((height, width))])
         return transform_test(img)
-
-    def to_image(self, x: torch.Tensor) -> PILImage:
-        return F.to_pil_image(x)
 
     def get_valid_dim(self, dim: int, downsample: int = 1) -> int:
         """
