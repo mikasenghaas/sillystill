@@ -13,9 +13,10 @@ from torchmetrics.image.fid import FrechetInceptionDistance as FID
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPIPS
 from torchmetrics.image.qnr import QualityWithNoReference as QNR
 from PIL.Image import Image as PILImage
-from torchvision.transforms.v2.functional import to_pil_image
 
 from matplotlib import pyplot as plt
+
+from src.models.transforms import pil_to_plot
 from .base_module import BaseModule
 
 
@@ -63,7 +64,7 @@ class TranslationModule(BaseModule):
                 "ssim": SSIM(),
                 "psnr": PSNR(),
                 # "fid": FID(),
-                # "lpips": LPIPS(),
+                "lpips": LPIPS(),
                 # "qnr": QNR(),  # not sure if this is the same thing as NIQE
             }
         )
@@ -82,7 +83,7 @@ class TranslationModule(BaseModule):
         Returns
             torch.Tensor: The output tensor representing the transformed images.
         """
-        return self.net(x)
+        return self.net(x).clamp(0 + 1e-5, 1 - 1e-5)
 
     def step(
         self, batch: torch.Tensor, transform: Optional[nn.Module]
@@ -160,9 +161,9 @@ class TranslationModule(BaseModule):
         output = self.forward(input)
 
         # Prepare output
-        film_predicted = self.undo_transform(output).squeeze(0)
+        film_predicted = self.undo_transform(output)
 
-        return to_pil_image(film_predicted)
+        return film_predicted
 
     def _log_images(
         self,
@@ -171,13 +172,6 @@ class TranslationModule(BaseModule):
         film_predicted: torch.Tensor,
         key: Optional[str] = None,
     ):
-        film, digital, film_predicted = self.undo_transform(
-            torch.cat(
-                [film.unsqueeze(0), digital.unsqueeze(0), film_predicted.unsqueeze(0)],
-                dim=0,
-            ),
-        )
-
         if self.logger:
             if hasattr(self.logger.experiment, "log"):
                 # Create figure
@@ -189,9 +183,11 @@ class TranslationModule(BaseModule):
                     axs = axs[:, None]
                 fig.tight_layout(pad=1.0)
                 for i in range(batch_size):
-                    axs[0, i].imshow(np.array(self.to_image(digital[i])))
-                    axs[1, i].imshow(np.array(self.to_image(film[i])))
-                    axs[2, i].imshow(np.array(self.to_image(film_predicted[i])))
+                    axs[0, i].imshow(pil_to_plot(self.undo_transform(digital[i])))
+                    axs[1, i].imshow(pil_to_plot(self.undo_transform(film[i])))
+                    axs[2, i].imshow(
+                        pil_to_plot(self.undo_transform(film_predicted[i]))
+                    )
                 axs[0, 0].set_ylabel("Digital")
                 axs[1, 0].set_ylabel("Film (Ground Truth)")
                 axs[2, 0].set_ylabel("Film (Predicted)")
