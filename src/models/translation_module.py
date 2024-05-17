@@ -161,7 +161,7 @@ class TranslationModule(BaseModule):
         output = self.forward(input)
 
         # Prepare output
-        film_predicted = self.undo_transform(output)
+        film_predicted = self.undo_transform(output.squeeze(0))
 
         return film_predicted
 
