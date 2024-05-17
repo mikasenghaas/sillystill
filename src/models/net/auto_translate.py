@@ -30,7 +30,11 @@ class AutoTranslateNet(nn.Module):
         self.film_autoencoder = UNet(input_output_channels, hidden_channels)
 
     def forward(
-        self, film: torch.Tensor, digital: torch.Tensor, paired: torch.Tensor
+        self,
+        film: torch.Tensor,
+        digital: torch.Tensor,
+        film_paired: torch.Tensor,
+        digital_paired: torch.Tensor,
     ) -> Tuple[
         torch.Tensor,
         torch.Tensor,
@@ -47,15 +51,12 @@ class AutoTranslateNet(nn.Module):
             paired: Input tensor representing a batch of paired images, shape [B_3, 3, n, n, 2].
 
         Returns:
-            digital_reconstructed: Transformed digital images, shape [B_1, 3, n, n].
             film_reconstructed: Transformed film images, shape [B_2, 3, n, n].
-            digital_to_film: Transformed digital images from the paired film, shape [B_1, 3, n, n].
+            digital_reconstructed: Transformed digital images, shape [B_1, 3, n, n].
             film_to_digital: Transformed film images from the paired digital, shape [B_2, 3, n, n].
+            digital_to_film: Transformed digital images from the paired film, shape [B_1, 3, n, n].
             paired_encoder_representation: Latent space representations of the paired images over all encoder layers. List of tuples of tensors (digital_latent, film_latent), each tuple containing the latent space representation of the digital and film images, each shape [B_3, channels, n, n].
         """
-        # Split the paired images into digital and film images
-        film_paired, digital_paired = paired
-
         # Get all digital/film images
         all_film = torch.cat([film, film_paired], dim=0)
         all_digital = torch.cat([digital, digital_paired], dim=0)
@@ -78,10 +79,10 @@ class AutoTranslateNet(nn.Module):
             paired_encoder_representations.append((digital_skips[i], film_skips[i]))
 
         return (
-            digital_reconstructed,
             film_reconstructed,
-            digital_to_film,
+            digital_reconstructed,
             film_to_digital,
+            digital_to_film,
             paired_encoder_representations,
         )
 

@@ -11,6 +11,7 @@ devices: 1
 log_every_n_steps: 1
 check_val_every_n_epoch: 1  
 accumulate_grad_batches: 1 # Accumulates grads every k batches (enables larger effective batch size)
+val_check_interval: 1.0 # How often within one training epoch to check the validation set
 
 # Setting to overfit on training (debugging)
 overfit_batches: 0.0 # Uses only this fraction/ num_samples per batch for training

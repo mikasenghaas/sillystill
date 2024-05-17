@@ -42,41 +42,40 @@ class AutoTranslateLoss(nn.Module):
 
     def forward(
         self,
-        digital_in,
-        film_in,
-        paired_in,
-        digital_reconstructed,
+        film,
+        digital,
+        film_paired,
+        digital_paired,
         film_reconstructed,
-        digital_transformed,
-        film_transformed,
+        digital_reconstructed,
+        digital_to_film,
+        film_to_digital,
         paired_encoder_representations,
     ):
         """Compute the loss.
 
         Args:
-            digital_in: Input tensor representing a batch of unpaired images, shape [B_1, 3, n, n].
-            film_in: Input tensor representing a batch of film images, shape [B_2, 3, n, n].
-            paired_in: Input tensor representing a batch of paired images, shape [B_3, 3, n, n, 2].
-            digital_reconstructed: Reconstructed digital images, shape [B_1, 3, n, n].
-            film_reconstructed: Reconstructed film images, shape [B_2, 3, n, n].
-            digital_out: Transformed digital images, shape [B_1, 3, n, n].
-            film_out: Transformed film images, shape [B_2, 3, n, n].
-            paired_encoder_representations: Latent space representation of the paired images. List of tuples of tensors (digital_latent, film_latent), each tuple containing the latent space representation of the digital and film images, each shape [B_3, channels, n, n].
+            film (torch.Tensor): Input tensor representing a batch of film images, shape [B_1, 3, n, n].
+            digital (torch.Tensor): Input tensor representing a batch of unpaired images, shape [B_2, 3, n, n].
+            film_paired (torch.Tensor): Input tensor representing a batch of paired film images, shape [B_3, 3, n, n].
+            digital_paired (torch.Tensor): Input tensor representing a batch of paired digital images, shape [B_3, 3, n, n].
+            film_reconstructed (torch.Tensor): Reconstructed film images, shape [B_1, 3, n, n].
+            digital_reconstructed (torch.Tensor): Reconstructed digital images, shape [B_2, 3, n, n].
+            digital_to_film (torch.Tensor): Transformed digital images, shape [B_1, 3, n, n].
+            film_to_digital (torch.Tensor): Transformed film images, shape [B_2, 3, n, n].
+            paired_encoder_representations (List[Tuple[torch.Tensor, torch.Tensor]]): Latent space representation of the paired images. List of tuples of tensors (digital_latent, film_latent), each tuple containing the latent space representation of the digital and film images, each shape [B_3, channels, n, n].
 
         Returns:
             loss: The computed loss value.
             (reconstruction loss, encoder_loss, paired_reconstruction_loss): Tuple of the individual loss components.
         """
-
-        paired_digital_in = paired_in[0]
-        paired_film_in = paired_in[1]
-
-        all_digital_in = torch.cat([digital_in, paired_digital_in], dim=0)
-        all_film_in = torch.cat([film_in, paired_film_in], dim=0)
+        # Combine unpaired and paired images
+        all_film = torch.cat([film, film_paired], dim=0)
+        all_digital = torch.cat([digital, digital_paired], dim=0)
 
         # Reconstruction loss
-        digital_loss = F.mse_loss(digital_reconstructed, all_digital_in)
-        film_loss = F.mse_loss(film_reconstructed, all_film_in)
+        digital_loss = F.mse_loss(digital_reconstructed, all_digital)
+        film_loss = F.mse_loss(film_reconstructed, all_film)
 
         # Encoder loss
         encoder_loss = 0
@@ -85,15 +84,20 @@ class AutoTranslateLoss(nn.Module):
         encoder_loss /= len(paired_encoder_representations)
 
         # Paired transformation loss
-        paired_digital_loss = self.paired_loss_fn(paired_digital_in, digital_transformed)
+        paired_digital_loss = self.paired_loss_fn(digital_paired, film_to_digital)
         paired_film_loss = 0
         if self.do_penalise_film_transformation:
-            paired_film_loss = self.paired_loss_fn(paired_film_in, film_transformed)
+            paired_film_loss = self.paired_loss_fn(film_paired, digital_to_film)
+
+        # Compute individual losses
+        reconstruction_loss = digital_loss + film_loss
+        paired_reconstruction_loss = paired_digital_loss + paired_film_loss
 
         # Compute total loss
         loss = (
-            self.reconstruction_weight * (digital_loss + film_loss)
+            self.reconstruction_weight * reconstruction_loss
             + self.encoder_weight * encoder_loss
-            + self.paired_reconstruction_weight * (paired_digital_loss + paired_film_loss)
+            + self.paired_reconstruction_weight * paired_reconstruction_loss
         )
-        return loss, (digital_loss + film_loss, encoder_loss, paired_digital_loss + paired_film_loss)
+
+        return loss, (reconstruction_loss, encoder_loss, paired_reconstruction_loss)
