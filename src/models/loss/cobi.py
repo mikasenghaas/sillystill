@@ -24,7 +24,13 @@ class CoBiLoss(nn.Module):
     """
 
     def __init__(
-        self, alpha=0.5, patch_size=10, ws=0.1, epsilon=1e-5, bandwidth=0.1, verbose=False
+        self,
+        alpha=0.5,
+        patch_size=10,
+        ws=0.1,
+        epsilon=1e-5,
+        bandwidth=0.1,
+        verbose=False,
     ):
         """Initialize a `CoBiLoss` module with optional verbosity.
 
@@ -53,7 +59,9 @@ class CoBiLoss(nn.Module):
 
         if self.verbose:
             print("Initialized CoBiLoss with the following settings:")
-            print(f"  alpha: {self.alpha}, patch_size: {self.patch_size}, ws: {self.ws}")
+            print(
+                f"  alpha: {self.alpha}, patch_size: {self.patch_size}, ws: {self.ws}"
+            )
             print(f"  feature_layers used: {self.feature_layers.keys()}")
 
     def forward(self, x, y):
@@ -84,12 +92,12 @@ class CoBiLoss(nn.Module):
         if self.verbose:
             print(f"RGB patch-based loss: {rgb_loss.item()}")
 
-        total_loss = self.alpha * rgb_loss + (1 - self.alpha) * vgg_loss
+        loss = self.alpha * rgb_loss + (1 - self.alpha) * vgg_loss
 
         if self.verbose:
-            print(f"Final computed CoBiLoss: {total_loss.item()}")
+            print(f"Final computed CoBiLoss: {loss.item()}")
 
-        return total_loss
+        return {"loss": loss, "vgg_loss": vgg_loss, "rgb_loss": rgb_loss}
 
     def extract_features(self, img):
         """Extracts features from the input image using the VGG19 model.
@@ -153,7 +161,8 @@ class CoBiLoss(nn.Module):
 
         # Compute cosine distances
         cos_similarity = torch.bmm(p_flat, q_flat.transpose(1, 2)) / (
-            p_flat.norm(dim=2, keepdim=True) * q_flat.norm(dim=2, keepdim=True).transpose(1, 2)
+            p_flat.norm(dim=2, keepdim=True)
+            * q_flat.norm(dim=2, keepdim=True).transpose(1, 2)
             + self.epsilon
         )
         cos_distance = 1 - cos_similarity  # Shape (n, h*w, h*w)
@@ -176,7 +185,9 @@ class CoBiLoss(nn.Module):
         combined_measure = (1 - self.ws) * cobi_ij + self.ws * spatial_dist
 
         # Compute the minimum combined measure for each feature vector in p
-        min_combined_measure, _ = torch.min(combined_measure, dim=2)  # Min across all j for each i
+        min_combined_measure, _ = torch.min(
+            combined_measure, dim=2
+        )  # Min across all j for each i
 
         # Average these minimum values across all vectors in the batch
         score = torch.mean(min_combined_measure)
@@ -205,38 +216,19 @@ class CoBiLoss(nn.Module):
 
         # Generate spatial coordinates
         coords = (
-            torch.stack(torch.meshgrid(torch.arange(h), torch.arange(w), indexing="ij"), dim=-1)
+            torch.stack(
+                torch.meshgrid(torch.arange(h), torch.arange(w), indexing="ij"), dim=-1
+            )
             .to(device)
             .float()
         )
 
         # Flatten coordinates and expand to match batch size
-        coords = coords.view(h * w, 2).unsqueeze(0).expand(n, h * w, 2)  # Expand along batch size
+        coords = (
+            coords.view(h * w, 2).unsqueeze(0).expand(n, h * w, 2)
+        )  # Expand along batch size
 
         # Compute pairwise Euclidean distances
         spatial_dist = torch.norm(coords.unsqueeze(2) - coords.unsqueeze(1), dim=3)
 
         return spatial_dist
-
-
-# Example usage
-if __name__ == "__main__":
-    cobiloss = CoBiLoss(verbose=True)
-    x = torch.randn(1, 3, 64, 64)  # Example input tensor
-    y = torch.randn(1, 3, 64, 64)  # Example output tensor
-
-    print("Computing CoBi Loss between random tensors...")
-    print("=" * 50)
-    loss = cobiloss(x, y)
-    print("=" * 50)
-
-    print("Computing CoBi Loss between same input tensors...")
-    print("=" * 50)
-    loss_same = cobiloss(x, x)  # Loss should be lower for same input
-    print("=" * 50)
-
-    print("Final Losses")
-    print("=" * 50)
-    print(f"CoBi Loss 1: {loss.item()}")
-    print(f"CoBi Loss 2 (same inputs): {loss_same.item()}")
-    print("=" * 50)

@@ -15,16 +15,16 @@ seed: 42
 
 model:
   optimizer:
-    lr: 1e-3 # From unet-combined
+    lr: 1e-3 # From unet-mse-vgg
     weight_decay: 1e-3
   scheduler:
     factor: 1e-1
     patience: 5
   net:
-    hidden_channels: [64,128,256] # From unet-combined
+    hidden_channels: [64, 128] # From unet-mse-vgg
   loss:
-    mse_weight: 0.5 # From unet-combined
-  training_patch_size: 128 # From unet-combined
+    mse_weight: 1.0 # From unet-mse-vgg
+  training_patch_size: 256 # From unet-mse-vgg
 
 hydra:
   sweeper:

@@ -43,9 +43,9 @@ class MSEVGGLoss(nn.Module):
         for layer in self.feature_layers.keys():
             y_features = y_vgg[layer]
             y_hat_features = y_hat_vgg[layer]
-            feature_loss += self.feature_weights[
-                self.feature_layers[layer]
-            ] * F.mse_loss(y_features, y_hat_features)
+            weight = self.feature_weights[self.feature_layers[layer]]
+            layer_loss = F.mse_loss(y_features, y_hat_features)
+            feature_loss += weight * layer_loss
 
         # Combine the losses
         loss = (

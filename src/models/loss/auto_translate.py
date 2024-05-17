@@ -83,7 +83,8 @@ class AutoTranslateLoss(nn.Module):
         encoder_loss /= len(paired_encoder_representations)
 
         # Paired transformation loss
-        paired_digital_loss = self.paired_loss_fn(digital_paired, film_to_digital)
+        losses = self.paired_loss_fn(digital_paired, film_to_digital)
+        paired_digital_loss = losses["loss"]
         paired_film_loss = 0
         if self.do_penalise_film_transformation:
             paired_film_loss = self.paired_loss_fn(film_paired, digital_to_film)
@@ -99,4 +100,9 @@ class AutoTranslateLoss(nn.Module):
             + self.paired_reconstruction_weight * paired_reconstruction_loss
         )
 
-        return loss, (reconstruction_loss, encoder_loss, paired_reconstruction_loss)
+        return {
+            "loss": loss,
+            "reconstruction_loss": reconstruction_loss,
+            "encoder_loss": encoder_loss,
+            "paired_reconstruction_loss": paired_reconstruction_loss,
+        }
