@@ -4,8 +4,9 @@ from torchvision.models import vgg19_bn
 from torchvision.models.vgg import VGG19_BN_Weights
 
 
-class SimpleCombinedLoss(nn.Module):
-    """Returns a loss value for the simple combined model.
+class MSEVGGLoss(nn.Module):
+    """
+    Returns a loss value for the combination of MSE and VGG loss.
 
     Consists of two components:
     - MSE Reconstruction loss for the digital and film images
@@ -42,13 +43,14 @@ class SimpleCombinedLoss(nn.Module):
         for layer in self.feature_layers.keys():
             y_features = y_vgg[layer]
             y_hat_features = y_hat_vgg[layer]
-            feature_loss += self.feature_weights[self.feature_layers[layer]] * F.mse_loss(
-                y_features, y_hat_features
-            )
+            feature_loss += self.feature_weights[
+                self.feature_layers[layer]
+            ] * F.mse_loss(y_features, y_hat_features)
 
         # Combine the losses
         loss = (
-            self.reconstruction_weight * reconstruction_loss + self.feature_weight * feature_loss
+            self.reconstruction_weight * reconstruction_loss
+            + self.feature_weight * feature_loss
         )
 
         return loss

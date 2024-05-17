@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torch import nn
-from src.models.loss.simple_combined import SimpleCombinedLoss
+from src.models.loss.mse_vgg import MSEVGGLoss
 
 
 class AutoTranslateLoss(nn.Module):
@@ -20,7 +20,7 @@ class AutoTranslateLoss(nn.Module):
         reconstruction_weight=1.0,
         encoder_weight=1.0,
         paired_reconstruction_weight=1.0,
-        paired_loss_fn=SimpleCombinedLoss(),
+        paired_loss_fn=MSEVGGLoss(),
         do_penalise_film_transformation=False,
     ):
         """
