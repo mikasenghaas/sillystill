@@ -6,11 +6,11 @@ defaults:
   - override /data: paired
   - override /model: translation
   - override /model/net: unet
-  - override /model/loss: simple-combined
+  - override /model/loss: mse-vgg
   - override /logger: wandb
 
-group: unet-combined
-tags: ["unet", "combined"]
+group: unet-mse-vgg
+tags: ["unet", "mse-vgg"]
 seed: 42
 
 hydra:
