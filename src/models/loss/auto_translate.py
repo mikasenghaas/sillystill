@@ -66,8 +66,7 @@ class AutoTranslateLoss(nn.Module):
             paired_encoder_representations (List[Tuple[torch.Tensor, torch.Tensor]]): Latent space representation of the paired images. List of tuples of tensors (digital_latent, film_latent), each tuple containing the latent space representation of the digital and film images, each shape [B_3, channels, n, n].
 
         Returns:
-            loss: The computed loss value.
-            (reconstruction loss, encoder_loss, paired_reconstruction_loss): Tuple of the individual loss components.
+            loss: Dict of the loss values.
         """
         # Combine unpaired and paired images
         all_film = torch.cat([film, film_paired], dim=0)

@@ -30,7 +30,7 @@ class MSEVGGLoss(nn.Module):
             y_hat: The predicted image.
 
         Returns:
-            loss: The computed loss value.
+            loss: dict of loss values
         """
 
         # Compute the reconstruction loss
@@ -53,7 +53,11 @@ class MSEVGGLoss(nn.Module):
             + self.feature_weight * feature_loss
         )
 
-        return loss
+        return {
+            "loss": loss,
+            "reconstruction_loss": reconstruction_loss,
+            "feature_loss": feature_loss,
+        }
 
     def extract_features(self, img):
         """Extracts features from the input image using the VGG19 model.
