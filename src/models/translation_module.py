@@ -9,11 +9,10 @@ from torchmetrics.image import (
     StructuralSimilarityIndexMeasure as SSIM,
     PeakSignalNoiseRatio as PSNR,
 )
-from torchmetrics.image.fid import FrechetInceptionDistance as FID
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPIPS
-from torchmetrics.image.qnr import QualityWithNoReference as QNR
-from PIL.Image import Image as PILImage
+from ..eval import PieAPP
 
+from PIL.Image import Image as PILImage
 from matplotlib import pyplot as plt
 
 from src.models.transforms import pil_to_plot
@@ -63,9 +62,8 @@ class TranslationModule(BaseModule):
             {
                 "ssim": SSIM(),
                 "psnr": PSNR(),
-                # "fid": FID(),
                 "lpips": LPIPS(),
-                # "qnr": QNR(),  # not sure if this is the same thing as NIQE
+                "pieapp": PieAPP(),
             }
         )
         self.train_metrics = metrics.clone(prefix="train/")

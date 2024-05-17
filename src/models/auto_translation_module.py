@@ -9,6 +9,8 @@ from torchmetrics.image import (
     StructuralSimilarityIndexMeasure as SSIM,
     PeakSignalNoiseRatio as PSNR,
 )
+from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPIPS
+from ..eval import PieAPP
 
 from .loss.auto_translate import AutoTranslateLoss
 from .net.auto_translate import AutoTranslateNet
@@ -59,6 +61,8 @@ class AutoTranslationModule(BaseModule):
             {
                 "ssim": SSIM(),
                 "psnr": PSNR(),
+                "lpips": LPIPS(),
+                "pieapp": PieAPP(),
             }
         )
         self.train_metrics = metrics.clone(prefix="train/")
