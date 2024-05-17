@@ -104,49 +104,65 @@ class TranslationModule(BaseModule):
         # Forward pass
         film, digital = transform(batch)
         film_predicted = self.forward(digital)
-        loss = self.loss(film_predicted, film)
+        losses = self.loss(film_predicted, film)
 
-        return loss, film, digital, film_predicted
+        return losses, film, digital, film_predicted
 
     def training_step(self, batch: torch.Tensor, batch_idx: int):
         """Training step for processing one batch of data."""
         # Forward pass
-        loss, film, digital, film_predicted = self.step(batch, self.train_transform)
+        losses, film, digital, film_predicted = self.step(batch, self.train_transform)
 
         # Log training loss, metrics and images
-        self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log_dict(
+            self._add_prefix(losses, "train/"),
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+        )
         train_metrics = self.train_metrics(film_predicted, film)
         self.log_dict(train_metrics, on_step=False, on_epoch=True, prog_bar=True)
         if batch_idx == 0:
-            self._log_images(film, digital, film_predicted, key="train/images")
+            self.log_images(film, digital, film_predicted, key="train/images")
 
-        return loss
+        return losses["loss"]
 
     def validation_step(self, batch: torch.Tensor, batch_idx: int):
         """Validation step for processing one batch of data."""
         # Forward pass
-        loss, film, digital, film_predicted = self.step(batch, self.train_transform)
+        losses, film, digital, film_predicted = self.step(batch, self.train_transform)
 
         # Log validation loss and images
-        self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        self.log_dict(
+            self._add_prefix(losses, "val/"),
+            on_step=False,
+            on_epoch=True,
+            prog_bar=True,
+        )
         val_metrics = self.val_metrics(film_predicted, film)
         self.log_dict(val_metrics, on_step=False, on_epoch=True, prog_bar=True)
         if batch_idx == 0:
-            self._log_images(film, digital, film_predicted, key="val/images")
+            self.log_images(film, digital, film_predicted, key="val/images")
 
     def test_step(self, batch: torch.Tensor, batch_idx: int):
         """Test step for processing one batch of data."""
         # Forward pass
         film, digital = self.test_transform(batch, downsample=2)
         film_predicted = self.forward(digital)
-        loss = self.loss(film_predicted, film)
 
-        # Log test loss and metrics
-        self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        # # Log test loss (Doesn't work for CoBi)
+        # losses = self.loss(film_predicted, film)
+        # self.log_dict(
+        #     self._add_prefix(losses, "test/"),
+        #     on_step=False,
+        #     on_epoch=True,
+        #     prog_bar=True,
+        # )
+
         test_metrics = self.test_metrics(film_predicted, film)
         self.log_dict(test_metrics, on_step=False, on_epoch=True, prog_bar=True)
 
-        self._log_images(film, digital, film_predicted, key="test/images")
+        self.log_images(film, digital, film_predicted, key="test/images")
 
     def predict(self, digital: PILImage, downsample=1) -> PILImage:
         """Predicts the output of the model for a given input."""
@@ -163,7 +179,7 @@ class TranslationModule(BaseModule):
 
         return film_predicted
 
-    def _log_images(
+    def log_images(
         self,
         film: torch.Tensor,
         digital: torch.Tensor,

@@ -9,8 +9,8 @@ defaults:
   - override /model/loss: auto-translate
   - override /logger: wandb
 
-group: auto-translate-combined
-tags: ["auto-translate", "combined"]
+group: auto-unet-mse-vgg
+tags: ["auto-translate", "unet", "mse-vgg"]
 seed: 42
 
 trainer:
@@ -21,15 +21,8 @@ trainer:
 
 model:
   optimizer:
-    lr: 1e-4
+    lr: 3e-4
 
 data:
   num_paired_per_batch: 1
   num_unpaired_per_batch: 1
-
-# hydra:
-#   sweeper:
-#     params:
-#       model.optimizer.lr: 1e-4, 1e-3
-#       model.net.hidden_channels: "choice([64, 128], [64, 128, 256])"
-#       data.patch_size: 128, 256

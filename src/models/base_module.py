@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict
 
 import torch
 from lightning import LightningModule
@@ -125,6 +125,9 @@ class BaseModule(LightningModule):
         adjusted_dim = dim // downsample
         valid_dim = (adjusted_dim // 8) * 8
         return valid_dim
+
+    def _add_prefix(self, dict: Dict, prefix: str) -> Dict:
+        return {prefix + key: value for key, value in dict.items()}
 
     def configure_optimizers(self):
         """Setup the optimizer and the LR scheduler."""

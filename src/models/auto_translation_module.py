@@ -3,7 +3,7 @@ from typing import Tuple, Optional
 import numpy as np
 import torch
 import torch.nn as nn
-from torchmetrics import MeanMetric, MetricCollection
+from torchmetrics import MetricCollection
 from torchmetrics import MetricCollection
 from torchmetrics.image import (
     StructuralSimilarityIndexMeasure as SSIM,
@@ -94,7 +94,9 @@ class AutoTranslationModule(BaseModule):
         return self.net(film, digital, film_paired, digital_paired)
 
     def step(
-        self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor], transforms
+        self,
+        batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
+        transforms: torch.nn.Module,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Perform a single step with the given batch, computing loss.
 
@@ -130,7 +132,7 @@ class AutoTranslationModule(BaseModule):
         ) = self(film, digital, film_paired, digital_paired)
 
         # Compute the loss
-        loss = self.loss(
+        losses = self.loss(
             film,
             digital,
             film_paired,
@@ -142,11 +144,8 @@ class AutoTranslationModule(BaseModule):
             paired_encoder_representations,
         )
 
-        overall_loss, component_losses = loss
-
         return (
-            overall_loss,
-            component_losses,
+            losses,
             film,
             digital,
             film_paired,
@@ -162,8 +161,7 @@ class AutoTranslationModule(BaseModule):
     ):
         """Training step for processing one batch of data."""
         (
-            loss,
-            component_losses,
+            losses,
             film,
             digital,
             film_paired,
@@ -178,60 +176,37 @@ class AutoTranslationModule(BaseModule):
         film_reconstructed = film_reconstructed[: film.shape[0]]
         digital_reconstructed = digital_reconstructed[: digital.shape[0]]
 
-        # Deconstruct the component losses
-        reconstruction_loss, encoder_loss, paired_reconstruction_loss = component_losses
-
-        # Log losses
-        self.log("train/loss", loss, on_step=True, on_epoch=True, prog_bar=True)
-        self.log(
-            "train/reconstruction_loss",
-            reconstruction_loss,
+        # Logging
+        self.log_dict(
+            self._add_prefix(losses, "train/"),
             on_step=True,
             on_epoch=True,
             prog_bar=True,
         )
-        self.log(
-            "train/encoder_loss",
-            encoder_loss,
-            on_step=True,
-            on_epoch=True,
-            prog_bar=True,
-        )
-        self.log(
-            "train/paired_reconstruction_loss",
-            paired_reconstruction_loss,
-            on_step=True,
-            on_epoch=True,
-            prog_bar=True,
-        )
-
-        # Log metrics
         train_metrics = self.train_metrics(digital_to_film, film)
         self.log_dict(train_metrics, on_step=True, on_epoch=True, prog_bar=True)
 
-        # Log images
         if batch_idx % 10 == 0:
-            self._log_images(
+            self.log_images(
                 film,
                 film_reconstructed,
                 key="train/film_reconstructed",
             )
-            self._log_images(
+            self.log_images(
                 digital,
                 digital_reconstructed,
                 key="train/digital_reconstructed",
             )
-            self._log_images(film_paired, digital_to_film, key="train/digital_to_film")
+            self.log_images(film_paired, digital_to_film, key="train/digital_to_film")
 
-        return loss
+        return losses["loss"]
 
     def validation_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor], batch_idx: int
     ):
         """Validation step for processing one batch of data."""
         (
-            loss,
-            component_losses,
+            losses,
             film,
             digital,
             film_paired,
@@ -246,28 +221,9 @@ class AutoTranslationModule(BaseModule):
         film_reconstructed = film_reconstructed[: film.shape[0]]
         digital_reconstructed = digital_reconstructed[: digital.shape[0]]
 
-        # Deconstruct the component losses
-        reconstruction_loss, encoder_loss, paired_reconstruction_loss = component_losses
-
         # Log losses
-        self.log("val/loss", loss, on_step=True, on_epoch=True, prog_bar=True)
-        self.log(
-            "val/reconstruction_loss",
-            reconstruction_loss,
-            on_step=True,
-            on_epoch=True,
-            prog_bar=True,
-        )
-        self.log(
-            "val/encoder_loss",
-            encoder_loss,
-            on_step=True,
-            on_epoch=True,
-            prog_bar=True,
-        )
-        self.log(
-            "val/paired_reconstruction_loss",
-            paired_reconstruction_loss,
+        self.log_dict(
+            self._add_prefix(losses, "val/"),
             on_step=True,
             on_epoch=True,
             prog_bar=True,
@@ -278,48 +234,101 @@ class AutoTranslationModule(BaseModule):
         self.log_dict(val_metrics, on_step=True, on_epoch=True, prog_bar=True)
 
         # Log images
-        self._log_images(
-            film,
-            film_reconstructed,
-            key="val/film_reconstructed",
-        )
-        self._log_images(
-            digital,
-            digital_reconstructed,
-            key="val/digital_reconstructed",
-        )
-        self._log_images(film_paired, digital_to_film, key="val/digital_to_film")
+        if batch_idx % 10 == 0:
+            self.log_images(
+                film,
+                film_reconstructed,
+                key="val/film_reconstructed",
+            )
+            self.log_images(
+                digital,
+                digital_reconstructed,
+                key="val/digital_reconstructed",
+            )
+            self.log_images(film_paired, digital_to_film, key="val/digital_to_film")
 
     def test_step(
         self, batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor], batch_idx: int
     ):
         """Test step for processing one batch of data."""
-        out = self.step(batch, self.val_transform)
-        loss = out[0]
-        self.log("test/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        # Unpack the batch
+        film, digital, paired = batch
+
+        # Remove artificial batch dimension
+        film, digital, paired = film.squeeze(0), digital.squeeze(0), paired.squeeze(0)
+
+        # Apply transforms
+        film = self.test_transform(film, downsample=2)
+        digital = self.test_transform(digital, downsample=2)
+        paired = self.test_transform(paired, downsample=2)
+        film_paired, digital_paired = paired
+
+        # Forward pass through the model
+        (
+            film_reconstructed,
+            digital_reconstructed,
+            film_to_digital,
+            digital_to_film,
+            paired_encoder_representations,
+        ) = self(film, digital, film_paired, digital_paired)
+
+        # Compute the loss
+        losses = self.loss(
+            film,
+            digital,
+            film_paired,
+            digital_paired,
+            film_reconstructed,
+            digital_reconstructed,
+            digital_to_film,
+            film_to_digital,
+            paired_encoder_representations,
+        )
+
+        # Log metrics
+        self.log_dict(
+            self._add_prefix(losses, "test/"),
+            on_step=True,
+            on_epoch=True,
+            prog_bar=True,
+        )
+
+        # Log all test images
+        self.log_images(
+            film,
+            film_reconstructed,
+            key="test/film_reconstructed",
+        )
+
+        self.log_images(
+            digital,
+            digital_reconstructed,
+            key="test/digital_reconstructed",
+        )
+
+        self.log_images(film_paired, digital_to_film, key="test/digital_to_film")
 
     def predict(self, digital: PILImage, downsample=1) -> PILImage:
         """Predicts the output of the model for a given input."""
         assert isinstance(digital, PILImage), "Input must be a PIL image."
-        pass  # TODO: Implements
 
-    def _log_images(
+        # Prepare input
+        input = self.infer_transform(digital, downsample=downsample).unsqueeze(0)
+
+        # Forward pass
+        output = self.net.predict(input)
+
+        # Prepare output
+        film_predicted = self.undo_transform(output)
+
+        return film_predicted
+
+    def log_images(
         self,
         reference: torch.Tensor,
         reconstructed: torch.Tensor,
         key: Optional[str] = None,
     ):
-
-        reference, reconstructed = self.undo_transform(
-            torch.cat(
-                [
-                    reference.unsqueeze(0),
-                    reconstructed.unsqueeze(0),
-                ],
-                dim=0,
-            ),
-        )
-
         if self.logger:
             if hasattr(self.logger.experiment, "log"):
                 # Create figure
@@ -331,8 +340,8 @@ class AutoTranslationModule(BaseModule):
                     axs = axs[:, None]
                 fig.tight_layout(pad=1.0)
                 for i in range(batch_size):
-                    axs[0, i].imshow(np.array(self.to_image(reference[i])))
-                    axs[1, i].imshow(np.array(self.to_image(reconstructed[i])))
+                    axs[0, i].imshow(np.array(self.undo_transform(reference[i])))
+                    axs[1, i].imshow(np.array(self.undo_transform(reconstructed[i])))
                 axs[0, 0].set_ylabel("Reference")
                 axs[1, 0].set_ylabel("Reconstructed")
 

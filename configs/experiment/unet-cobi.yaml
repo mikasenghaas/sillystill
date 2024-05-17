@@ -17,6 +17,6 @@ seed: 42
 hydra:
   sweeper:
     params:
-      model.optimizer.lr: 1e-3, 1e-2
-      model.net.hidden_channels: "choice([64, 128, 256], [32, 64, 128, 256])"
+      model.optimizer.lr: 1e-3, 3e-4
+      model.net.hidden_channels: "choice([64, 128], [64, 128, 256])"
       model.loss.alpha: 0.25, 0.5, 0.75
