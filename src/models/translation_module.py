@@ -16,8 +16,6 @@ from PIL.Image import Image as PILImage
 from torchvision.transforms.v2.functional import to_pil_image
 
 from matplotlib import pyplot as plt
-
-from src.utils.utils import undo_transforms
 from .base_module import BaseModule
 
 
@@ -75,24 +73,46 @@ class TranslationModule(BaseModule):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Forward pass through the model. The input is expected to be a normalised
-        tensor representing a batch of images. Use `self.transform_test` to prepare
-        images for input.
+        Forward pass through the model. The input is expected to be of shape
+        [B, C, H, W] and normalised with the common transforms.
 
         Args:
-            x: Input tensor representing a batch of images, shape [batch_size, 3, n, n].
+            x (torch.Tensor): Input tensor representing a batch of images.
 
-        Returns:
-            A tensor of transformed images, shape [batch_size, 3, n, n].
+        Returns
+            torch.Tensor: The output tensor representing the transformed images.
         """
         return self.net(x)
+
+    def step(
+        self, batch: torch.Tensor, transform: Optional[nn.Module]
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Process one batch of data. A batch comes is expected to be of shape
+        [2, B, C, H, W] where the first element is the film images and the
+        second element is the digital images.
+
+        Args:
+            batch (torch.Tensor): A batch of data, shape [2, B, C, H, W].
+            transform (Optional[nn.Module]): A transform to apply to the batch.
+
+        Returns:
+            torch.Tensor: The loss value for the batch.
+            torch.Tensor: The film images.
+            torch.Tensor: The digital images.
+            torch.Tensor: The predicted film images.
+        """
+        # Forward pass
+        film, digital = transform(batch)
+        film_predicted = self.forward(digital)
+        loss = self.loss(film_predicted, film)
+
+        return loss, film, digital, film_predicted
 
     def training_step(self, batch: torch.Tensor, batch_idx: int):
         """Training step for processing one batch of data."""
         # Forward pass
-        film, digital = self.train_transform(batch)
-        film_predicted = self.forward(digital)
-        loss = self.loss(film_predicted, film)
+        loss, film, digital, film_predicted = self.step(batch, self.train_transform)
 
         # Log training loss, metrics and images
         self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
@@ -106,9 +126,7 @@ class TranslationModule(BaseModule):
     def validation_step(self, batch: torch.Tensor, batch_idx: int):
         """Validation step for processing one batch of data."""
         # Forward pass
-        film, digital = self.val_transform(batch)
-        film_predicted = self.forward(digital)
-        loss = self.loss(film_predicted, film)
+        loss, film, digital, film_predicted = self.step(batch, self.train_transform)
 
         # Log validation loss and images
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
