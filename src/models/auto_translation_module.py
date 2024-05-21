@@ -184,7 +184,7 @@ class AutoTranslationModule(BaseModule):
             prog_bar=True,
         )
         train_metrics = self.train_metrics(digital_to_film, film)
-        self.log_dict(train_metrics, on_step=True, on_epoch=True, prog_bar=True)
+        self.log_dict(train_metrics, on_step=True, on_epoch=False, prog_bar=True)
 
         if batch_idx % 10 == 0:
             self.log_images(
@@ -231,7 +231,7 @@ class AutoTranslationModule(BaseModule):
 
         # Log metrics
         val_metrics = self.val_metrics(digital_to_film, film)
-        self.log_dict(val_metrics, on_step=True, on_epoch=True, prog_bar=True)
+        self.log_dict(val_metrics, on_step=True, on_epoch=False, prog_bar=True)
 
         # Log images
         if batch_idx % 10 == 0:
@@ -252,58 +252,27 @@ class AutoTranslationModule(BaseModule):
     ):
         """Test step for processing one batch of data."""
         # Unpack the batch
-        film, digital, paired = batch
+        _, _, paired = batch
 
         # Remove artificial batch dimension
-        film, digital, paired = film.squeeze(0), digital.squeeze(0), paired.squeeze(0)
+        paired = paired.squeeze(0)
 
         # Apply transforms
-        film = self.test_transform(film, downsample=2)
-        digital = self.test_transform(digital, downsample=2)
         paired = self.test_transform(paired, downsample=2)
         film_paired, digital_paired = paired
 
         # Forward pass through the model
-        (
-            film_reconstructed,
-            digital_reconstructed,
-            film_to_digital,
-            digital_to_film,
-            paired_encoder_representations,
-        ) = self(film, digital, film_paired, digital_paired)
-
-        # Compute the loss
-        losses = self.loss(
-            film,
-            digital,
-            film_paired,
-            digital_paired,
-            film_reconstructed,
-            digital_reconstructed,
-            digital_to_film,
-            film_to_digital,
-            paired_encoder_representations,
-        )
+        digital_to_film = self.net.predict(digital_paired)
 
         # Log metrics
-        self.log_dict(
-            self._add_prefix(losses, "test/"),
-            on_step=True,
-            on_epoch=True,
-            prog_bar=True,
-        )
+        test_metrics = self.test_metrics(digital_to_film, film_paired)
+        self.log_dict(test_metrics, on_step=False, on_epoch=False, prog_bar=True)
 
         # Log all test images
         self.log_images(
             film,
             film_reconstructed,
             key="test/film_reconstructed",
-        )
-
-        self.log_images(
-            digital,
-            digital_reconstructed,
-            key="test/digital_reconstructed",
         )
 
         self.log_images(film_paired, digital_to_film, key="test/digital_to_film")
