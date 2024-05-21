@@ -1,0 +1,26 @@
+# @package _global_
+
+# To run: `python train.py -m experiment={exp-name}`
+
+defaults:
+  - override /data: paired
+  - override /model: translation
+  - override /logger: wandb
+
+group: dev
+tags: ["train-len"]
+seed: 42
+
+# Disable checkpointing
+callbacks:
+  early_stopping: null
+
+# Enable data augmentation
+model:
+  augment: 0.75
+
+# Increase the number of epochs
+hydra:
+  sweeper:
+    params:
+      trainer.max_epochs: 10, 20, 30, 40, 50, 60, 70, 80, 90, 100

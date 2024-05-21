@@ -17,7 +17,6 @@ trainer:
   min_epochs: 1
   max_epochs: 10
   accumulate_grad_batches: 8
-  val_check_interval: 0.25
 
 model:
   optimizer:
@@ -26,3 +25,10 @@ model:
 data:
   num_paired_per_batch: 1
   num_unpaired_per_batch: 1
+
+hydra:
+  sweeper:
+    params:
+      model.optimizer.lr: 3e-4, 1e-3
+      model.net.hidden_channels: "choice([64,128], [64, 128, 256])"
+      model.training_patch_size: 128, 256
