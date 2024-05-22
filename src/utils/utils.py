@@ -194,8 +194,8 @@ def test_transform(
 
 
 def process_pair(
-    film: torch.Tensor,
-    digital: torch.Tensor,
+    image1: torch.Tensor,
+    image2: torch.Tensor,
     downsample: int = 8,
     transform=T.Compose([T.ToImage(), T.Resize((2433, 3637))]),
 ) -> torch.Tensor:
@@ -209,8 +209,8 @@ def process_pair(
     Returns:
         Tuple[torch.Tensor, torch.Tensor]: The processed film and digital images
     """
-    film = transform(film)
-    digital = transform(digital)
-    film = test_transform(film, downsample=downsample)
-    digital = test_transform(digital, downsample=downsample)
-    return film, digital
+    image1 = transform(image1)
+    image2 = transform(image2)
+    image1 = test_transform(image1, downsample=downsample)
+    image2 = test_transform(image2, downsample=downsample)
+    return image1, image2
