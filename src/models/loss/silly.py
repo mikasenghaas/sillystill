@@ -1,5 +1,5 @@
 from enum import Enum
-import torch as nn
+from torch import nn
 from src.models.loss import (
     ColorLoss,
     TVAbsoluteLoss,
