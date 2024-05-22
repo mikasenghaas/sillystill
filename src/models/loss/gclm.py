@@ -1,3 +1,4 @@
+from typing import Literal
 import numpy as np
 import torch
 from skimage.feature import graycomatrix, graycoprops
@@ -12,6 +13,7 @@ class GCLMLoss(BaseLoss):
 
     def __init__(
         self,
+        mode: Literal["statistical", "l1"] = "statistical",
         distances=[1],
         angles=[0, np.pi / 4, np.pi / 2, 3 * np.pi / 4],
         contrast_weight=1.0,
@@ -38,10 +40,14 @@ class GCLMLoss(BaseLoss):
         """
         super(GCLMLoss, self).__init__()
 
+        # Define the properties
         self.distances = distances
         self.angles = angles
         self.normalise = normalise
         self.symmetric = symmetric
+
+        # Define the weight
+        self.mode = mode
 
         self.contrast_weight = contrast_weight
         self.dissimilarity_weight = dissimilarity_weight
@@ -92,12 +98,16 @@ class GCLMLoss(BaseLoss):
                 symmetric=self.symmetric,
             )
 
-            # Iterate over GLCM properties and calculate loss with weights and l1 norm
-            for prop in self.property_weights.keys():
-                prop1 = graycoprops(glcm1, prop)
-                prop2 = graycoprops(glcm2, prop)
-                prop_loss = torch.tensor(prop1 - prop2).abs().sum()
-                loss += prop_loss * self.property_weights[prop]
+            if self.mode == "l1":
+                # Calculate L1 loss between GLCM matrices
+                loss += torch.tensor(glcm1 - glcm2).abs().sum()
+            else:
+                # Calculate loss using GLCM properties
+                for prop in self.property_weights.keys():
+                    prop1 = graycoprops(glcm1, prop)
+                    prop2 = graycoprops(glcm2, prop)
+                    prop_loss = torch.tensor(prop1 - prop2).abs().sum()
+                    loss += prop_loss * self.property_weights[prop]
 
         # Take mean of losses over batch
         loss /= pred.shape[0]
@@ -179,4 +189,16 @@ if __name__ == "__main__":
 
     # Create the dataframe
     df = pd.DataFrame(results, columns=["Default"] + properties, index=image_names)
+    print(df)
+
+    # Print df of l1 vs statistical modes for random, identity, and homogeneous images
+    results = []
+    for image_name, (pred, target) in zip(image_names, image_pairs):
+        row = []
+        row.append(GCLMLoss(mode="l1")(pred, target).item())
+        row.append(GCLMLoss(mode="statistical")(pred, target).item())
+        results.append(row)
+
+    # Create the dataframe
+    df = pd.DataFrame(results, columns=["L1", "Statistical"], index=image_names)
     print(df)
