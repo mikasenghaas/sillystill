@@ -64,4 +64,9 @@ class DSLRLoss(nn.Module):
             + self.vgg_weight * vgg_loss
         )
 
-        return {"loss": loss}
+        return {
+            "loss": loss,
+            "color_loss": color_loss,
+            "tv_loss": tv_loss,
+            "vgg_loss": vgg_loss,
+        }
