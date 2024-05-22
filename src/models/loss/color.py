@@ -1,10 +1,13 @@
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as T
+from src.models.loss.base import BaseLoss
 
 
-class ColorLoss(nn.Module):
+class ColorLoss(BaseLoss):
+    def name(self) -> str:
+        return "color_loss"
+
     def __init__(self, kernel_size=7, sigma=3.0):
         super(ColorLoss, self).__init__()
         self.gaussian_blur = T.GaussianBlur(kernel_size=kernel_size, sigma=sigma)

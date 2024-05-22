@@ -1,9 +1,13 @@
 import torch.nn.functional as F
 from torch import nn
+from src.models.loss.base import BaseLoss
 
 
-class MSELoss(nn.Module):
+class MSELoss(BaseLoss):
     """Returns MSELoss."""
+
+    def name(self) -> str:
+        return "mse_loss"
 
     def forward(self, y, y_hat):
         """Compute the loss.
