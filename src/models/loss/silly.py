@@ -1,37 +1,38 @@
 from enum import Enum
-import torch as nn
+from torch import nn
 from src.models.loss import (
-    ColorLoss,
-    TVAbsoluteLoss,
-    TVRelativeLoss,
-    MSELoss,
-    VGGLoss,
-    GCLMLoss,
-    FrequencyLoss,
-    CoBiLoss,
+    BaseLoss,
+    # ColorLoss,
+    # TVAbsoluteLoss,
+    # TVRelativeLoss,
+    # MSELoss,
+    # VGGLoss,
+    # GCLMLoss,
+    # FrequencyLoss,
+    # CoBiLoss,
 )
 
 
-class Loss(Enum):
-    MSE = MSELoss
-    Color = ColorLoss
-    VGG = VGGLoss
-    TV_Absolute = TVAbsoluteLoss
-    TV_Relative = TVRelativeLoss
-    GCLM = GCLMLoss
-    Frequency = FrequencyLoss
-    CoBi = CoBiLoss
+# class Loss(Enum):
+#     MSE = MSELoss
+#     Color = ColorLoss
+#     VGG = VGGLoss
+#     TV_Absolute = TVAbsoluteLoss
+#     TV_Relative = TVRelativeLoss
+#     GCLM = GCLMLoss
+#     Frequency = FrequencyLoss
+#     CoBi = CoBiLoss
 
 
 class SillyLoss(nn.Module):
-    def __init__(self, losses: list[Loss], weights: list[float]):
+    def __init__(self, losses: list[BaseLoss], weights: list[float]):
         super().__init__()
 
-        for loss in losses:
-            if not isinstance(loss, Loss):
-                raise ValueError(f"Loss must be an instance of Loss Enum, got {loss}")
+        # for loss in losses:
+        #     if not isinstance(loss, Loss):
+        #         raise ValueError(f"Loss must be an instance of Loss Enum, got {loss}")
 
-        self.loss_fns = [loss.value() for loss in losses]
+        self.loss_fns = losses
         self.weights = weights
 
     def forward(self, pred, target):
@@ -57,19 +58,20 @@ class SillyLoss(nn.Module):
 
 
 if __name__ == "__main__":
+    pass
     # Example usage
-    import torch
-    from src.models.loss import Loss
+    # import torch
+    # from src.models.loss import Loss
 
-    # Create a loss function that is a combination of MSE and VGG loss
-    loss = SillyLoss([Loss.MSE, Loss.VGG], [0.5, 0.5])
+    # # Create a loss function that is a combination of MSE and VGG loss
+    # loss = SillyLoss([Loss.MSE, Loss.VGG], [0.5, 0.5])
 
-    # Generate some random images
-    pred = torch.rand(1, 3, 256, 256)
-    target = torch.rand(1, 3, 256, 256)
+    # # Generate some random images
+    # pred = torch.rand(1, 3, 256, 256)
+    # target = torch.rand(1, 3, 256, 256)
 
-    # Compute the loss
-    loss_dict = loss(pred, target)
+    # # Compute the loss
+    # loss_dict = loss(pred, target)
 
-    print(loss_dict)
+    # print(loss_dict)
     # Output: {'mse_loss': tensor(0.0837), 'vgg_loss': tensor(0.0837), 'loss': tensor(0.0837)}

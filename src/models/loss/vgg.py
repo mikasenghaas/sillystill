@@ -21,7 +21,7 @@ class VGGLoss(BaseLoss):
 
     def forward(self, pred, target):
         # Compute the feature loss
-        feature_loss = 0
+        loss = 0
         pred_vgg = self.extract_features(pred)
         target_vgg = self.extract_features(target)
         for layer in self.feature_layers.keys():
@@ -29,8 +29,9 @@ class VGGLoss(BaseLoss):
             target_features = target_vgg[layer]
             weight = self.feature_weights[self.feature_layers[layer]]
             layer_loss = F.mse_loss(pred_features, target_features)
-            feature_loss += weight * layer_loss
-        return
+            loss += weight * layer_loss
+
+        return loss
 
     def extract_features(self, img):
         """Extracts features from the input image using the VGG19 model.

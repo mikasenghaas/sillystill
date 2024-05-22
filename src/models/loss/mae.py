@@ -1,13 +1,12 @@
 import torch.nn.functional as F
-from torch import nn
 from src.models.loss.base import BaseLoss
 
 
-class MSELoss(BaseLoss):
-    """Returns MSELoss."""
+class MAELoss(BaseLoss):
+    """Returns MAELoss."""
 
     def name(self) -> str:
-        return "mse_loss"
+        return "mae_loss"
 
     def forward(self, y, y_hat):
         """Compute the loss.
@@ -21,6 +20,6 @@ class MSELoss(BaseLoss):
         """
 
         # Compute the reconstruction loss
-        loss = F.mse_loss(y, y_hat)
+        loss = F.l1_loss(y, y_hat)
 
         return loss

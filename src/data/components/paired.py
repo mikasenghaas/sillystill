@@ -12,10 +12,7 @@ from ...utils.load import _load_image_from_path
 class PairedDataset(Dataset):
     """A PyTorch dataset class for loading image pairs from two directories."""
 
-    def __init__(
-        self,
-        image_dirs: Tuple[str, str],
-    ):
+    def __init__(self, image_dirs: Tuple[str, str], duplicate: int = 1):
         """
         Initialises a `PairedDataset` instance. This dataset is used to load
         image pairs from two data directories. The dataset assumes that the
@@ -33,8 +30,8 @@ class PairedDataset(Dataset):
         self.image_dirs = image_dirs
 
         # Load image paths
-        self.image_paths1 = sorted(glob.glob(f"{image_dirs[0]}/*"))
-        self.image_paths2 = sorted(glob.glob(f"{image_dirs[1]}/*"))
+        self.image_paths1 = sorted(glob.glob(f"{image_dirs[0]}/*")) * duplicate
+        self.image_paths2 = sorted(glob.glob(f"{image_dirs[1]}/*")) * duplicate
 
         # Assertions
         assert len(self.image_paths1) == len(
