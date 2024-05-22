@@ -10,7 +10,7 @@ class GrainLoss(nn.Module):
     Returns a loss value for grain based on total variation loss.
     """
 
-    def __init__(self, mode=Literal["diff", "max"]):
+    def __init__(self, mode=Literal["diff", "max", "min"]):
         """
         Instantiates the GrainLoss class.
 
@@ -52,6 +52,14 @@ class GrainLoss(nn.Module):
 
             # Loss is the reciprocal of the total variation
             loss = 1 / tv_y_hat
+
+        elif self.mode == "min":
+            # Compute the total variation loss
+            tv_y_hat = self.total_variation(y_hat)
+            tv_y_hat /= y_hat.numel()
+
+            # Loss is the total variation
+            loss = tv_y_hat
 
         return {
             "loss": loss,
