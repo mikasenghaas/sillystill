@@ -1,6 +1,7 @@
 # Custom
 .DS_Store
 artifacts
+outputs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
