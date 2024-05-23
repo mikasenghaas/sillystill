@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional, Tuple, List
 import torch
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset, random_split
-import torchvision.transforms.v2 as T
+import torchvision.transforms as T
 from PIL.Image import Image as PILImage
 
 from .components.paired import PairedDataset
@@ -15,6 +15,7 @@ class PairedDigitalFilmDataModule(LightningDataModule):
 
     def __init__(
         self,
+        image_dirs: Tuple[str, str],
         data_split: Tuple[float, float, float] = (0.7, 0.2, 0.1),
         batch_size: int = 1,
         num_workers: int = 0,
@@ -48,8 +49,7 @@ class PairedDigitalFilmDataModule(LightningDataModule):
         If not, it raises an error.
         """
         # Default image directories
-        self.film_paired_dir = os.path.join("data", "paired", "processed", "film")
-        self.digital_paired_dir = os.path.join("data", "paired", "processed", "digital")
+        self.film_paired_dir, self.digital_paired_dir = self.hparams.image_dirs
 
         # Assert data exists
         assert os.path.exists(self.film_paired_dir) and os.path.exists(

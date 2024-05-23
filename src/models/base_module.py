@@ -2,8 +2,8 @@ from typing import Optional, Dict
 
 import torch
 from lightning import LightningModule
-import torchvision.transforms.v2 as T
-import torchvision.transforms.v2.functional as F
+import torchvision.transforms as T
+import torchvision.transforms.functional as F
 from PIL.Image import Image as PILImage
 
 from . import transforms as CT
@@ -59,8 +59,8 @@ class BaseModule(LightningModule):
         transform_train = T.Compose(
             [
                 CT.Augment(self.augment),
-                CT.ToModelInput(),
-                T.RandomResizedCrop(self.training_patch_size),
+                # CT.ToModelInput(),
+                T.RandomCrop(self.training_patch_size),
             ]
         )
 
@@ -80,8 +80,8 @@ class BaseModule(LightningModule):
         """
         transform_val = T.Compose(
             [
-                CT.ToModelInput(),
-                T.RandomResizedCrop(self.training_patch_size),
+                # CT.ToModelInput(),
+                T.RandomCrop(self.training_patch_size),
             ]
         )
         return transform_val(x)

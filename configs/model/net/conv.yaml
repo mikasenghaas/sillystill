@@ -1,4 +1,6 @@
 _target_: src.models.net.ConvNet
 
 input_output_channels: 3
-hidden_channels: [64, 128]
+hidden_channels: [64, 128, 512]
+kernel_size: 3
+with_noise: true

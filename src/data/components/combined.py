@@ -2,7 +2,7 @@ from typing import Tuple
 
 import torch
 from torch.utils.data import Dataset
-import torchvision.transforms.v2 as T
+import torchvision.transforms as T
 
 from src.data.components.paired import PairedDataset
 from src.data.components.unpaired import UnpairedDataset

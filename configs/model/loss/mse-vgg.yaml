@@ -1,4 +1,0 @@
-_target_: src.models.loss.MSEVGGLoss
-
-mse_weight: 1.0
-feature_weight: 1.0

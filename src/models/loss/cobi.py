@@ -2,9 +2,10 @@ import torch
 import torch.nn as nn
 from torchvision.models import vgg19_bn
 from torchvision.models.vgg import VGG19_BN_Weights
+from src.models.loss.base import BaseLoss
 
 
-class CoBiLoss(nn.Module):
+class CoBiLoss(BaseLoss):
     """
     A PyTorch implementation of the Contextual Bilateral (CoBi) Loss, as described in "Zoom to Learn, Learn to Zoom" (https://arxiv.org/pdf/1905.05169). This implementation has been adapted for PyTorch from the original code found at https://github.com/ceciliavision/zoom-learn-zoom.
 
@@ -22,6 +23,9 @@ class CoBiLoss(nn.Module):
         CoBiLoss = alpha * CoBi(RGB, n) + (1 - alpha) * CoBi(VGG19)
     where 'alpha' is a weight balancing the two terms, 'n' is the size of RGB patches used, and the VGG19 features considered are from layers 'conv1_2', 'conv2_2', and 'conv3_2'.
     """
+
+    def name(self) -> str:
+        return "cobi_loss"
 
     def __init__(
         self,
@@ -97,7 +101,7 @@ class CoBiLoss(nn.Module):
         if self.verbose:
             print(f"Final computed CoBiLoss: {loss.item()}")
 
-        return {"loss": loss, "vgg_loss": vgg_loss, "rgb_loss": rgb_loss}
+        return loss
 
     def extract_features(self, img):
         """Extracts features from the input image using the VGG19 model.

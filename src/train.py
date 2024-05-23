@@ -50,6 +50,7 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
             - metric_dict: Dictionary containing training and testing metrics.
             - object_dict: Dictionary containing all objects instantiated during training.
     """
+    print(OmegaConf.to_yaml(cfg))
     # set seed for random number generators in pytorch, numpy and python.random
     if cfg.get("seed"):
         L.seed_everything(cfg.seed, workers=True)

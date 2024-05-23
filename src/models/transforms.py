@@ -1,12 +1,12 @@
 import numpy as np
 import torch
 import torch.nn as nn
-import torchvision.transforms.v2 as T
+import torchvision.transforms as T
 from PIL.Image import Image as PILImage
 
 
 def ToModelInput():
-    return T.Compose([T.ToImage(), T.ToDtype(torch.float32, scale=True)])
+    return T.Compose([T.ToTensor()])
 
 
 def FromModelInput():

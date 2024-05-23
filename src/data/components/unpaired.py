@@ -3,7 +3,7 @@ import glob
 import torch
 from typing import List
 from torch.utils.data import Dataset
-import torchvision.transforms.v2 as T
+import torchvision.transforms as T
 from PIL.Image import Image as PILImage
 
 from src.utils.load import _load_image_from_path

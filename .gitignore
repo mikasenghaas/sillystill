@@ -6,6 +6,9 @@ artifacts
 __pycache__/
 *.py[cod]
 *$py.class
+dev
+data/paired/grain
+data/paired/halo
 
 # C extensions
 *.so

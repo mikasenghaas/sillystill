@@ -1,4 +1,15 @@
-from .cobi import CoBiLoss
-from .auto_translate import AutoTranslateLoss
+from .base import BaseLoss
+
+from .mae import MAELoss
 from .mse import MSELoss
-from .mse_vgg import MSEVGGLoss
+from .vgg import VGGLoss
+from .tv_absolute import TVAbsoluteLoss
+from .tv_relative import TVRelativeLoss
+from .color import ColorLoss
+from .cobi import CoBiLoss
+from .frequency import FrequencyLoss
+from .gclm import GCLMLoss
+
+from .silly import SillyLoss
+
+from .auto_translate import AutoTranslateLoss

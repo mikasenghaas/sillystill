@@ -81,7 +81,7 @@ class TranslationModule(BaseModule):
         Returns
             torch.Tensor: The output tensor representing the transformed images.
         """
-        return self.net(x).clamp(0 + 1e-5, 1 - 1e-5)
+        return self.net(x)
 
     def step(
         self, batch: torch.Tensor, transform: Optional[nn.Module]
@@ -149,15 +149,6 @@ class TranslationModule(BaseModule):
         # Forward pass
         film, digital = self.test_transform(batch, downsample=2)
         film_predicted = self.forward(digital)
-
-        # # Log test loss (Doesn't work for CoBi)
-        # losses = self.loss(film_predicted, film)
-        # self.log_dict(
-        #     self._add_prefix(losses, "test/"),
-        #     on_step=False,
-        #     on_epoch=True,
-        #     prog_bar=True,
-        # )
 
         test_metrics = self.test_metrics(film_predicted, film)
         self.log_dict(test_metrics, on_step=False, on_epoch=True, prog_bar=True)
