@@ -10,9 +10,8 @@ rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
 from src.data.components import PairedDataset
 from src.models import TranslationModule
-from src.utils import process_pair
 from src.eval import PieAPP
-from src.models.transforms import FromModelInput
+from src.models.transforms import FromModelInput, ToModelInput, TestTransforms, get_valid_dim
 
 import torch
 from tqdm import tqdm
@@ -91,7 +90,16 @@ def main():
         enumerate(digital_film_data), total=len(digital_film_data)
     ):
         # Process images to be in the same format as test images
-        film, digital = process_pair(film, digital, downsample=DOWNSAMPLE)
+        height = get_valid_dim(film.size[1], downsample=DOWNSAMPLE)
+        width = get_valid_dim(film.size[0], downsample=DOWNSAMPLE)
+        film_transform = TestTransforms(dim=(height, width))
+
+        height = get_valid_dim(digital.size[1], downsample=DOWNSAMPLE)
+        width = get_valid_dim(digital.size[0], downsample=DOWNSAMPLE)
+        digital_transform = TestTransforms(dim=(height, width))
+
+        film = film_transform(film)
+        digital = digital_transform(digital)
 
         # Move images to device
         film = film.to(device).unsqueeze(0)

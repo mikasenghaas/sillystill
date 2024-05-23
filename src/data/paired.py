@@ -1,11 +1,9 @@
 import os
-from typing import Any, Dict, Optional, Tuple, List
+from typing import Any, Dict, Optional, Tuple
 
 import torch
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset, random_split
-import torchvision.transforms.v2 as T
-from PIL.Image import Image as PILImage
 
 from .components.paired import PairedDataset
 

@@ -2,7 +2,6 @@ from typing import Tuple
 
 import torch
 from torch.utils.data import Dataset
-import torchvision.transforms.v2 as T
 
 from src.data.components.paired import PairedDataset
 from src.data.components.unpaired import UnpairedDataset
@@ -35,8 +34,6 @@ class CombinedDataset(Dataset):
         self.paired_dataset = paired_dataset
         self.num_paired_per_batch = num_paired_per_batch
         self.num_unpaired_per_batch = num_unpaired_per_batch
-
-        self.transform = T.Compose([T.ToImage(), T.Resize((2433, 3637))])
 
     def __len__(self) -> int:
         """Returns the length of the dataset."""

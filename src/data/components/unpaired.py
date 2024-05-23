@@ -3,10 +3,10 @@ import glob
 import torch
 from typing import List
 from torch.utils.data import Dataset
-import torchvision.transforms.v2 as T
 from PIL.Image import Image as PILImage
 
 from src.utils.load import _load_image_from_path
+import src.models.transforms as CT
 
 
 class UnpairedDataset(Dataset):
@@ -31,6 +31,9 @@ class UnpairedDataset(Dataset):
         # Load image paths
         self.image_paths = sorted(glob.glob(f"{image_dir}/*"))
 
+        # Define transforms
+        self.transform = CT.ToBatchedTensor()
+
     def __len__(self) -> int:
         """Returns the length of the dataset."""
         return len(self.image_paths)
@@ -54,12 +57,9 @@ class UnpairedDataset(Dataset):
         Returns:
             torch.Tensor: The collated batch of images
         """
-        # Transfrom for batching (convert to equal sized tensors)
-        transform = T.Compose([T.ToImage(), T.Resize((2433, 3637))])
-
         # Process batch
         for i, digital in enumerate(batch):
-            batch[i] = transform(digital)
+            batch[i] = self.transform(digital)
 
         # Stack the batch
         batch = torch.stack(batch, dim=0)

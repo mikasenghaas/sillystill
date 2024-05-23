@@ -4,9 +4,9 @@ from typing import List, Tuple
 import glob
 from torch.utils.data import Dataset
 from PIL.Image import Image as PILImage
-import torchvision.transforms.v2 as T
 
 from ...utils.load import _load_image_from_path
+from ...models.transforms import ToBatchedTensor
 
 
 class PairedDataset(Dataset):
@@ -32,6 +32,8 @@ class PairedDataset(Dataset):
         # Load image paths
         self.image_paths1 = sorted(glob.glob(f"{image_dirs[0]}/*")) * duplicate
         self.image_paths2 = sorted(glob.glob(f"{image_dirs[1]}/*")) * duplicate
+
+        self.transform = ToBatchedTensor()
 
         # Assertions
         assert len(self.image_paths1) == len(
@@ -78,13 +80,10 @@ class PairedDataset(Dataset):
         Returns:
             torch.Tensor: The collated batch of images
         """
-        # Transfrom for batching (convert to equal sized tensors)
-        transform = T.Compose([T.ToImage(), T.Resize((2433, 3637))])
-
         # Process batch
         for i, (film, digital) in enumerate(batch):
-            film = transform(film)
-            digital = transform(digital)
+            film = self.transform(film)
+            digital = self.transform(digital)
             batch[i] = torch.cat([film.unsqueeze(0), digital.unsqueeze(0)], dim=0)
 
         # Stack the batch

@@ -2,8 +2,6 @@ from typing import Optional, Dict
 
 import torch
 from lightning import LightningModule
-import torchvision.transforms.v2 as T
-import torchvision.transforms.v2.functional as F
 from PIL.Image import Image as PILImage
 
 from . import transforms as CT

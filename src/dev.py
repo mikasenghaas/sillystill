@@ -5,7 +5,6 @@ import rootutils
 import numpy as np
 import torch
 from torch.optim import Adam
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -15,23 +14,11 @@ from matplotlib import pyplot as plt
 # Setup root
 rootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 
-# Import utilities
+# Local modules
 from src.data.components.paired import PairedDataset
 from src.models.net.unet import UNet
-import torchvision.transforms.v2 as T
 import src.models.transforms as CT
-from src.models.loss import (
-    MAELoss,
-    MSELoss,
-    VGGLoss,
-    ColorLoss,
-    GCLMLoss,
-    FrequencyLoss,
-    TVAbsoluteLoss,
-    TVRelativeLoss,
-    CoBiLoss,
-    SillyLoss,
-)
+import src.models.loss as L
 
 
 def main():
@@ -61,24 +48,16 @@ def main():
     print(f"init loader (len={len(train_loader)})")
 
     # model
-    model = UNet(hidden_channels=[64, 128, 256], kernel_size=3, with_noise=False)
+    model = UNet(hidden_channels=[64, 128, 256], kernel_size=3, with_noise=True)
     print(f"init unet ({sum([np.prod(p.size()) for p in model.parameters()])})")
     print(model)
 
-    # loss, optimser and lr scheduler
-    mse = MSELoss()
-    # color = ColorLoss(kernel_size=3, sigma=7)
-    # gclm = GCLMLoss()
-    # vgg = VGGLoss()
-    loss_fn = SillyLoss([mse], weights=[1.0])
+    # loss, optimser
+    loss_fn = L.SillyLoss([L.MSELoss()], weights=[1.0])
     optimiser = Adam(model.parameters(), lr=1e-3)
-    # scheduler = ReduceLROnPlateau(optimiser, mode="min", patience=50, factor=0.5, verbose=True)
 
-    # to_model = T.Compose([T.CenterCrop((1216, 1816)), T.RandomCrop(256)])
-    to_model = T.Compose(
-        [T.ToImage(), T.ToDtype(torch.float32, scale=True), T.RandomCrop(256)]
-    )
-    from_model = T.ToPILImage()
+    to_model = CT.TrainTransforms(patch_size=256, augment=0.0)
+    from_model = CT.FromModelInput()
 
     # train loop
     model = model.to(device)

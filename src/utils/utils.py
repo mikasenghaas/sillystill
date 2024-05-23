@@ -4,8 +4,6 @@ from typing import Any, Callable, Dict, Optional, Tuple
 
 import torch
 from omegaconf import DictConfig
-import torchvision.transforms.v2 as T
-from src.models import transforms as CT
 from src.utils import pylogger, rich_utils
 
 log = pylogger.RankedLogger(__name__, rank_zero_only=True)
@@ -153,64 +151,64 @@ def undo_transforms(img: torch.Tensor) -> torch.Tensor:
     return img
 
 
-def get_valid_dim(dim: int, downsample: int = 1) -> int:
-    """
-    Returns the nearest multiple of 8 that is less than or equal to the
-    input dimension. This is required because of the network architecture.
-
-    NOTE: This should better be defined in the `src.models.net` modules.
-
-    Args:
-        dim (int): The input dimension
-
-    Returns:
-        int: The nearest multiple of 4 that is less than or equal to the input
-    """
-    adjusted_dim = dim // downsample
-    valid_dim = (adjusted_dim // 8) * 8
-    return valid_dim
-
-
-def test_transform(
-    x: torch.Tensor,
-    downsample: int = 1,
-) -> torch.Tensor:
-    """
-    Applies a series of transformations to the input tensor to prepare it
-    for testing. This includes resizing the image to the nearest multiple
-    of 4.
-
-    Args:
-        x (torch.Tensor): The input tensor to transform ([..., H, W])
-
-    Returns:
-        torch.Tensor: The transformed tensor
-    """
-
-    height = get_valid_dim(x.shape[-2], downsample=downsample)
-    width = get_valid_dim(x.shape[-1], downsample=downsample)
-    transform_test = T.Compose([CT.ToModelInput(), T.Resize((height, width))])
-    return transform_test(x)
-
-
-def process_pair(
-    image1: torch.Tensor,
-    image2: torch.Tensor,
-    downsample: int = 8,
-    transform=T.Compose([T.ToImage(), T.Resize((2433, 3637))]),
-) -> torch.Tensor:
-    """
-    Processes a pair of PIL images by resizing them using the same transforms as the data loader collate and downsampling using the same transforms as the test data.
-
-    Args:
-        film (torch.Tensor): The film image
-        digital (torch.Tensor): The digital image
-
-    Returns:
-        Tuple[torch.Tensor, torch.Tensor]: The processed film and digital images
-    """
-    image1 = transform(image1)
-    image2 = transform(image2)
-    image1 = test_transform(image1, downsample=downsample)
-    image2 = test_transform(image2, downsample=downsample)
-    return image1, image2
+# def get_valid_dim(dim: int, downsample: int = 1) -> int:
+#     """
+#     Returns the nearest multiple of 8 that is less than or equal to the
+#     input dimension. This is required because of the network architecture.
+# 
+#     NOTE: This should better be defined in the `src.models.net` modules.
+# 
+#     Args:
+#         dim (int): The input dimension
+# 
+#     Returns:
+#         int: The nearest multiple of 4 that is less than or equal to the input
+#     """
+#     adjusted_dim = dim // downsample
+#     valid_dim = (adjusted_dim // 8) * 8
+#     return valid_dim
+# 
+# 
+# def test_transform(
+#     x: torch.Tensor,
+#     downsample: int = 1,
+# ) -> torch.Tensor:
+#     """
+#     Applies a series of transformations to the input tensor to prepare it
+#     for testing. This includes resizing the image to the nearest multiple
+#     of 4.
+# 
+#     Args:
+#         x (torch.Tensor): The input tensor to transform ([..., H, W])
+# 
+#     Returns:
+#         torch.Tensor: The transformed tensor
+#     """
+# 
+#     height = get_valid_dim(x.shape[-2], downsample=downsample)
+#     width = get_valid_dim(x.shape[-1], downsample=downsample)
+#     transform_test = T.Compose([CT.ToModelInput(), T.Resize((height, width))])
+#     return transform_test(x)
+# 
+# 
+# def process_pair(
+#     image1: torch.Tensor,
+#     image2: torch.Tensor,
+#     downsample: int = 8,
+#     transform=T.Compose([T.ToImage(), T.Resize((2433, 3637))]),
+# ) -> torch.Tensor:
+#     """
+#     Processes a pair of PIL images by resizing them using the same transforms as the data loader collate and downsampling using the same transforms as the test data.
+# 
+#     Args:
+#         film (torch.Tensor): The film image
+#         digital (torch.Tensor): The digital image
+# 
+#     Returns:
+#         Tuple[torch.Tensor, torch.Tensor]: The processed film and digital images
+#     """
+#     image1 = transform(image1)
+#     image2 = transform(image2)
+#     image1 = test_transform(image1, downsample=downsample)
+#     image2 = test_transform(image2, downsample=downsample)
+#     return image1, image2
