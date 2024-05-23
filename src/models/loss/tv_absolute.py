@@ -1,6 +1,5 @@
-import torch.nn.functional as F
 import torch
-from torchmetrics import TotalVariation
+from torchmetrics.functional.image import total_variation
 from typing import Literal
 from src.models.loss.base import BaseLoss
 
@@ -23,7 +22,6 @@ class TVAbsoluteLoss(BaseLoss):
         super().__init__()
         self.mode = mode
         self.grayscale = grayscale
-        self.total_variation = TotalVariation().to("cuda")
 
     def forward(self, pred, target):
         """Compute the loss.
@@ -43,7 +41,7 @@ class TVAbsoluteLoss(BaseLoss):
 
         if self.mode == "max":
             # Compute the total variation loss
-            tv_pred = self.total_variation(pred)
+            tv_pred = total_variation(pred)
             tv_pred /= pred.numel()
 
             # Loss is the reciprocal of the total variation
@@ -51,7 +49,7 @@ class TVAbsoluteLoss(BaseLoss):
 
         elif self.mode == "min":
             # Compute the total variation loss
-            tv_pred = self.total_variation(pred)
+            tv_pred = total_variation(pred)
             tv_pred /= pred.numel()
 
             # Loss is the total variation

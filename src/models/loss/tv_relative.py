@@ -1,8 +1,6 @@
 import torch.nn.functional as F
-from torch import nn
 import torch
-from torchmetrics import TotalVariation
-from typing import Literal
+from torchmetrics.functional.image import total_variation
 from src.models.loss.base import BaseLoss
 
 
@@ -20,7 +18,6 @@ class TVRelativeLoss(BaseLoss):
         """
         super().__init__()
         self.grayscale = grayscale
-        self.total_variation = TotalVariation().to("cuda")
 
     def forward(self, pred, target):
         """Compute the loss.
@@ -39,8 +36,8 @@ class TVRelativeLoss(BaseLoss):
             target = target.mean(dim=1, keepdim=True)
 
         # Compute the total variation loss
-        tv_pred = self.total_variation(pred)
-        tv_target = self.total_variation(target)
+        tv_pred = total_variation(pred)
+        tv_target = total_variation(target)
 
         # Normalize the total variation loss by the size of the image
         tv_pred /= pred.numel()
