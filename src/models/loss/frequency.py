@@ -25,6 +25,7 @@ class FrequencyLoss(BaseLoss):
         """
         # Convert to grayscale
         pred = F.rgb_to_grayscale(pred)
+        target = F.rgb_to_grayscale(target)
 
         # Convert images to frequency domain
         fft1 = fft.fft2(pred)
