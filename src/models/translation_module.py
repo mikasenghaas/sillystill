@@ -147,7 +147,7 @@ class TranslationModule(BaseModule):
     def test_step(self, batch: torch.Tensor, batch_idx: int):
         """Test step for processing one batch of data."""
         # Forward pass
-        film, digital = self.test_transform(batch, downsample=2)
+        film, digital = self.test_transform(batch, downsample=4)
         film_predicted = self.forward(digital)
 
         test_metrics = self.test_metrics(film_predicted.clamp(0+1e-5, 1-1e-5), film)

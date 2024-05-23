@@ -10,7 +10,7 @@ defaults:
   - override /logger: wandb
 
 group: single-image
-tags: ["mse", "grain"]
+tags: ["mae", "halo", "noise"]
 seed: 42
 
 train: true
@@ -19,8 +19,8 @@ inference: true
 
 data:
   image_dirs: 
-    - data/paired/grain/film
-    - data/paired/grain/digital
+    - data/paired/halo/film
+    - data/paired/halo/digital
 
 trainer:
   max_epochs: 400
@@ -36,12 +36,12 @@ callbacks:
 
 model:
   net:
-    with_noise: false
+    with_noise: true
     hidden_channels: [64, 128, 256]
     kernel_size: 3
   loss:
     losses:
-      # - _target_: src.models.loss.MAELoss
+      - _target_: src.models.loss.MAELoss
       # - _target_: src.models.loss.MSELoss
       # - _target_: src.models.loss.VGGLoss
       # - _target_: src.models.loss.ColorLoss

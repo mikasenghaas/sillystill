@@ -140,12 +140,12 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
             # Run inference
             with torch.no_grad():
                 # Process images to be in the same format as test images
-                height = model.get_valid_dim(film.size[1], downsample=2)
-                width = model.get_valid_dim(film.size[0], downsample=2)
+                height = model.get_valid_dim(film.size[1], downsample=4)
+                width = model.get_valid_dim(film.size[0], downsample=4)
                 film_transform = CT.TestTransforms(dim=(height, width))
 
-                height = model.get_valid_dim(digital.size[1], downsample=2)
-                width = model.get_valid_dim(digital.size[0], downsample=2)
+                height = model.get_valid_dim(digital.size[1], downsample=4)
+                width = model.get_valid_dim(digital.size[0], downsample=4)
                 digital_transform = CT.TestTransforms(dim=(height, width))
 
                 film = film_transform(film).unsqueeze(0)

@@ -15,7 +15,7 @@ class VGGLoss(BaseLoss):
         self.reconstruction_weight = mse_weight
         self.feature_weight = feature_weight
 
-        self.vgg = vgg19_bn(weights=VGG19_BN_Weights.DEFAULT).features
+        self.vgg = vgg19_bn(weights=VGG19_BN_Weights.DEFAULT).to("cuda").features
         self.feature_layers = {"3": "conv1_2", "8": "conv2_2", "17": "conv3_2"}
         self.feature_weights = {"conv1_2": 0.4, "conv2_2": 0.4, "conv3_2": 0.2}
 

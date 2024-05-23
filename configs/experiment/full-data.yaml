@@ -9,8 +9,8 @@ defaults:
   - override /model/loss: silly
   - override /logger: wandb
 
-group: single-image
-tags: ["mse", "grain"]
+group: full-data
+tags: ["full-data"]
 seed: 42
 
 train: true
@@ -19,39 +19,39 @@ inference: true
 
 data:
   image_dirs: 
-    - data/paired/grain/film
-    - data/paired/grain/digital
+    - data/paired/processed/film
+    - data/paired/processed/digital
 
 trainer:
   max_epochs: 400
 
   # Disable validation
-  num_sanity_val_steps: 0
-  limit_val_batches: 0
+  # num_sanity_val_steps: 0
+  # limit_val_batches: 0
 
 callbacks:
   early_stopping:
-    monitor: "train/loss"
-    patience: 100
+    monitor: "val/loss"
+    patience: 25
 
 model:
   net:
-    with_noise: false
+    with_noise: true
     hidden_channels: [64, 128, 256]
     kernel_size: 3
   loss:
     losses:
       # - _target_: src.models.loss.MAELoss
       # - _target_: src.models.loss.MSELoss
-      # - _target_: src.models.loss.VGGLoss
-      # - _target_: src.models.loss.ColorLoss
+      - _target_: src.models.loss.VGGLoss
+      - _target_: src.models.loss.ColorLoss
       # - _target_: src.models.loss.GCLMLoss
       # - _target_: src.models.loss.FrequencyLoss
       # - _target_: src.models.loss.TVAbsoluteLoss
       #   mode: max
       #   grayscale: true
-      # - _target_: src.models.loss.TVRelativeLoss
-      #   grayscale: true
+      - _target_: src.models.loss.TVRelativeLoss
+        grayscale: true
       # - _target_: src.models.loss.CoBiLoss
-    weights: [1.0]
+    weights: [1.0, 1.0, 1.0]
   training_patch_size: 256
