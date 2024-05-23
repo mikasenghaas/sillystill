@@ -14,6 +14,8 @@ class CombinedDigitalFilmDataModule(LightningDataModule):
 
     def __init__(
         self,
+        paired_image_dirs: Tuple[str, str],
+        unpaired_image_dirs: Tuple[str, str],
         data_split: Tuple[float, float, float] = (0.7, 0.2, 0.1),
         num_paired_per_batch: int = 4,
         num_unpaired_per_batch: int = 6,
@@ -38,11 +40,8 @@ class CombinedDigitalFilmDataModule(LightningDataModule):
         If not, it raises an error.
         """
         # Initialise paths
-        self.film_paired_dir = os.path.join("data", "paired", "processed", "film")
-        self.digital_paired_dir = os.path.join("data", "paired", "processed", "digital")
-
-        self.film_unpaired_dir = os.path.join("data", "unpaired", "film")
-        self.digital_unpaired_dir = os.path.join("data", "unpaired", "digital")
+        self.film_paired_dir, self.digital_paired_dir = self.hparams.paired_image_dirs
+        self.film_unpaired_dir, self.digital_unpaired_dir = self.hparams.upaired_image_dirs
 
         # Asserts data exists
         assert (

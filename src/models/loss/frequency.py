@@ -24,7 +24,9 @@ class FrequencyLoss(BaseLoss):
             loss: The frequency loss between the predicted and target images.
         """
         # Convert to grayscale
-        pred = F.rgb_to_grayscale(pred)
+        if pred.shape[1] == 3:
+            pred = pred.mean(dim=1, keepdim=True)
+            target = target.mean(dim=1, keepdim=True)
 
         # Convert images to frequency domain
         fft1 = fft.fft2(pred)

@@ -3,3 +3,7 @@ defaults:
   - default
 
 _target_: src.data.PairedDigitalFilmDataModule
+
+image_dirs: 
+  - data/paired/grain/film
+  - data/paired/grain/digital

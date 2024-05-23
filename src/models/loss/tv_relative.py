@@ -20,7 +20,7 @@ class TVRelativeLoss(BaseLoss):
         """
         super().__init__()
         self.grayscale = grayscale
-        self.total_variation = TotalVariation()
+        self.total_variation = TotalVariation().to("cuda")
 
     def forward(self, pred, target):
         """Compute the loss.

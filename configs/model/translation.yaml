@@ -1,7 +1,7 @@
 defaults:
   - _self_
   - net: unet
-  - loss: mse-vgg
+  - loss: silly
   - default
 
 _target_: src.models.TranslationModule

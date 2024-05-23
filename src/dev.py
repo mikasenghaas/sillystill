@@ -121,10 +121,7 @@ def main():
 
     # inference
     print("running inference")
-    to_infer = T.Compose(
-        [T.ToImage(), T.ToDtype(torch.float32, scale=True), T.Resize((1216, 1816))]
-    )
-    # to_infer = T.CenterCrop((128, 128))
+    to_infer = CT.TestTransforms((1216, 1816))
     model.eval()
     with torch.no_grad():
         for batch in test_loader:

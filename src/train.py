@@ -10,6 +10,13 @@ from lightning import Callback, LightningDataModule, LightningModule, Trainer
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig, OmegaConf
 from tqdm import tqdm
+from torchmetrics import MetricCollection
+from torchmetrics.image import (
+    StructuralSimilarityIndexMeasure as SSIM,
+    PeakSignalNoiseRatio as PSNR,
+)
+
+from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity as LPIPS
 
 from matplotlib import pyplot as plt
 
@@ -28,6 +35,8 @@ from src.utils import (
     log_hyperparameters,
     task_wrapper,
 )
+from src.eval import PieAPP
+import src.models.transforms as CT
 
 # Setup logger
 log = RankedLogger(__name__, rank_zero_only=True)
@@ -88,8 +97,9 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         log_hyperparameters(object_dict)
 
     # Train model
-    log.info("Starting training!")
-    trainer.fit(model=model, datamodule=datamodule)
+    if cfg.get("train"):
+        log.info("Starting training!")
+        trainer.fit(model=model, datamodule=datamodule)
 
     train_metrics = trainer.callback_metrics
 
@@ -103,34 +113,73 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         trainer.test(model=model, datamodule=datamodule)
         log.info(f"Best ckpt path: {ckpt_path}")
 
-    if cfg.get("inference"):
-        # Test inference
-        log.info("Starting inference")
-        film_paired_dir = os.path.join("data", "paired", "processed", "film")
-        digital_paired_dir = os.path.join("data", "paired", "processed", "digital")
-        paired_image_data = PairedDataset((film_paired_dir, digital_paired_dir))
-
-        for film, digital in tqdm(paired_image_data):
-            model.eval()
-            with torch.no_grad():
-                film_predicted = model.predict(digital, downsample=2)
-
-            # Plot
-            fig, axs = plt.subplots(ncols=3, figsize=(30, 10))
-            axs[0].imshow(np.array(digital))
-            axs[1].imshow(np.array(film))
-            axs[2].imshow(np.array(film_predicted))
-            axs[0].set_xlabel("Digital")
-            axs[1].set_xlabel("Film (Ground Truth)")
-            axs[2].set_xlabel("Film (Predicted)")
-
-            # Log to W&B
-            logger.experiment.log({"inference": wandb.Image(fig)})
-
     test_metrics = trainer.callback_metrics
 
     # Merge train and test metrics
     metric_dict = {**train_metrics, **test_metrics}
+
+    if cfg.get("inference"):
+        # Test inference
+        log.info("Starting inference")
+
+        infer_metrics = MetricCollection(
+            {
+                "ssim": SSIM().to("cuda"),
+                "psnr": PSNR().to("cuda"),
+                "lpips": LPIPS().to("cuda"),
+                "pieapp": PieAPP().to("cuda"),
+            }
+        )
+
+        paired_image_data = PairedDataset(cfg.data.image_dirs)
+        data = []
+        for film, digital in tqdm(paired_image_data):
+            model.eval()
+            model.to("cuda")
+            
+            # Run inference
+            with torch.no_grad():
+                # Process images to be in the same format as test images
+                height = model.get_valid_dim(film.size[1], downsample=2)
+                width = model.get_valid_dim(film.size[0], downsample=2)
+                film_transform = CT.TestTransforms(dim=(height, width))
+
+                height = model.get_valid_dim(digital.size[1], downsample=2)
+                width = model.get_valid_dim(digital.size[0], downsample=2)
+                digital_transform = CT.TestTransforms(dim=(height, width))
+
+                film = film_transform(film).unsqueeze(0)
+                digital = digital_transform(digital).unsqueeze(0)
+                film, digital = film.to("cuda"), digital.to("cuda")
+
+                # Run inference
+                film_predicted = model(digital).clamp(0+1e-5, 1-1e-5)
+
+                metrics = {k: float(v) for k, v in infer_metrics(film_predicted, film).items()}
+
+            data.append(
+                [
+                    wandb.Image(CT.FromModelInput()(digital.squeeze())),
+                    wandb.Image(CT.FromModelInput()(film.squeeze())),
+                    wandb.Image(CT.FromModelInput()(film_predicted.squeeze())),
+                    *metrics.values()
+                 ]
+            )
+
+        columns = ["digital", "film", "film_predicted", "ssim", "psnr", "lpips", "pieapp"]
+        table = wandb.Table(data=data, columns=columns)
+
+        if logger:
+            logger.experiment.log({"inference/table": table})
+            logger.experiment.log({"inference/ssim_mean": np.mean([data[i][3] for i in range(len(data))])})
+            logger.experiment.log({"inference/ssim_std": np.std([data[i][3] for i in range(len(data))])})
+            logger.experiment.log({"inference/psnr_mean": np.mean([data[i][4] for i in range(len(data))])})
+            logger.experiment.log({"inference/psnr_std": np.std([data[i][4] for i in range(len(data))])})
+            logger.experiment.log({"inference/lpips_mean": np.mean([data[i][5] for i in range(len(data))])})
+            logger.experiment.log({"inference/psnr_std": np.std([data[i][5] for i in range(len(data))])})
+            logger.experiment.log({"inference/pieapp_mean": np.mean([data[i][6] for i in range(len(data))])})
+            logger.experiment.log({"inference/pieapp_std": np.std([data[i][6] for i in range(len(data))])})
+
 
     return metric_dict, object_dict
 

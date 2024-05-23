@@ -23,7 +23,7 @@ class TVAbsoluteLoss(BaseLoss):
         super().__init__()
         self.mode = mode
         self.grayscale = grayscale
-        self.total_variation = TotalVariation()
+        self.total_variation = TotalVariation().to("cuda")
 
     def forward(self, pred, target):
         """Compute the loss.

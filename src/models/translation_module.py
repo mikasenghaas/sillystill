@@ -53,7 +53,7 @@ class TranslationModule(BaseModule):
         )
 
         # Store hyperparameters
-        self.save_hyperparameters(logger=False)
+        self.save_hyperparameters(logger=False, ignore=["loss", "net"])
         self.net = net
         self.loss = loss
 
@@ -81,7 +81,7 @@ class TranslationModule(BaseModule):
         Returns
             torch.Tensor: The output tensor representing the transformed images.
         """
-        return self.net(x).clamp(0 + 1e-5, 1 - 1e-5)
+        return self.net(x)
 
     def step(
         self, batch: torch.Tensor, transform: Optional[nn.Module]
@@ -120,9 +120,9 @@ class TranslationModule(BaseModule):
             on_epoch=True,
             prog_bar=True,
         )
-        train_metrics = self.train_metrics(film_predicted, film)
+        train_metrics = self.train_metrics(film_predicted.clamp(0+1e-5, 1-1e-5), film)
         self.log_dict(train_metrics, on_step=False, on_epoch=True, prog_bar=True)
-        if batch_idx == 0:
+        if batch_idx % 25 == 0:
             self.log_images(film, digital, film_predicted, key="train/images")
 
         return losses["loss"]
@@ -139,9 +139,9 @@ class TranslationModule(BaseModule):
             on_epoch=True,
             prog_bar=True,
         )
-        val_metrics = self.val_metrics(film_predicted, film)
+        val_metrics = self.val_metrics(film_predicted.clamp(0+1e-5, 1-1e-5), film)
         self.log_dict(val_metrics, on_step=False, on_epoch=True, prog_bar=True)
-        if batch_idx == 0:
+        if batch_idx % 25 == 0:
             self.log_images(film, digital, film_predicted, key="val/images")
 
     def test_step(self, batch: torch.Tensor, batch_idx: int):
@@ -150,16 +150,7 @@ class TranslationModule(BaseModule):
         film, digital = self.test_transform(batch, downsample=2)
         film_predicted = self.forward(digital)
 
-        # # Log test loss (Doesn't work for CoBi)
-        # losses = self.loss(film_predicted, film)
-        # self.log_dict(
-        #     self._add_prefix(losses, "test/"),
-        #     on_step=False,
-        #     on_epoch=True,
-        #     prog_bar=True,
-        # )
-
-        test_metrics = self.test_metrics(film_predicted, film)
+        test_metrics = self.test_metrics(film_predicted.clamp(0+1e-5, 1-1e-5), film)
         self.log_dict(test_metrics, on_step=False, on_epoch=True, prog_bar=True)
 
         self.log_images(film, digital, film_predicted, key="test/images")

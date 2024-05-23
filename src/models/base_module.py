@@ -4,7 +4,7 @@ import torch
 from lightning import LightningModule
 from PIL.Image import Image as PILImage
 
-from . import transforms as CT
+import src.models.transforms as CT
 
 
 class BaseModule(LightningModule):
@@ -54,15 +54,7 @@ class BaseModule(LightningModule):
         Returns:
             torch.Tensor: The transformed tensor
         """
-        transform_train = T.Compose(
-            [
-                CT.Augment(self.augment),
-                CT.ToModelInput(),
-                T.RandomResizedCrop(self.training_patch_size),
-            ]
-        )
-
-        return transform_train(x)
+        return CT.TrainTransforms(self.training_patch_size, self.augment)(x)
 
     def val_transform(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -76,13 +68,7 @@ class BaseModule(LightningModule):
         Returns:
             torch.Tensor: The transformed tensor
         """
-        transform_val = T.Compose(
-            [
-                CT.ToModelInput(),
-                T.RandomResizedCrop(self.training_patch_size),
-            ]
-        )
-        return transform_val(x)
+        return CT.TrainTransforms(self.training_patch_size, self.augment)(x)
 
     def test_transform(self, x: torch.Tensor, downsample: int = 1) -> torch.Tensor:
         """
@@ -98,14 +84,14 @@ class BaseModule(LightningModule):
         """
         height = self.get_valid_dim(x.shape[-2], downsample=downsample)
         width = self.get_valid_dim(x.shape[-1], downsample=downsample)
-        transform_test = T.Compose([CT.ToModelInput(), T.Resize((height, width))])
-        return transform_test(x)
+        test_transforms = CT.TestTransforms(dim=(height, width))
+        return test_transforms(x)
 
     def infer_transform(self, img: PILImage, downsample: int = 1) -> None:
         height = self.get_valid_dim(img.size[1], downsample=downsample)
         width = self.get_valid_dim(img.size[0], downsample=downsample)
-        transform_test = T.Compose([CT.ToModelInput(), T.Resize((height, width))])
-        return transform_test(img)
+        infer_transforms = CT.TestTransforms(dim=(height, width))
+        return infer_transforms(img)
 
     def get_valid_dim(self, dim: int, downsample: int = 1) -> int:
         """

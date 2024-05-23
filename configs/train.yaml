@@ -17,5 +17,7 @@ group: null
 name: null
 tags: ["dev"]
 seed: null
-test: true
-inference: false
+
+train: false
+test: false
+inference: true
