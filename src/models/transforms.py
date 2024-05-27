@@ -2,20 +2,27 @@ from typing import Tuple
 import numpy as np
 import torch
 import torch.nn as nn
-import torchvision.transforms as T
-# import torchvision.transforms.v2 as T
+
+# import torchvision.transforms as T
+import torchvision.transforms.v2 as T
 from PIL.Image import Image as PILImage
 
+
 def ToBatchedTensor():
-    return T.Compose([T.ToTensor(), T.Resize((2433, 3637))]) 
-    # return T.Compose([T.ToImage(), T.Resize((2433, 3637))]) # transforms.v2
+    # return T.Compose([T.ToTensor(), T.Resize((2433, 3637))])
+    return T.Compose([T.ToImage(), T.Resize((2433, 3637))])  # transforms.v2
+
 
 def ToModelInput():
-    return T.ToTensor()
-    # return T.Compose([T.ToImage(), T.ToDtype(torch.float32, scale=True)]) # transforms.v2
+    # return T.ToTensor()
+    return T.Compose(
+        [T.ToImage(), T.ToDtype(torch.float32, scale=True)]
+    )  # transforms.v2
+
 
 def FromModelInput():
     return T.ToPILImage()
+
 
 def Augment(augment: float):
     return T.Compose(
@@ -30,6 +37,7 @@ def Augment(augment: float):
         ]
     )
 
+
 def TrainTransforms(patch_size: int, augment: float):
     return T.Compose(
         [
@@ -38,13 +46,10 @@ def TrainTransforms(patch_size: int, augment: float):
         ]
     )
 
+
 def TestTransforms(dim: Tuple[int, int]):
-    return T.Compose(
-        [
-            ToModelInput(),
-            T.Resize(dim)
-        ]
-    )
+    return T.Compose([T.ToImage(), T.ToDtype(torch.float32, scale=True), T.Resize(dim)])
+
 
 def get_valid_dim(dim: int, downsample: int = 1) -> int:
     """
@@ -60,6 +65,7 @@ def get_valid_dim(dim: int, downsample: int = 1) -> int:
     adjusted_dim = dim // downsample
     valid_dim = (adjusted_dim // 8) * 8
     return valid_dim
+
 
 def pil_to_plot(img: PILImage):
     return np.array(img)
