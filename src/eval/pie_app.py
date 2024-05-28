@@ -6,8 +6,13 @@ from piq import PieAPP as PieAPPBase
 class PieAPP(Metric):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.pie_app = PieAPPBase(reduction="none", stride=32)
-        self.total_loss, self.total = 0.0, 0.0
+        self.pie_app = PieAPPBase(reduction="none", stride=128)
+        self.add_state(
+            "loss", default=torch.tensor(0, dtype=torch.float32), dist_reduce_fx="sum"
+        )
+        self.add_state(
+            "total", default=torch.tensor(0, dtype=torch.float32), dist_reduce_fx="sum"
+        )
 
     def update(self, preds: torch.Tensor, targets: torch.Tensor) -> None:
         assert (
@@ -20,9 +25,8 @@ class PieAPP(Metric):
         # Compute PieAPP error (batched)
         pieapp_dist = self.pie_app(preds, targets)  # [B,]
 
-        self.total_loss += pieapp_dist.sum().item()
+        self.loss += pieapp_dist.sum()
         self.total += pieapp_dist.shape[0]
 
     def compute(self) -> torch.Tensor:
-        # Subtract from 1.0 because this library returns the distance, not the similarity
-        return self.total_loss / self.total
+        return self.loss / self.total
