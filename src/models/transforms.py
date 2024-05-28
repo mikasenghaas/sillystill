@@ -3,28 +3,37 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-# import torchvision.transforms as T
 import torchvision.transforms.v2 as T
 from PIL.Image import Image as PILImage
 
 
-def ToBatchedTensor():
-    # return T.Compose([T.ToTensor(), T.Resize((2433, 3637))])
-    return T.Compose([T.ToImage(), T.Resize((2433, 3637))])  # transforms.v2
-
-
 def ToModelInput():
-    # return T.ToTensor()
-    return T.Compose(
-        [T.ToImage(), T.ToDtype(torch.float32, scale=True)]
-    )  # transforms.v2
+    """
+    Transform to convert np.array, PIL image or torch.Tensor to a tensor
+    that can be fed into the model (C, H, W) w/ float32 dtype.
+    """
+    return T.Compose([T.ToImage(), T.ToDtype(torch.float32, scale=True)])
 
 
 def FromModelInput():
+    """
+    Converts back from model input to a PIL image.
+    """
     return T.ToPILImage()
 
 
+def ToBatchedTensor():
+    """
+    Used in the dataloader to convert a list of tensors to a batched tensor.
+    """
+    return T.Compose([ToModelInput(), T.Resize((2433, 3637))])
+
+
 def Augment(augment: float):
+    """
+    Applies transform to augment the data. Only works when the input is in
+    the "model input" format.
+    """
     return T.Compose(
         [
             T.RandomHorizontalFlip(p=augment),
@@ -39,6 +48,10 @@ def Augment(augment: float):
 
 
 def TrainTransforms(patch_size: int, augment: float):
+    """
+    Transform used during training (data is assumed to already be in the
+    model input format) because it comes from the dataloader.
+    """
     return T.Compose(
         [
             Augment(augment),
@@ -48,7 +61,11 @@ def TrainTransforms(patch_size: int, augment: float):
 
 
 def TestTransforms(dim: Tuple[int, int]):
-    return T.Compose([T.ToImage(), T.ToDtype(torch.float32, scale=True), T.Resize(dim)])
+    """
+    Transform used during inference (data might not be in the model input
+    format yet).
+    """
+    return T.Compose([ToModelInput(), T.Resize(dim)])
 
 
 def get_valid_dim(dim: int, downsample: int = 1) -> int:
@@ -65,6 +82,14 @@ def get_valid_dim(dim: int, downsample: int = 1) -> int:
     adjusted_dim = dim // downsample
     valid_dim = (adjusted_dim // 8) * 8
     return valid_dim
+
+
+def to_infer(img, downsample=2, device="cpu"):
+    height = get_valid_dim(img.size[1], downsample=downsample)
+    width = get_valid_dim(img.size[0], downsample=downsample)
+    img_transform = TestTransforms(dim=(height, width))
+    img = img_transform(img).unsqueeze(0).clamp(0 + 1e-5, 1 - 1e-5)
+    return img.to(device)
 
 
 def pil_to_plot(img: PILImage):

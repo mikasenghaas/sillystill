@@ -121,7 +121,7 @@ class UNet(nn.Module):
         # Add noise if specified
         if self.with_noise:
             B, _, H, W = x.shape
-            noise = torch.rand((B, 1, H, W)).to("cuda")
+            noise = torch.rand((B, 1, H, W)).to(x.device)
             x = torch.cat([x, noise], dim=1)
 
         x, skips = self.encode(x)

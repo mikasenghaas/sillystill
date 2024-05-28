@@ -1,7 +1,6 @@
 from typing import Any, Dict, List, Optional, Tuple
 
-import os
-import numpy as np
+import pandas as pd
 import hydra
 import torch
 import lightning as L
@@ -118,16 +117,21 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     # Merge train and test metrics
     metric_dict = {**train_metrics, **test_metrics}
 
+    device = torch.device(
+        "cuda"
+        if torch.cuda.is_available()
+        else "mps" if torch.backends.mps.is_available() else "cpu"
+    )
     if cfg.get("inference"):
         # Test inference
         log.info("Starting inference")
 
-        infer_metrics = MetricCollection(
+        compute_metrics = MetricCollection(
             {
-                "ssim": SSIM().to("cuda"),
-                "psnr": PSNR().to("cuda"),
-                "lpips": LPIPS().to("cuda"),
-                "pieapp": PieAPP().to("cuda"),
+                "ssim": SSIM().to(device),
+                "psnr": PSNR().to(device),
+                "lpips": LPIPS(net_type="squeeze", normalize=True).to(device),
+                "pieapp": PieAPP().to(device),
             }
         )
 
@@ -135,51 +139,43 @@ def train(cfg: DictConfig) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         data = []
         for film, digital in tqdm(paired_image_data):
             model.eval()
-            model.to("cuda")
-            
+            model = model.to(device)
+
             # Run inference
             with torch.no_grad():
-                # Process images to be in the same format as test images
-                height = model.get_valid_dim(film.size[1], downsample=4)
-                width = model.get_valid_dim(film.size[0], downsample=4)
-                film_transform = CT.TestTransforms(dim=(height, width))
-
-                height = model.get_valid_dim(digital.size[1], downsample=4)
-                width = model.get_valid_dim(digital.size[0], downsample=4)
-                digital_transform = CT.TestTransforms(dim=(height, width))
-
-                film = film_transform(film).unsqueeze(0)
-                digital = digital_transform(digital).unsqueeze(0)
-                film, digital = film.to("cuda"), digital.to("cuda")
+                # Process from PILImage to Tensor
+                film = CT.to_infer(film, downsample=2, device=device)
+                digital = CT.to_infer(digital, downsample=2, device=device)
 
                 # Run inference
-                film_predicted = model(digital).clamp(0+1e-5, 1-1e-5)
+                film_predicted = model(digital).clamp(0 + 1e-5, 1 - 1e-5)
 
-                metrics = {k: float(v) for k, v in infer_metrics(film_predicted, film).items()}
+                # Compute metrics
+                infer_metrics = compute_metrics(film_predicted, film)
+                baseline_metrics = compute_metrics(digital, film)
 
-            data.append(
-                [
-                    wandb.Image(CT.FromModelInput()(digital.squeeze())),
-                    wandb.Image(CT.FromModelInput()(film.squeeze())),
-                    wandb.Image(CT.FromModelInput()(film_predicted.squeeze())),
-                    *metrics.values()
-                 ]
-            )
+                # Process from Tensor to PILImage
+                film_predicted = CT.FromModelInput()(film_predicted.squeeze())
+                digital = CT.FromModelInput()(digital.squeeze())
+                film = CT.FromModelInput()(film.squeeze())
 
-        columns = ["digital", "film", "film_predicted", "ssim", "psnr", "lpips", "pieapp"]
-        table = wandb.Table(data=data, columns=columns)
+                data.append(
+                    {
+                        "run_name": logger.experiment.name,
+                        "digital": wandb.Image(digital),
+                        "film": wandb.Image(film),
+                        "predicted": wandb.Image(film_predicted),
+                        **{k: v.item() for k, v in infer_metrics.items()},
+                        **{
+                            f"baseline_{k}": v.item()
+                            for k, v in baseline_metrics.items()
+                        },
+                    }
+                )
 
         if logger:
+            table = wandb.Table(dataframe=pd.DataFrame(data))
             logger.experiment.log({"inference/table": table})
-            logger.experiment.log({"inference/ssim_mean": np.mean([data[i][3] for i in range(len(data))])})
-            logger.experiment.log({"inference/ssim_std": np.std([data[i][3] for i in range(len(data))])})
-            logger.experiment.log({"inference/psnr_mean": np.mean([data[i][4] for i in range(len(data))])})
-            logger.experiment.log({"inference/psnr_std": np.std([data[i][4] for i in range(len(data))])})
-            logger.experiment.log({"inference/lpips_mean": np.mean([data[i][5] for i in range(len(data))])})
-            logger.experiment.log({"inference/psnr_std": np.std([data[i][5] for i in range(len(data))])})
-            logger.experiment.log({"inference/pieapp_mean": np.mean([data[i][6] for i in range(len(data))])})
-            logger.experiment.log({"inference/pieapp_std": np.std([data[i][6] for i in range(len(data))])})
-
 
     return metric_dict, object_dict
 
@@ -192,12 +188,12 @@ def main(cfg: DictConfig) -> Optional[float]:
     # Train the model
     metric_dict, _ = train(cfg)
 
-    # safely retrieve metric value for hydra-based hyperparameter optimization
+    # Safely retrieve metric value for hydra-based hyperparameter optimization
     metric_value = get_metric_value(
         metric_dict=metric_dict, metric_name=cfg.get("optimized_metric")
     )
 
-    # return optimized metric
+    # Return optimized metric
     return metric_value
 
 

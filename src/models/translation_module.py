@@ -58,17 +58,20 @@ class TranslationModule(BaseModule):
         self.loss = loss
 
         # Initialise metrics
-        metrics = MetricCollection(
-            {
-                "ssim": SSIM(),
-                "psnr": PSNR(),
-                "lpips": LPIPS(),
-                "pieapp": PieAPP(),
-            }
-        )
-        self.train_metrics = metrics.clone(prefix="train/")
-        self.val_metrics = metrics.clone(prefix="val/")
-        self.test_metrics = metrics.clone(prefix="test/")
+        # metrics = MetricCollection(
+        #     {
+        #         "ssim": SSIM(),
+        #         "psnr": PSNR(),
+        #         # "lpips": LPIPS(net_type="squeeze", normalize=True),
+        #         # "pieapp": PieAPP(),
+        #     }
+        # )
+        # self.train_metrics = metrics.clone(prefix="train/")
+        # self.val_metrics = metrics.clone(prefix="val/")
+        # self.test_metrics = metrics.clone(prefix="test/")
+        # self.train_baseline_metrics = metrics.clone(prefix="train/baseline/")
+        # self.val_baseline_metrics = metrics.clone(prefix="val/baseline/")
+        # self.test_baseline_metrics = metrics.clone(prefix="test/baseline/")
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -120,9 +123,13 @@ class TranslationModule(BaseModule):
             on_epoch=True,
             prog_bar=True,
         )
-        train_metrics = self.train_metrics(film_predicted.clamp(0+1e-5, 1-1e-5), film)
-        self.log_dict(train_metrics, on_step=False, on_epoch=True, prog_bar=True)
-        if batch_idx % 25 == 0:
+        # train_metrics = self.train_metrics(
+        #     film_predicted.clamp(0 + 1e-5, 1 - 1e-5), film.clamp(0 + 1e-5, 1 - 1e-5)
+        # )
+        # baseline_metrics = self.train_baseline_metrics(digital, film)
+        # self.log_dict(train_metrics, on_step=False, on_epoch=True, prog_bar=True)
+        # self.log_dict(baseline_metrics, on_step=False, on_epoch=True, prog_bar=True)
+        if batch_idx == 0:
             self.log_images(film, digital, film_predicted, key="train/images")
 
         return losses["loss"]
@@ -139,20 +146,27 @@ class TranslationModule(BaseModule):
             on_epoch=True,
             prog_bar=True,
         )
-        val_metrics = self.val_metrics(film_predicted.clamp(0+1e-5, 1-1e-5), film)
-        self.log_dict(val_metrics, on_step=False, on_epoch=True, prog_bar=True)
-        if batch_idx % 25 == 0:
+        # val_metrics = self.val_metrics(
+        #     film_predicted.clamp(0 + 1e-5, 1 - 1e-5), film.clamp(0 + 1e-5, 1 - 1e-5)
+        # )
+        # baseline_metrics = self.train_baseline_metrics(digital, film)
+        # self.log_dict(val_metrics, on_step=False, on_epoch=True, prog_bar=True)
+        # self.log_dict(baseline_metrics, on_step=False, on_epoch=True, prog_bar=True)
+        if batch_idx == 0:
             self.log_images(film, digital, film_predicted, key="val/images")
 
     def test_step(self, batch: torch.Tensor, batch_idx: int):
         """Test step for processing one batch of data."""
         # Forward pass
-        film, digital = self.test_transform(batch, downsample=4)
+        film, digital = self.test_transform(batch, downsample=2)
         film_predicted = self.forward(digital)
 
-        test_metrics = self.test_metrics(film_predicted.clamp(0+1e-5, 1-1e-5), film)
-        self.log_dict(test_metrics, on_step=False, on_epoch=True, prog_bar=True)
-
+        test_metrics = self.test_metrics(
+            film_predicted.clamp(0 + 1e-5, 1 - 1e-5), film.clamp(0 + 1e-5, 1 - 1e-5)
+        )
+        # baseline_metrics = self.test_baseline_metrics(digital, film)
+        # self.log_dict(test_metrics, on_step=False, on_epoch=True, prog_bar=True)
+        # self.log_dict(baseline_metrics, on_step=False, on_epoch=True, prog_bar=True)
         self.log_images(film, digital, film_predicted, key="test/images")
 
     def predict(self, digital: PILImage, downsample=1) -> PILImage:
