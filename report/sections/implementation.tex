@@ -220,11 +220,41 @@ For our experiments we vary the number of layers $L$, the number of filters $F$,
 
 VGG loss is a perceptual loss function that measures the difference between the feature representations of the predicted and ground truth images. The feature representations are computed by passing the images through a pre-trained VGG network and extracting the activations of certain layers. 
 
+
 \textbf{Colour Loss.}
 
-\textbf{Absolute Total Variational Loss.}
+As MSE computes pixel-by-pixel squared error, it is sensitive to small changes in pixel values, including those caused by subtle differences in grain patterns in the original film image and the generated film image. Therefore, one would expect MSE to effectively \textit{penalise} the generation of grain that does not perfectly match the grain in the original film image -- an extremely unlikely event. To build a loss function that is more robust to such differences, we propose a colour loss function that computes the mean squared error over a blurred image. This blurred image is created by applying a Gaussian blur to the original image. The colour loss is then defined as the MSE between the blurred images of the predicted and ground truth images. 
 
-\textbf{Relative Total Variational Loss.}
+\textbf{Total Variational Loss.}
+
+We compute the total variation of an image by taking the absolute difference between pairs of adjacent pixels, summed over the entire image. The total variation of an image is a measure of the amount of noise in the image. It is defined as the sum of the absolute differences between pixel values in the image. 
+
+\begin{definition}
+    \textbf{Total Variation.} The total variation of an image $I$ is defined as:
+    \begin{equation}
+        \text{TV}(I) = \Sigma_{i,j}\sqrt{|y_{i+1,j} - y_{i,j}|^2 + |y_{i,j+1} - y_{i,j}|^2}
+    \end{equation}
+\end{definition}
+
+The Absolute Total Variational Loss is defined to maximize the noise in the predicted image, defined as 
+
+\begin{definition}
+  \textbf{Absolute Total Variational Loss}
+\begin{equation}
+  \frac{1}{TV(\text{prediction})}
+\end{equation}
+\end{definition}
+
+Relative Total Variational Loss is then defined as the absolute difference between the total variation of the predicted and ground truth images.
+
+\begin{definition}
+\textbf{Relative Total Variational Loss} 
+\begin{equation}
+| TV(\text{prediction}) - TV(\text{ground truth film})| 
+\end{equation}
+\end{definition}
+
+Relative Total Variational Loss encourages the model to generate images with a similar amount of noise to the ground truth film images.
 
 \textbf{CoBi Loss.}
 
@@ -234,16 +264,40 @@ VGG loss is a perceptual loss function that measures the difference between the 
 \label{subsec:training}
 
 % Optimiser: Adam w/ learning rate 1e-3
+
 % Patched training
-% Number of patches (instead of epochs)
-% Batch size relatively small at 4
+
+Beginning with the simplest task, we explored the ability of our architecture to learn Cinestill 800T grain patterns on small patches of a singular image -- testing its ability to overfit and memorize grain patterns. Observing which loss functions and combinations of loss functions proved most effective, we then expanded to training on the full dataset, evaluating the model's ability to generalize to unseen images.
+
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\textwidth]{figures/training-overview.png}
+  \caption{\textbf{Training Overview.} We train our model on a dataset of paired digital-film images. The dataset is split into a training, validation and test set. The model is trained using the Adam optimizer with a learning rate of $1e-3$. We use a patched training approach, where the images are divided into patches of size $256 \times 256$ and the model is trained on these patches.}
+  \label{fig:training-overview}
+\end{figure}
+
+% Training on single-image datasets
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.9\textwidth]{figures/training-overview.png}
-    \caption{\textbf{Training Overview.} We train our model on a dataset of paired digital-film images. The dataset is split into a training, validation and test set. The model is trained using the Adam optimizer with a learning rate of $1e-3$. We use a patched training approach, where the images are divided into patches of size $256 \times 256$ and the model is trained on these patches.}
-    \label{fig:training-overview}
+    \includegraphics[width=0.5\textwidth]{figures/RGBnoise.png}
+    \caption{\textbf{Original RGB Channels, Random Noise Channel}}
+    \label{fig:random-noise-channel}
 \end{figure}
+
+
+% Adding noise channel
+
+From single-image experiments with MSE and VGG loss, we observed that the model was able to learn grain patterns on small patches of a single image. However, the grain patterns of small patches were memorized by the model and such patterns were not consistent across the dataset, and so the model struggled to generalize to unseen images.
+
+To aided our model's ability to learn noise patterns, we seed our models with an extra random noise channel. We vary the distribution from which the random seed noise is drawn using \textcolor{red}{Gaussian and uniform samples}.
+
+
+% Number of patches (instead of epochs)
+% Batch size relatively small at 4
+
+
 
 
 \subsection{Evaluation}
@@ -260,15 +314,15 @@ Beyond subjective opinion, four quantitative image quality and image similarity 
 \textbf{Pixel-Based Metrics:}
 
 \begin{itemize}
-  \item \textbf{Peak Signal-to-Noise Ratio (PSNR)}
-  \item \textbf{Structural Similarity Index (SSIM)}
+  \item[$\circ$] \textbf{Peak Signal-to-Noise Ratio (PSNR)}
+  \item[$\circ$] \textbf{Structural Similarity Index (SSIM)}
 \end{itemize}
 
 \textbf{Learning-Based Metrics:}
 
 \begin{itemize}
-  \item \textbf{Learned Perceptual Image Patch Similarity (LPIPS)}
-  \item \textbf{Perceptual Image-Error Assessment through Pairwise Preference (PieApp)}
+  \item[$\circ$] \textbf{Learned Perceptual Image Patch Similarity (LPIPS)}
+  \item[$\circ$] \textbf{Perceptual Image-Error Assessment through Pairwise Preference (PieApp)}
 \end{itemize}
 
 % - PSNR
@@ -296,7 +350,9 @@ Therefore, we expect PSNR to judge predictions most positively when we use MSE l
 
 \subsubsection{Structural Similarity Index (SSIM)}
 
-The Structural Similarity Index (SSIM) is a pixel-based metric for measuring the similarity between two images. It is based on the assumption that the human visual system is highly sensitive to structural information in images, and that the perceived quality of an image is determined by the similarity of its structure to the structure of a reference image. SSIM is designed to capture three aspects of image quality: luminance, contrast, and structure. As these aspects are not judgements of color accuratecy, SSIM is often computed based on the luminance channel of the image, or individually over the red, green, and blue channels and then combined to create a final signal. In our implementation
+The Structural Similarity Index (SSIM) is a pixel-based metric for measuring the similarity between two images. It is based on the assumption that the human visual system is highly sensitive to structural information in images, and that the perceived quality of an image is determined by the similarity of its structure to the structure of a reference image.
+
+SSIM is designed to capture three aspects of image quality: luminance, contrast, and structure. As these aspects are not judgements of color accuratecy, SSIM is often computed based on the luminance channel of the image, or individually over the red, green, and blue channels and then combined to create a final signal. In our implementation
 
 The SSIM index is defined as:
 
@@ -313,7 +369,7 @@ Given SSIM's sensitivity to structural information in the image, we expect SSIM 
 
 \subsubsection{Learned Perceptual Image Patch Similarity (LPIPS)}
 
-Proposed in \cite{lpips}, the Learned Perceptual Image Patch Similarity (LPIPS) metric is a learned metric based on VGG features. As features of the VGG network trained on ImageNet classification are useful as training loss for image synthesis, it follows that these features should capture some kind of perceptual quality of images. The LPIPS metric computes the distance between two images based on the distance between their VGG features. 
+Proposed in \cite{LPIPS}, the Learned Perceptual Image Patch Similarity (LPIPS) metric is a learned metric based on VGG features. As features of the VGG network trained on ImageNet classification are useful as training loss for image synthesis, it follows that these features should capture some kind of perceptual quality of images. The LPIPS metric computes the distance between two images based on the distance between their VGG features. 
 
 LPIPS is trained on a human-annotated dataset of images along with several distorted copies of each imgage. Humans were asked to choose the most similar image to the original image from the distorted images. The LPIPS metric is then trained to predict the human choice on this dataset.
 
