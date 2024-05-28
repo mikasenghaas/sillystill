@@ -10,7 +10,7 @@ defaults:
   - override /logger: wandb
 
 group: full-data
-tags: ["full-data"]
+tags: ["MSE", "VGG", "Combined"]
 seed: 42
 
 train: true
@@ -23,7 +23,10 @@ data:
     - data/paired/processed/digital
 
 trainer:
+  min_epochs: 50
   max_epochs: 400
+  min_steps: -1
+  max_steps: -1
 
   # Disable validation
   # num_sanity_val_steps: 0
@@ -32,26 +35,26 @@ trainer:
 callbacks:
   early_stopping:
     monitor: "val/loss"
-    patience: 25
+    patience: 10
 
 model:
   net:
-    with_noise: true
+    with_noise: false
     hidden_channels: [64, 128, 256]
     kernel_size: 3
   loss:
     losses:
       # - _target_: src.models.loss.MAELoss
-      # - _target_: src.models.loss.MSELoss
+      - _target_: src.models.loss.MSELoss
       - _target_: src.models.loss.VGGLoss
-      - _target_: src.models.loss.ColorLoss
+      # - _target_: src.models.loss.ColorLoss
       # - _target_: src.models.loss.GCLMLoss
       # - _target_: src.models.loss.FrequencyLoss
       # - _target_: src.models.loss.TVAbsoluteLoss
       #   mode: max
       #   grayscale: true
-      - _target_: src.models.loss.TVRelativeLoss
-        grayscale: true
+      # - _target_: src.models.loss.TVRelativeLoss
+      #   grayscale: true
       # - _target_: src.models.loss.CoBiLoss
     weights: [1.0, 1.0, 1.0]
   training_patch_size: 256

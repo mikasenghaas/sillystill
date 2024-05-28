@@ -2,8 +2,9 @@ _target_: lightning.pytorch.trainer.Trainer
 
 default_root_dir: ${paths.output_dir}
 
-min_epochs: 10
-max_epochs: 100
+# Step corresponds to patch (because we do batch size 1)
+min_steps: 10
+max_steps: 100
 
 accelerator: cpu
 devices: 1
