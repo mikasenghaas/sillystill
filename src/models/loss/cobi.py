@@ -4,6 +4,12 @@ from torchvision.models import vgg19_bn
 from torchvision.models.vgg import VGG19_BN_Weights
 from src.models.loss.base import BaseLoss
 
+device = torch.device(
+    "cuda"
+    if torch.cuda.is_available()
+    else "mps" if torch.backends.mps.is_available() else "cpu"
+)
+
 
 class CoBiLoss(BaseLoss):
     """
@@ -30,7 +36,7 @@ class CoBiLoss(BaseLoss):
     def __init__(
         self,
         alpha=0.5,
-        patch_size=10,
+        patch_size=64,
         ws=0.1,
         epsilon=1e-5,
         bandwidth=0.1,
@@ -53,7 +59,7 @@ class CoBiLoss(BaseLoss):
         self.epsilon = epsilon
         self.bandwidth = bandwidth
         self.verbose = verbose
-        self.vgg = vgg19_bn(weights=VGG19_BN_Weights.DEFAULT).to("cuda").features
+        self.vgg = vgg19_bn(weights=VGG19_BN_Weights.DEFAULT).to(device).features
         self.feature_layers = {"3": "conv1_2", "8": "conv2_2", "17": "conv3_2"}
         self.feature_weights = {"conv1_2": 0.4, "conv2_2": 0.4, "conv3_2": 0.2}
 
