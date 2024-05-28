@@ -216,18 +216,12 @@ For our experiments we vary the number of layers $L$, the number of filters $F$,
     \label{eq:mae}
 \end{equation}
 
-\textbf{VGG Loss.}
-
-VGG loss is a perceptual loss function that measures the difference between the feature representations of the predicted and ground truth images. The feature representations are computed by passing the images through a pre-trained VGG network and extracting the activations of certain layers. 
+\textbf{VGG Loss.} VGG loss is a perceptual loss function that measures the difference between the feature representations of the predicted and ground truth images. The feature representations are computed by passing the images through a pre-trained VGG network and extracting the activations of certain layers. 
 
 
-\textbf{Colour Loss.}
+\textbf{Colour Loss.} As MSE computes pixel-by-pixel squared error, it is sensitive to small changes in pixel values, including those caused by subtle differences in grain patterns in the original film image and the generated film image. Therefore, one would expect MSE to effectively \textit{penalise} the generation of grain that does not perfectly match the grain in the original film image -- an extremely unlikely event. To build a loss function that is more robust to such differences, we propose a colour loss function that computes the mean squared error over a blurred image. This blurred image is created by applying a Gaussian blur to the original image. The colour loss is then defined as the MSE between the blurred images of the predicted and ground truth images. 
 
-As MSE computes pixel-by-pixel squared error, it is sensitive to small changes in pixel values, including those caused by subtle differences in grain patterns in the original film image and the generated film image. Therefore, one would expect MSE to effectively \textit{penalise} the generation of grain that does not perfectly match the grain in the original film image -- an extremely unlikely event. To build a loss function that is more robust to such differences, we propose a colour loss function that computes the mean squared error over a blurred image. This blurred image is created by applying a Gaussian blur to the original image. The colour loss is then defined as the MSE between the blurred images of the predicted and ground truth images. 
-
-\textbf{Total Variational Loss.}
-
-We compute the total variation of an image by taking the absolute difference between pairs of adjacent pixels, summed over the entire image. The total variation of an image is a measure of the amount of noise in the image. It is defined as the sum of the absolute differences between pixel values in the image. 
+\textbf{Total Variational Loss.} We compute the total variation of an image by taking the absolute difference between pairs of adjacent pixels, summed over the entire image. The total variation of an image is a measure of the amount of noise in the image. It is defined as the sum of the absolute differences between pixel values in the image. 
 
 \begin{definition}
     \textbf{Total Variation.} The total variation of an image $I$ is defined as:
@@ -256,7 +250,16 @@ Relative Total Variational Loss is then defined as the absolute difference betwe
 
 Relative Total Variational Loss encourages the model to generate images with a similar amount of noise to the ground truth film images.
 
-\textbf{CoBi Loss.}
+\textbf{CoBi Loss.} Introduced by \cite{zoom-to-learn}, Contextual Bilateral Loss (CoBi Loss) is inspired by the bilateral filter \cite{bilateral-filter} which preserves-edges while reducing noise. The motivation for its design is to judge image feature similarity even when an image pair is misaligned. CoBi Loss combines spatial pixel coordinates and pixel-level RGB information for a nearest neighbor search on image features. 
+
+\begin{definition}
+  \textbf{CoBi Loss}
+\begin{equation}
+  \text{CoBi}(P, Q) = \frac{1}{N}\Sigma_{i,j}\min_{j=1,...M} (D_{p_i,q_i} + \omega_s D'_{p_i, q_i})
+\end{equation}
+\end{definition}
+
+Where $P$ and $Q$ are the predicted and ground truth images with $N$ and $M$ feature points respectively. $\omega_s$ is a hyperparameter that controls the influence of the spatial awareness for nearest neighbor search. $D_{p_i,q_i}$ and $D'_{p_i,q_i}$ are distance measurements between feature points of the predicted and ground truth images. 
 
 % TODO: Talk about combination of losses.
 
@@ -291,14 +294,13 @@ Beginning with the simplest task, we explored the ability of our architecture to
 
 From single-image experiments with MSE and VGG loss, we observed that the model was able to learn grain patterns on small patches of a single image. However, the grain patterns of small patches were memorized by the model and such patterns were not consistent across the dataset, and so the model struggled to generalize to unseen images.
 
-To aided our model's ability to learn noise patterns, we seed our models with an extra random noise channel. We vary the distribution from which the random seed noise is drawn using \textcolor{red}{Gaussian and uniform samples}.
+% TODO go into more detail about single-image experiments with different loss functions
+
+To aid our model's ability to learn noise patterns, we seed our models with an extra random noise channel. We vary the distribution from which the random seed noise is drawn using \textcolor{red}{Gaussian and uniform samples}.
 
 
 % Number of patches (instead of epochs)
 % Batch size relatively small at 4
-
-
-
 
 \subsection{Evaluation}
 \label{subsec:evaluation}
