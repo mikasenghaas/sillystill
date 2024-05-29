@@ -1,89 +1,4 @@
 
-\subsection{Evaluation}
-\label{subsec:evaluation}
-
-% Qualitative assessment: Visual comparison of results (patches during training/ evaluation + inference on downsampled images on full dataset)
-
-
-% Quantitative assessment: 
-
-Beyond subjective opinion, four quantitative image quality and image similarity metrics were used to evaluate the performance of the model. These metrics are:
-
-
-\textbf{Pixel-Based Metrics:}
-
-\begin{itemize}
-  \item[$\circ$] \textbf{Peak Signal-to-Noise Ratio (PSNR)}
-  \item[$\circ$] \textbf{Structural Similarity Index (SSIM)}
-\end{itemize}
-
-\textbf{Learning-Based Metrics:}
-
-\begin{itemize}
-  \item[$\circ$] \textbf{Learned Perceptual Image Patch Similarity (LPIPS)}
-  \item[$\circ$] \textbf{Perceptual Image-Error Assessment through Pairwise Preference (PieApp)}
-\end{itemize}
-
-% - PSNR
-
-\subsubsection{Peak Signal-to-Noise Ratio (PSNR)}
-
-The Peak Signal-to-Noise Ratio (PSNR) is a frequently used pixel-based metric to evaluate the quality of a reconstructed image. It measures the ratio between the maximum possible power of a signal and the power of the noise that affects the fidelity of its representation. If the PSNR value is high, the quality of the image is high, as it implies a low level of corrupting noise.
-
-We denote the Mean Squared Error (MSE) between an original $m$-by-$n$ pixel image $I$ and the reconstructed image $J$, as $\text{MSE}(I, J)$. The PSNR is then defined using MSE as:
-
-\begin{equation}
-    \text{PSNR}(I, J) = 10 \cdot \log_{10} \left( \frac{{\text{MAX}_I}^2}{\text{MSE}(I, J)} \right)
-    \label{eq:psnr}
-\end{equation}
-
-where $\text{MAX}_I$ is the maximum possible pixel value of the image. The PSNR is usually expressed in decibels (dB).
-
-As an image similarity metric, PSNR has several limitations. It does not take into account the human visual system's perception of image quality, and it is sensitive to small changes in pixel values. This means that small changes in the image can lead to large changes in the PSNR value. For this reason, PSNR is often used in combination with other image quality metrics to provide a more comprehensive evaluation of image quality.
-
-We use PSNR to compute the pixel-wise similarity between the ground truth film image and the predicted film images. Given PSNR's sensitivity to noise patterns in the image, we expect PSNR to report high values when the model is able to accurately predict noise patterns in the film image. However, the exact placement of the noise pattern is likely to drastically effect the pixel-by-pixel MSE computation for PSNR, and therefore the PSNR value may not be a useful judgement of similarity between real and generated film.
-
-Therefore, we expect PSNR to judge predictions most positively when we use MSE loss, as opposed to other loss functions.
-
-% - SSIM
-
-\subsubsection{Structural Similarity Index (SSIM)}
-
-The Structural Similarity Index (SSIM) is a pixel-based metric for measuring the similarity between two images. It is based on the assumption that the human visual system is highly sensitive to structural information in images, and that the perceived quality of an image is determined by the similarity of its structure to the structure of a reference image.
-
-SSIM is designed to capture three aspects of image quality: luminance, contrast, and structure. As these aspects are not judgements of color accuratecy, SSIM is often computed based on the luminance channel of the image, or individually over the red, green, and blue channels and then combined to create a final signal. In our implementation
-
-The SSIM index is defined as:
-
-\begin{equation}
-    \text{SSIM}(I, J) = \frac{(2\mu_I\mu_J + C_1)(2\sigma_{IJ} + C_2)}{(\mu_I^2 + \mu_J^2 + C_1)(\sigma_I^2 + \sigma_J^2 + C_2)}
-    \label{eq:ssim}
-\end{equation}
-
-where $\mu_I$ and $\mu_J$ are the average pixel values of images $I$ and $J$, $\sigma_I^2$ and $\sigma_J^2$ are the variances of images $I$ and $J$, $\sigma_{IJ}$ is the covariance of images $I$ and $J$, and $C_1$ and $C_2$ are constants to stabilise the any division with weak a denominator. The SSIM index ranges from -1 to 1, where 1 indicates perfect similarity between the images.
-
-Given SSIM's sensitivity to structural information in the image, we expect SSIM to report high values when the model is able to accurately predict the structure and/or grain of the film image, but not be sensitive to the accuracy of the color hue, saturation, or grain. We expect SSIM to be a more robust metric than PSNR, closer in agreement with human perception, as it is less sensitive to small changes in pixel values and more closely aligns with the human visual system's perception of image quality.
-
-% - LPIPS
-
-\subsubsection{Learned Perceptual Image Patch Similarity (LPIPS)}
-
-Proposed in \cite{LPIPS}, the Learned Perceptual Image Patch Similarity (LPIPS) metric is a learned metric based on VGG features. As features of the VGG network trained on ImageNet classification are useful as training loss for image synthesis, it follows that these features should capture some kind of perceptual quality of images. The LPIPS metric computes the distance between two images based on the distance between their VGG features. 
-
-LPIPS is trained on a human-annotated dataset of images along with several distorted copies of each imgage. Humans were asked to choose the most similar image to the original image from the distorted images. The LPIPS metric is then trained to predict the human choice on this dataset.
-
-We expect LPIPS to be a more robust metric than PSNR and SSIM, as it is trained on human-annotated data and should more closely align with a human's subjective opinion of image quality.  
-
-% - PieAPP
-
-\subsubsection{Perceptual Image-Error Assessment through Pairwise Preference (PieApp)}
-
-Similar to LPIPS, the Perceptual Image-Error Assessment through Pairwise Preference (PieApp) metric is a learned metric trained on a large-scale dataset labeled with the probability that humans will prefered one image over another \cite{PieAPP}. PieApp trains a pairwise-learning framework to predict the preference of one distorted image over the other, similar to LPIPS. 
-
-PieApp defines a \textit{perceptual error} score between a distorted image and its reference which represents the magnitude of human-perceived distortion. The key observation is that PieApp's trained network can predict a human's perception of error without ever being trained on explicit human perceptual-error labels, but rather only on human preference labels.
-
-Like LPIPS, we expect PieApp to be a more robust metric than PSNR and SSIM, as it is trained on human-annotated data. We expect both PieApp and LPIPS to align most closely with a human's subjective opinion of image quality.
-
 \section{Results}
 \label{sec:results}
 
@@ -94,3 +9,150 @@ Like LPIPS, we expect PieApp to be a more robust metric than PSNR and SSIM, as i
 % - And lastly, discuss the limitations you faced (not implementation problems, but limitations to the project itself), and what you think can be improved.
 
 ...
+
+% For Pierre: All single-image experiments (feel free to subset as you see fit)
+\begin{table}
+    \centering
+    \caption{
+        \textbf{Single Image Results.} Full Table
+    .}
+    \begin{tabular}{lcc|cccc}
+        \toprule
+        \multicolumn{3}{c}{\textbf{Configuration}}& \multicolumn{4}{c}{\textbf{Evaluation}} \\
+        Loss & Noise & Resized & SSIM & PSNR & LPIPS & PieAPP \\
+        \midrule
+        MSE + VGG & No & Yes & \textbf{0.71} & \textbf{23.19} & 0.35 & 1.62 \\
+        MAE & Yes & No & 0.68 & 19.04 & 0.33 & 1.96 \\
+        Color + VGG + TV-Rel & No & No & 0.68 & 19.67 & 0.45 & 1.42 \\
+        Color + VGG & No & No & 0.68 & 20.07 & 0.45 & 1.61 \\
+        Color + VGG & Yes & No & 0.68 & 17.94 & 0.36 & 1.58 \\
+        Color + VGG + TV-Rel & Yes & No  & 0.67 & 18.01 & 0.37 & \textbf{1.14} \\
+        MSE & No & Yes & 0.67 & 20.03 & 0.47 & 1.77 \\
+        MSE & Yes & No & 0.67 & 19.26 & 0.32 & 1.89 \\
+        MSE + VGG & Yes & No & 0.67 & 19.79 & 0.34 & 2.05 \\
+        MSE & Yes & Yes & 0.67 & 18.61 & 0.30 & 1.87 \\
+        MSE + TV-Rel + VGG & Yes & No & 0.66 & 20.14 & 0.30 & 1.84 \\
+        MSE + VGG & No & No & 0.66 & 18.26 & 0.48 & 2.53 \\
+        MAE & No & No & 0.65 & 18.61 & 0.50 & 2.12 \\
+        Color & No & No & 0.65 & 18.45 & 0.50 & 2.99 \\
+        MSE & No & No & 0.65 & 18.29 & 0.50 & 2.42 \\
+        \textbf{Baseline} & - & - & 0.64 & 16.97 & 0.36 & 3.79 \\
+        \hline
+        Color & Yes & No & 0.63 & 15.66 & 0.43 & 2.50 \\
+        TV-Rel & Yes & No & 0.27 & 11.11 & \textbf{0.27} & 2.20 \\
+        TV-Rel & No & No & 0.17 & 9.84 & 0.60 & 4.84 \\
+        VGG & No & No & 0.16 & 9.10 & 0.62 & 4.50 \\
+        VGG & Yes & No & 0.06 & 8.71 & 0.64 & 5.11 \\
+        TV-Abs & Yes & No & 0.00 & 4.96 & 0.60 & 19.05 \\
+        TV-Abs & No & No & 0.00 & 4.96 & 0.53 & 19.05 \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:full-single-image-results}
+\end{table}
+
+% Example 1: Only show runs w/ resize
+% \begin{table}
+%     \centering
+%     \caption{
+%         \textbf{Single Image Results.} Only runs w/o resize
+%     .}
+%     \begin{tabular}{lc|cccc}
+%         \toprule
+%         \multicolumn{2}{c}{\textbf{Configuration}}& \multicolumn{4}{c}{\textbf{Evaluation}} \\
+%         Loss & Noise & SSIM & PSNR & LPIPS & PieAPP \\
+%         \midrule
+%         MAE & Yes & 0.68 & 19.04 & 0.33 & 1.96 \\
+%         Color + VGG + TV-Rel & No & 0.68 & 19.67 & 0.45 & 1.42 \\
+%         Color + VGG & No & 0.68 & 20.07 & 0.45 & 1.61 \\
+%         Color + VGG & Yes & 0.68 & 17.94 & 0.36 & 1.58 \\
+%         Color + VGG + TV-Rel & Yes & 0.67 & 18.01 & 0.37 & \textbf{1.14} \\
+%         MSE & Yes & 0.67 & 19.26 & 0.32 & 1.89 \\
+%         MSE + TV-Rel + VGG & Yes & 0.66 & 20.14 & \textbf{0.30} & 1.84 \\
+%         MSE + VGG & No & 0.66 & 18.26 & 0.48 & 2.53 \\
+%         MAE & No & 0.65 & 18.61 & 0.50 & 2.12 \\
+%         Color & No & 0.65 & 18.45 & 0.50 & 2.99 \\
+%         MSE & No & 0.65 & 18.29 & 0.50 & 2.42 \\
+%         \textbf{Baseline} & - & 0.64 & 16.97 & 0.36 & 3.79 \\
+%         \hline
+%         Color & Yes & 0.63 & 15.66 & 0.43 & 2.50 \\
+%         TV-Rel & Yes & 0.27 & 11.11 & 0.27 & 2.20 \\
+%         TV-Rel & No & 0.17 & 9.84 & 0.60 & 4.84 \\
+%         VGG & No & 0.16 & 9.10 & 0.62 & 4.50 \\
+%         VGG & Yes & 0.06 & 8.71 & 0.64 & 5.11 \\
+%         TV-Abs & Yes & 0.00 & 4.96 & 0.60 & 19.05 \\
+%         TV-Abs & No & 0.00 & 4.96 & 0.53 & 19.05 \\
+%         \bottomrule
+%     \end{tabular}
+%     \label{tab:single-image-results}
+% \end{table}
+
+% Example 2: MSE w/ and w/o noise and resize
+% Could be nice to show the influence of noise/ resize w/ MSE loss (only loss that has all combinations)
+% \begin{table}
+%     \centering
+%     \caption{
+%         \textbf{Single Image Results.} MSE Runs
+%     .}
+%     \begin{tabular}{lcc|cccc}
+%         \toprule
+%         \multicolumn{3}{c}{\textbf{Configuration}}& \multicolumn{4}{c}{\textbf{Evaluation}} \\
+%         Loss & Noise & Resized & SSIM & PSNR & LPIPS & PieAPP \\
+%         \midrule
+%         MSE & No & Yes & \textbf{0.67} & \textbf{20.03} & 0.47 & \textbf{1.77} \\
+%         MSE & Yes & No & 0.67 & 19.26 & 0.32 & 1.89 \\
+%         MSE & Yes & Yes & 0.67 & 18.61 & \textbf{0.30} & 1.87 \\
+%         MSE & No & No & 0.65 & 18.29 & 0.50 & 2.42 \\
+%         \textbf{Baseline} & - & - & 0.64 & 16.97 & 0.36 & 3.79 \\
+%         \bottomrule
+%     \end{tabular}
+% \end{table}
+
+% For Pierre: All full-data experiments (feel free to subset as you see fit)
+\begin{table}
+    \centering
+    \caption{
+        \textbf{Full Data.}
+    }
+    \begin{tabular}{lc|cccc}
+        \toprule
+        \multicolumn{2}{c}{\textbf{Configuration}}& \multicolumn{4}{c}{\textbf{Evaluation}} \\
+        Loss & Noise & SSIM & PSNR & LPIPS & PieAPP \\
+        \midrule
+        \textbf{Baseline} & - & \textbf{0.64} {\tiny $\pm 0.09$} & 21.68 {\tiny $\pm 2.02$} & \textbf{0.26} {\tiny$\pm 0.07$} & 1.96 {\tiny $\pm 0.83$} \\
+        \hline
+        MSE + VGG (Resized) & Yes & \textbf{0.64} {\tiny $\pm 0.10$} & \textbf{22.87} {\tiny $\pm 2.20$} & 0.27 {\tiny$\pm 0.07$} & 1.90 {\tiny $\pm 0.62$} \\
+        MSE + VGG (Resized) & No & 0.63 {\tiny $\pm 0.10$} & 22.85 {\tiny $\pm 2.16$} & 0.27 {\tiny$\pm 0.07$} & \textbf{1.84} {\tiny $\pm 0.59$} \\
+        MSE (Resized) & No & 0.63 {\tiny $\pm 0.08$} & 22.20 {\tiny $\pm 2.15$} & 0.35 {\tiny$\pm 0.07$} & 2.31 {\tiny $\pm 0.74$} \\
+        MSE (Resized) & Yes & 0.59 {\tiny $\pm 0.09$} & 20.87 {\tiny $\pm 2.39$} & 0.40 {\tiny$\pm 0.07$} & 3.29 {\tiny $\pm 0.85$} \\
+        MAE & No & 0.59 {\tiny $\pm 0.09$} & 19.68 {\tiny $\pm 2.28$} & 0.48 {\tiny$\pm 0.08$} & 3.38 {\tiny $\pm 0.67$} \\
+        Color + VGG + TV-Rel & Yes & 0.59 {\tiny $\pm 0.11$} & 21.42 {\tiny $\pm 2.13$} & 0.41 {\tiny$\pm 0.06$} & 3.07 {\tiny $\pm 0.78$} \\
+        MSE & No & 0.58 {\tiny $\pm 0.10$} & 20.47 {\tiny $\pm 2.16$} & 0.50 {\tiny$\pm 0.08$} & 3.67 {\tiny $\pm 0.88$} \\
+        MSE + VGG & No & 0.58 {\tiny $\pm 0.10$} & 20.47 {\tiny $\pm 2.16$} & 0.50 {\tiny$\pm 0.08$} & 3.67 {\tiny $\pm 0.88$} \\
+        MSE + VGG + TV-Rel & Yes & 0.58 {\tiny $\pm 0.11$} & 20.43 {\tiny $\pm 2.29$} & 0.46 {\tiny$\pm 0.08$} & 3.54 {\tiny $\pm 0.76$} \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:full-data-results}
+\end{table}
+
+% Example 1: Exclude resized crop experiments
+% \begin{table}
+%     \centering
+%     \caption{
+%         \textbf{Full Data.}
+%     }
+%     \begin{tabular}{lc|cccc}
+%         \toprule
+%         \multicolumn{2}{c}{\textbf{Configuration}}& \multicolumn{4}{c}{\textbf{Evaluation}} \\
+%         Loss & Noise & SSIM & PSNR & LPIPS & PieAPP \\
+%         \midrule
+%         \textbf{Baseline} & - & \textbf{0.64} {\tiny $\pm 0.09$} & \textbf{21.68} {\tiny $\pm 2.02$} & \textbf{0.26} {\tiny$\pm 0.07$} & \textbf{1.96} {\tiny $\pm 0.83$} \\
+%         MAE & No & 0.59 {\tiny $\pm 0.09$} & 19.68 {\tiny $\pm 2.28$} & 0.48 {\tiny$\pm 0.08$} & 3.38 {\tiny $\pm 0.67$} \\
+%         Color + VGG + TV-Rel & Yes & 0.59 {\tiny $\pm 0.11$} & 21.42 {\tiny $\pm 2.13$} & 0.41 {\tiny$\pm 0.06$} & 3.07 {\tiny $\pm 0.78$} \\
+%         MSE & No & 0.58 {\tiny $\pm 0.10$} & 20.47 {\tiny $\pm 2.16$} & 0.50 {\tiny$\pm 0.08$} & 3.67 {\tiny $\pm 0.88$} \\
+%         MSE + VGG & No & 0.58 {\tiny $\pm 0.10$} & 20.47 {\tiny $\pm 2.16$} & 0.50 {\tiny$\pm 0.08$} & 3.67 {\tiny $\pm 0.88$} \\
+%         MSE + VGG + TV-Rel & Yes & 0.58 {\tiny $\pm 0.11$} & 20.43 {\tiny $\pm 2.29$} & 0.46 {\tiny$\pm 0.08$} & 3.54 {\tiny $\pm 0.76$} \\
+%         \hline
+%         \bottomrule
+%     \end{tabular}
+%     \label(tab:full-data-results)
+% \end{table}
