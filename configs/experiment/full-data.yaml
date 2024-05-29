@@ -10,7 +10,7 @@ defaults:
   - override /logger: wandb
 
 group: full-data
-tags: ["MSE", "VGG", "Combined"]
+tags: ["MSE"]
 seed: 42
 
 train: true
@@ -39,14 +39,14 @@ callbacks:
 
 model:
   net:
-    with_noise: false
+    with_noise: true
     hidden_channels: [64, 128, 256]
     kernel_size: 3
   loss:
     losses:
       # - _target_: src.models.loss.MAELoss
       - _target_: src.models.loss.MSELoss
-      - _target_: src.models.loss.VGGLoss
+      # - _target_: src.models.loss.VGGLoss
       # - _target_: src.models.loss.ColorLoss
       # - _target_: src.models.loss.GCLMLoss
       # - _target_: src.models.loss.FrequencyLoss
@@ -56,5 +56,5 @@ model:
       # - _target_: src.models.loss.TVRelativeLoss
       #   grayscale: true
       # - _target_: src.models.loss.CoBiLoss
-    weights: [1.0, 1.0, 1.0]
+    weights: [1.0, 1.0]
   training_patch_size: 256

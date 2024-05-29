@@ -5,11 +5,7 @@ from src.models.loss.base import BaseLoss
 from torchvision.models import vgg19_bn
 from torchvision.models.vgg import VGG19_BN_Weights
 
-device = torch.device(
-    "cuda"
-    if torch.cuda.is_available()
-    else "mps" if torch.backends.mps.is_available() else "cpu"
-)
+device = "cpu"
 
 
 class VGGLoss(BaseLoss):
