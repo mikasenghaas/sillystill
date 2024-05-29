@@ -6,13 +6,12 @@
 % - Divide your project into different sections, and explain each one here.
 % - Add as many illustrations and graphs/charts as possible to make sure your ideas are conveyed clearly. The goal is to make sure what you have done is clearly explained to be graded fairly.
 
-To recreate the look of Cinestill-800T we train a deep image-to-image
+To recreate the look of Cinestill-800T we aim to train a deep image-to-image
 translation network on a paired digital-film dataset. This requires a dataset of
 digital images and their corresponding film images, a suitable model
-architecture and careful hyper-parameter tuning. The details of the training and evaluation procedure are detailed in the
-following sections.
+architecture, and carefully designed loss functions capable of capturing the intricate film appearance, like grain, halation and colour profile.
 
-% TODO: Could add overview figure of training pipeline (similar to the one in  the slides)
+This sections details design choices for each of these components: starting from data collection and processing, we motivate the model architecture and loss functions used and describe the training and evaluation procedure.
 
 \subsection{Data}
 \label{subsec:data}
@@ -21,13 +20,14 @@ following sections.
 While unpaired digital or film datasets are abundant, our method requires
 \textit{paired} digital-film images. This means, that the exact same scene has
 to be captured with both a digital and a film camera to allow the model to learn
-differences between the looks of the two mediums. As no such dataset was available, we collected our own.
+differences between the looks of the two mediums. As no such dataset was
+available, we had to collect our own.
 
 % Dataset collection
 \subsubsection{Data Collection}
 \label{subsubsec:data-collection}
 
-The images were taken with two cameras: a G Sony / Sony Alpha 7 \textcolor{red}{(which one? Raphael said G Sony)} digital camera and a Nikon F3 film camera. More details about the cameras can be found in Table~\ref{tab:cameras}. The methodology for collecting the dataset was designed to ensure that the digital and film images were as similar as possible. To this end, we employed a tripod setup to ensure that both cameras were capturing the same scene from the same angle. As no synchronization mechanism was available, the cameras were triggered manually and one after the other. Because of the temporal difference between the two captures, we chose to only shoot static scences to avoid heavy misalignments between the digital and film images. However, it is to be noted that subtle difference, like moving leaves or clouds, could still be present in the dataset. More importantly, the differences in lens size between the two cameras led to slight differences in the field of view. This was addressed by employing keypoint alignment to crop the digital image to match what was captured by the film camera, as described in Section~\ref{subsubsec:preprocessing}.
+The main goal of the data collection was to capture an \textit{aligned} and \textit{diverse} dataset of digital-film image pairs. Aligned, so our model can learn a style rather than a content function and diverse, so as it can learn the complex patterns required to model how Cinestill-800T reacts in various scenes and lighting conditions.
 
 \begin{table}
     \centering
@@ -43,16 +43,10 @@ The images were taken with two cameras: a G Sony / Sony Alpha 7 \textcolor{red}{
     \label{tab:cameras}
 \end{table}
 
-To ensure that our dataset captures a wide range of scenes and visual effects,
-we took photos in various locations and under different lighting conditions.
-This includes day and night shots, indoor and outdoor scenes, and photos taken
-in different weather conditions. Examples of the raw image pairs can be seen in
-Figure~\ref{fig:raw-dataset}. The final raw dataset consists of $n=41$ image
-pairs, which we refer to as $D_{\text{raw}}=\{(I^F_n, I^D_n)\}_n^{41}$, where
-each $I\in\mathbb{R}^{3 \times H \times W}$ is an RGB image, the superscript $F$
-and $D$ denote film and digital images respectively, and the subscript $n$
-denotes the $n$-th image pair.
+The data collection was carefully designed to achieve both goals: To ensure aligned images, we take inspiration from the setup proposed in~\cite{DSLR-quality} and utilise two cameras, a Sony Alpha 7 digital camera and a Nikon F3 film camera mounted on a tripod. Photos were taken by keeping the same tripod setup, and exchange the digital for the film camera, or vice versa. Camera settings, like aperture, ISO, shutter speed, were kept constant across both cameras as best as possible (Table~\ref{tab:cameras}). Further, we refrained from shooting scenes with motion, like cars, or faces, to minimise the misaligned caused by temporal shift between the two images. To create a diverse dataset, images were taken in three separate sessions, varying indoor and outdoor locations, weather conditions and scenes. Specific emphasis was put on ensuring that all special visual effects (halation, grain and colours) were well-represented in the dataset. The final raw dataset consists of $n=41$ image pairs. Some examples are presented in Figure~\ref{fig:raw-dataset}. 
 
+% TODO: Maybe introduce notation to refer to dataset
+% $D_{\text{raw}}=\{(I^F_n, I^D_n)\}_n^{41}$
 % TODO: Maybe talk about resolution of digital/ film images
 % TODO: Maybe talk about processing to JPEG
 
@@ -86,45 +80,48 @@ denotes the $n$-th image pair.
     \begin{subfigure}[t]{.19\textwidth}
       \centering
       \includegraphics[width=\linewidth]{figures/film1.jpeg}
-      \caption{Pair 1}
     \end{subfigure}
     \hfill
     \begin{subfigure}[t]{.19\textwidth}
       \centering
       \includegraphics[width=\linewidth]{figures/film2.jpeg}
-      \caption{Pair 2}
     \end{subfigure}
     \hfill
     \begin{subfigure}[t]{.19\textwidth}
       \centering
       \includegraphics[width=\linewidth]{figures/film3.jpeg}
-      \caption{Pair 3}
     \end{subfigure}
     \hfill
     \begin{subfigure}[t]{.19\textwidth}
       \centering
       \includegraphics[width=\linewidth]{figures/film4.jpeg}
-      \caption{Pair 4}
     \end{subfigure}
     \begin{subfigure}[t]{.19\textwidth}
       \centering
       \includegraphics[width=\linewidth]{figures/film5.jpeg}
-      \caption{Pair 5}
     \end{subfigure}
   
     \caption{\textbf{Raw Paired Image Dataset.} Examples of raw image pairs from the dataset. A column shows a single scene captured with a digital camera (top) and a film camera (bottom). The images show a wide range of scenes and visual effects.}
     \label{fig:raw-dataset}
 \end{figure}
 
+
+
 \subsubsection*{Data Preprocessing}
 \label{subsubsec:preprocessing}
 
-Due to the differences in the capturing process, the digital and film images
-were not perfectly spatially aligned and showed different dynamic ranges. We
-performed a series of pre-processing steps to address these issues. 
+Despite best efforts to capture the exact same scene on the digital and film
+images, the raw image pairs were not perfectly aligned. Specifically, the images
+were not spatially aligned and showed different dynamic ranges. To address this
+issue, we performed a series of pre-processing steps.
 
 % Keypoint Alignment
-First, we aligned the images using keypoint alignment. This technique is based on the assumption that the digital and film images should contain the same visual features. We follow a standard image processing pipeline using openly available implementations of common feature detection, matching and perspective transformation algorithms from the OpenCV library~\cite{opencv}. For all image pairs we perform the following steps:
+First, we aligned the images using keypoint alignment. This technique is based
+on the assumption that the digital and film images should contain the same
+visual features. We follow a standard image processing pipeline using openly
+available implementations of common feature detection, matching and perspective
+transformation algorithms from the OpenCV library~\cite{opencv}. For all image
+pairs we perform the following steps:
 
 \begin{enumerate}
     \item \textbf{Keypoint Detection} We use the ORB~\cite{orb} (Oriented FAST and Rotated BRIEF) feature detection algorithm to detect keypoints and extract descriptors from both images.
@@ -141,18 +138,17 @@ First, we aligned the images using keypoint alignment. This technique is based o
 Next, we address the differences in the dynamic range of the images. To ensure that our model does not learn systematic brightness adjustments caused by slight variations in the camera setup during our data collection, we aimed to align the luminance of the film image to the digital image. In this way, the digital image serves as a reference for the luminance of the film image, as we want our training distribution to be as close as possible to the types of images our model will see at inference time. The luminance alignment is performed using histogram matching in CIELAB space. Specifically, we follow these steps:
 
 \begin{enumerate}
-    \item \textbf{Convert to CIELAB} We convert both the digital and film images to the CIELAB colour space. This colour space is designed to approximate human vision and is more perceptually uniform than the RGB colour space. Crucially, the luminance channel $L$ is separated from the chrominance channels $a$ and $b$ which allows us to focus on the luminance information.
-    \item \textbf{Histogram Matching} We then match the luminance histogram of the film image to the digital image. This is done by computing the cumulative distribution function (CDF) of the luminance channel of both images and then performing a linear interpolation to map the luminance values of the film image to the digital image.
+    \item \textbf{Convert to CIELAB} We convert both the digital and film images to the CIELAB colour space, where the $L$-channel corresponds to luminance.
+    \item \textbf{Histogram Matching} We then match the luminance histogram of the film image to the digital image. This is done by computing and interpolating the cumulative distribution function (CDF) of the luminance channel of both images.
     \item \textbf{Convert back to RGB} Finally, we convert the film image back to the RGB colour space.
 \end{enumerate}
 
 We observe that both the keypoint alignment and luminance matching steps are
 crucial prerequisites for training our model. An example of the results of these
 steps can be seen in Figure~\ref{fig:data-preprocessing}. After the
-preprocessing steps we are left with 38 processed image pairs (three images
-could not be aligned) which we refer to as $D_{\text{processed}}=\{(I^F_n,
-I^D_n)\}_n^{38}$. We publicly release both the raw and processed dataset to
-facilitate further research in this or related areas.
+preprocessing steps we are left with 38 processed image pairs. We publicly
+release both the raw and processed dataset to facilitate further research in
+this or related areas.
 
 \begin{figure}
     \begin{subfigure}[t]{.49\textwidth}
@@ -185,8 +181,4 @@ facilitate further research in this or related areas.
     \label{fig:data-preprocessing}
 \end{figure}
 
-For our experiments we consider training both on single-image datasets and on the full dataset. The single-image datasets are created by manually selecting an image from the full dataset that best represents a specific visual effect, like graininess or colour cast. For such datasets, we train and evaluate the model on the same image to ensure that the model learns the desired effect. The full dataset is used to train a model that can generalize to a wide range of visual effects, and is split into a training, validation and test split according to the guidelines in Section~\ref{subsec:training}.
-
 % TODO: Maybe talk about data augmentation (horizontal/ vertical flips, brightness adjustment and blur)
-
-% TODO: Add figure of example pair before and after pre-processing

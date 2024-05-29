@@ -1,0 +1,63 @@
+\subsection{Loss Functions}
+\label{subsec:loss-functions}
+
+\textbf{Mean Squared Error Loss.} The mean squared error (MSE) loss is a common loss function used in image-to-image translation tasks. It measures the average squared difference between the predicted and ground truth images. For two images $I$ and $J$ of the same size, the MSE loss is defined as:
+
+\begin{equation}
+    \text{MSE}(I, J) = \frac{1}{n} \sum_{i=1}^{n} (I_i - J_i)^2
+    \label{eq:mse}
+\end{equation}
+
+\textbf{Mean Absolute Error.} The mean absolute error (MAE) loss is another common loss function used in image-to-image translation tasks. It measures the average absolute difference between the predicted and ground truth images. For two images $I, J \in \mathbb{R}^{3 \times H \times W}$ the MAE loss is defined as:
+
+\begin{equation}
+    \text{MAE}(I, J) = \frac{1}{n} \sum_{c=1}^{3}\sum_{h=1}^{H} \sum_{w=1}^{W} |I_{c,h,w} - J_{c,h,w}|.
+    \label{eq:mae}
+\end{equation}
+
+\textbf{VGG Loss.} VGG loss is a perceptual loss function that measures the difference between the feature representations of the predicted and ground truth images. The feature representations are computed by passing the images through a pre-trained VGG network and extracting the activations of certain layers. 
+
+
+\textbf{Colour Loss.} As MSE computes pixel-by-pixel squared error, it is sensitive to small changes in pixel values, including those caused by subtle differences in grain patterns in the original film image and the generated film image. Therefore, one would expect MSE to effectively \textit{penalise} the generation of grain that does not perfectly match the grain in the original film image -- an extremely unlikely event. To build a loss function that is more robust to such differences, we propose a colour loss function that computes the mean squared error over a blurred image. This blurred image is created by applying a Gaussian blur to the original image. The colour loss is then defined as the MSE between the blurred images of the predicted and ground truth images. 
+
+\textbf{Total Variational Loss.} We compute the total variation of an image by taking the absolute difference between pairs of adjacent pixels, summed over the entire image. The total variation of an image is a measure of the amount of noise in the image. It is defined as the sum of the absolute differences between pixel values in the image. 
+
+\begin{definition}
+    \textbf{Total Variation.} The total variation of an image $I$ is defined as:
+    \begin{equation}
+        \text{TV}(I) = \Sigma_{i,j}\sqrt{|y_{i+1,j} - y_{i,j}|^2 + |y_{i,j+1} - y_{i,j}|^2}
+    \end{equation}
+\end{definition}
+
+The Absolute Total Variational Loss is defined to maximize the noise in the predicted image, defined as 
+
+\begin{definition}
+  \textbf{Absolute Total Variational Loss}
+\begin{equation}
+  \frac{1}{TV(\text{prediction})}
+\end{equation}
+\end{definition}
+
+Relative Total Variational Loss is then defined as the absolute difference between the total variation of the predicted and ground truth images.
+
+\begin{definition}
+\textbf{Relative Total Variational Loss} 
+\begin{equation}
+| TV(\text{prediction}) - TV(\text{ground truth film})| 
+\end{equation}
+\end{definition}
+
+Relative Total Variational Loss encourages the model to generate images with a similar amount of noise to the ground truth film images.
+
+\textbf{CoBi Loss.} Introduced by \cite{zoom-to-learn}, Contextual Bilateral Loss (CoBi Loss) is inspired by the bilateral filter \cite{bilateral-filter} which preserves-edges while reducing noise. The motivation for its design is to judge image feature similarity even when an image pair is misaligned. CoBi Loss combines spatial pixel coordinates and pixel-level RGB information for a nearest neighbor search on image features. 
+
+\begin{definition}
+  \textbf{CoBi Loss}
+\begin{equation}
+  \text{CoBi}(P, Q) = \frac{1}{N}\Sigma_{i,j}\min_{j=1,...M} (D_{p_i,q_i} + \omega_s D'_{p_i, q_i})
+\end{equation}
+\end{definition}
+
+Where $P$ and $Q$ are the predicted and ground truth images with $N$ and $M$ feature points respectively. $\omega_s$ is a hyperparameter that controls the influence of the spatial awareness for nearest neighbor search. $D_{p_i,q_i}$ and $D'_{p_i,q_i}$ are distance measurements between feature points of the predicted and ground truth images. 
+
+% TODO: Talk about combination of losses.
