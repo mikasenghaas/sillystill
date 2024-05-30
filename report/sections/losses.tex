@@ -32,7 +32,7 @@ halation.
 Intuitively, the VGG loss encourages the model to generate images that are similar to the ground truth images in terms of their high-level semantic, such 
 as edges, textures, and patterns.
 
-\textbf{Color Loss.} Inspired by~\cite{DSLR-quality}, we consider an alternative to the MSE loss, which we refer to as the color loss. The color loss is a computes the MSE between two images, $X_b$ an $Y_b$, where $X_b$ and $Y_b$ are the blurred versions of the predicted and ground truth images, respectively. We can write
+\textbf{Color Loss.} Inspired by~\cite{dslr-quality}, we consider an alternative to the MSE loss, which we refer to as the color loss. The color loss is a computes the MSE between two images, $X_b$ an $Y_b$, where $X_b$ and $Y_b$ are the blurred versions of the predicted and ground truth images, respectively. We can write
 
 \begin{equation}
     \mathcal{L}_\text{Color}(X, Y) = \mathcal{L}_\text{MSE}(X_b, Y_b).
