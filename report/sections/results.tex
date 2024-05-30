@@ -8,15 +8,15 @@
 % - Your results should be accompanied by an analysis showing your understanding of why some approach outperforms another, and in what sense/cases it does so.
 % - And lastly, discuss the limitations you faced (not implementation problems, but limitations to the project itself), and what you think can be improved.
 
-We perform experiments in 3 dimensions: loss function, the presence of a noise channel, and whether or not to resize our cropped patches during training.  First, we obtain results for a single image from which we select the best performing configurations to evaluate on the full dataset. 
+% We perform experiments in 3 dimensions: loss function, the presence of a noise channel, and whether or not to resize our cropped patches during training.  First, we obtain results for a single image from which we select the best performing configurations to evaluate on the full dataset. 
 
-Our analysis and evaluation focuses on two effects: colour and grain. We perform quantitative evalution using the previously mentioned metrics: PSNR, SSIM, LPIPS and PieAPP. However, much of our evaluation is based on qualitative assessment, as the perceptual quality of the film effects is the most important aspect of our results. We also include a reference baseline comparison which is calculated using the original digital image as the prediction, or equivalently a model that performs the identity mapping. 
+% Our analysis and evaluation focuses on two effects: colour and grain. We perform quantitative evalution using the previously mentioned metrics: PSNR, SSIM, LPIPS and PieAPP. However, much of our evaluation is based on qualitative assessment, as the perceptual quality of the film effects is the most important aspect of our results. We also include a reference baseline comparison which is calculated using the original digital image as the prediction, or equivalently a model that performs the identity mapping. 
 
-A comprehensive list of all experiments can be found in the the appendix in section \ref{sec:all-results}.
+A comprehensive list of all results and experiments can be found in the the appendix in section \ref{sec:all-results}.
 
 \subsection{Single Image Results}
 
-We selected an image from our dataset that contains a white wall with a light source. It was chosen for the clear blue tint of the film effect and the visually perceptible grain on the uniform background.  We first evaluate how each loss produces the desired colour effect. 
+% We selected an image from our dataset that contains a white wall with a light source. It was chosen for the clear blue tint of the film effect and the visually perceptible grain on the uniform background.  We first evaluate how each loss produces the desired colour effect. 
 
 Table \ref{tab:single-image-losses} shows each loss configuration with and without an added noise channel and without resizing. We find that the best performing loss configuration is a combined loss of Color/VGG/TV-Rel, which produces the best SSIM score without noise, and the best PieAPP score in either setting. Notably, the combined losses all perform well, as they account for both the colour and grain effects. The colour-focused losses: MAE, MSE and Colour, all perform well alone, whereas all feature based losses: VGG, TV-Rel and TV-Abs, almost always perform below the baseline. Interestingly, LPIPS scores are inconsistent with the other metrics with the best performing configuration as the baseline and TV-Rel alone with and without noise respecitively. This is contrary to what we would be expect as can be seen in a sample of results in Figure \ref{fig:single-image-samples}.
 

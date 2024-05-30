@@ -5,18 +5,15 @@
 % evaluation + inference on downsampled images on full dataset)
 To evaluate the generated film images, we conduct both qualitative and
 quantitative assessments. We qualitatively assess the model's performance by
-visually comparing the generated film images to the ground truth film images,
-both on patches during training, as well as on the full-sized images at test
-time. Beyond qualitative assessment, we evaluate the performance of our model
-using four quantitative image quality and image similarity metrics. 
+visually comparing the generated film images to the ground truth film images.
+For quantitative evaluation, we use four image quality and image similarity metrics. 
 
 \textbf{Peak Signal-to-Noise Ratio (PSNR)} assesses the quality of a
 reconstructed image compared to its original by calculating the ratio of the
 maximum possible signal power to the power of corrupting noise. High PSNR values
 indicate better image quality, implying less noise corruption. However, PSNR
-does not account for human visual perception and is sensitive to small pixel
-variations, often requiring complementary metrics for a fuller quality
-assessment.
+can be sensitive to small pixel
+variations.
 
 \textbf{Structural Similarity Index (SSIM)} measures image quality by comparing
 structural, luminance, and contrast elements between an original and a
@@ -26,10 +23,8 @@ to PSNR and is less sensitive to minor pixel changes, making it more reflective
 of perceived image quality.
 
 \textbf{Learned Perceptual Image Patch Similarity (LPIPS)}~\cite{LPIPS} is a
-learned metric based on VGG features, capturing perceptual image quality based
-on human-annotated data. LPIPS computes image distance using VGG features,
-trained on a dataset where humans chose the most similar image to an original
-from distorted images. Lower LPIPS values indicate higher similarity between the
+learned distance metric based on VGG features, capturing perceptual image quality based
+on human-annotated data.Lower LPIPS values indicate higher similarity between the
 images.
 
 \textbf{PieApp}, like LPIPS, is a learned metric designed to align with human

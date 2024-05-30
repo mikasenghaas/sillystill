@@ -1,7 +1,7 @@
 \subsection{Loss Functions}
 \label{subsec:loss-functions}
 
-The main difficulty of the task is to design a loss function that captures the perceptual quality of the generated film images, with a special focus on the visual effets that we aim to achieve. Only if our loss function is correctly designed, the model will be able to learn the desired features. As it is difficult to define a single loss function that captures all the desired features, we propose a combination of loss functions that capture various aspects of the image quality. First, we will discuss the individual loss functions, and how we combine them.
+We propose a list of loss functions that can be combined, each targeting different effects.
 
 \textbf{MSE/ MAE.} Both the mean squared error (MSE, Eq.~\ref{eq:mse}) and mean absolute error (MAE, Eq.~\ref{eq:mae}) are common pixel-to-pixel loss functions, that are popularly used in image reconstruction tasks. They measure the average squared or absolute difference between the predicted and ground truth images pixels, respectively. For two images, $I, J \in \mathbb{R}^{3 \times H \times W}$, the MSE loss is defined as
 
