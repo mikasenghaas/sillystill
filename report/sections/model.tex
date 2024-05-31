@@ -10,15 +10,15 @@ resembles a conventional convolutional network, involving repeated convolutions
 followed by a non-linear activation functions and pooling operations. The decoder integrates both feature and spatial information using up-convolutions and high-resolution features via skip connections.
 
 % Motivation for using U-Net
-The architecture is well-suited for our problem for multiple reasons: First, it
-is a relatively simple model family, allowing us to focus on
-the specifics of our problem rather than the intricacies of the model. Second,
-despite its simplicity, similar models such as CNNs with residual connections have been shown to be effective for image-to-image translation, such as \cite{dslr-quality}. Finally,
-in being fully convolutional, it can be applied to images of arbitrary size
-\footnote{So long as the input dimensions are divisible by $2^L$, where $L$ is
-the number of layers in the contracting path}.  This allows us to experiment
-with training on smaller image patches and applying the network to larger images
-at test time with no architectural changes or pre-processing steps.
+% The architecture is well-suited for our problem for multiple reasons: First, it
+% is a relatively simple model family, allowing us to focus on
+% the specifics of our problem rather than the intricacies of the model. Second,
+% despite its simplicity, similar models such as CNNs with residual connections have been shown to be effective for image-to-image translation, such as \cite{dslr-quality}. Finally,
+% in being fully convolutional, it can be applied to images of arbitrary size
+% \footnote{So long as the input dimensions are divisible by $2^L$, where $L$ is
+% the number of layers in the contracting path}.  This allows us to experiment
+% with training on smaller image patches and applying the network to larger images
+% at test time with no architectural changes or pre-processing steps.
 
 % TODO: Maybe add some more citations on related work using U-Net
 
