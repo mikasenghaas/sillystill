@@ -9,17 +9,17 @@
 To recreate the look of Cinestill-800T we aim to train a deep image-to-image
 translation network on a paired digital-film dataset. This requires a dataset of
 digital images and their corresponding film images, a suitable model
-architecture, and carefully designed loss functions capable of capturing the appearance of film.
+architecture, and loss functions capable of capturing the appearance of film.
 
 \subsection{Data Collection and Preprocessing}
 \label{subsec:data}
 \label{subsubsec:data-collection}
 
 % Motivation
-While unpaired digital or film datasets are abundant, our method requires \textit{paired} digital-film images. This means, that the exact same scene has to be captured with both a digital and a film camera to allow the model to learn differences between the looks of the two mediums. Images should be aligned, as our model should merely transfer style and not move content around, and diverse in order to capture Cinestill-800T's baheviour in a variety of scenes and lighting conditions. As no such dataset was available, we collected our own.
+While unpaired digital or film datasets are abundant, our method requires paired digital-film images. This means that the exact same scene has to be captured with both a digital and a film camera to allow the model to learn the differences in appearance between the two media. Images should be aligned, as our model should only transfer style and not learn move contents of the image around, and diverse in order to capture Cinestill-800T's baheviour in a variety of scenes and lighting conditions. As no such dataset was available, we collected our own.
 
 % Dataset collection
-\textbf{Data Collection. } To ensure aligned images, we take inspiration from the setup proposed in~\cite{dslr-quality} and utilise two cameras, a Sony Alpha 7 digital camera and a Nikon F3 film camera mounted on a tripod. Photos were taken by keeping the same tripod setup with both cameras. Camera settings, like aperture, ISO, shutter speed, were kept constant across both cameras as best as possible (Table~\ref{tab:cameras}). We only shot static scenes to limit changes in the scene between shots. To create a diverse dataset, images were taken both indoors and outdoors, in different weather conditions, with different light and containing different subjects. Specific emphasis was put on ensuring that all special visual effects (halation, grain and colours) were well-represented in the dataset. The final raw dataset consists of $n=41$ image pairs. Some examples are presented in Figure~\ref{fig:raw-dataset}. 
+\textbf{Data Collection.} To ensure aligned images, we take inspiration from the setup proposed in~\cite{dslr-quality} and capture images with two cameras, a Sony Alpha 7 digital camera and a Nikon F3 film camera. Photos were taken by keeping the same tripod setup for both cameras for each image. Camera settings like aperture, ISO and shutter speed were kept constant across both cameras as best as possible (Table~\ref{tab:cameras}). We only captured static scenes to limit changes in the scene between shots. To create a diverse dataset, images were taken both indoors and outdoors, in different weather conditions, with different light and containing different subjects. Specific emphasis was put on ensuring that all special visual effects (halation, grain and colours) were well-represented in the dataset. The final raw dataset consists of 41 image pairs. Some examples are presented in Figure~\ref{fig:raw-dataset}. 
 
 \begin{table}
     \centering
@@ -100,7 +100,7 @@ While unpaired digital or film datasets are abundant, our method requires \texti
 \subsubsection*{Data Preprocessing}
 \label{subsubsec:preprocessing}
 
-Inevitably, raw image pairs are not perfectly spatially aligned. To address this
+Inevitably, raw image pairs are not perfectly aligned. To address this
 issue, we first spatially align the images using keypoint alignment. We follow a standard processing pipeline using openly available implementations of common feature detection, matching and perspective transformation algorithms from the OpenCV library~\cite{opencv}. For all image pairs we first detect keypoints and extract descriptors using ORB~\cite{orb}, match them using FLANN~\cite{flann}, and estimate a homography transformation matrix using the \href{https://www.mathworks.com/discovery/ransac.html}{RANSAC} algorithm.
 
 % Luminance Alignment

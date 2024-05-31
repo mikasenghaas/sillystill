@@ -18,7 +18,7 @@ A comprehensive list of all results and experiments can be found in the Appendix
 
 % We selected an image from our dataset that contains a white wall with a light source. It was chosen for the clear blue tint of the film effect and the visually perceptible grain on the uniform background.  We first evaluate how each loss produces the desired colour effect. 
 
-Table \ref{tab:single-image-losses} shows each loss configuration with and without an added noise channel and without resizing. We find that the best performing loss configuration is a combined loss of Color/VGG/TV-Rel, which produces the best SSIM score without noise, and the best PieAPP score in either setting. Notably, the combined losses all perform well, as they account for both the colour and grain effects. The colour-focused losses: MAE, MSE and Colour, all perform well alone, whereas all feature based losses: VGG and TV-Rel almost always perform below the baseline. Interestingly, LPIPS scores are inconsistent with the other metrics with the best performing configuration as the baseline and TV-Rel alone with and without noise respecitively. This is contrary to what we would be expect as can be seen in a sample of results in Figure \ref{fig:single-image-samples}.
+Table \ref{tab:single-image-losses} shows each loss configuration with and without an added noise channel and without resizing. We find that the best performing loss configuration is a combined loss of Color/VGG/TV-Rel, which produces the best SSIM score without noise, and the best PieAPP score in either setting. Notably, the combined losses all perform well, as they account for both the colour and grain effects. The colour-focused losses (MAE, MSE and Colour) all perform well alone, whereas all feature-based losses (VGG and TV-Rel) almost always perform below the baseline. Interestingly, LPIPS scores are inconsistent with the other metrics with the best performing configuration as the baseline and TV-Rel alone with and without noise respectively. This is contrary to what we would be expect as can be seen in a sample of results in Figure \ref{fig:single-image-samples}.
 
 \begin{figure}
     \begin{subfigure}[t]{.19\textwidth}
@@ -85,7 +85,7 @@ Table \ref{tab:single-image-losses} shows each loss configuration with and witho
 \end{table}
 
 
-The addition of noise has mixed effects. The perceptual metrics significantly reward the addition of noise in almost all cases. SSIM and PSNR react differently depending on the loss: pixel-wise MSE/MAE scores increase slightly, whereas Color Losses all decrease. This can be interpreted as Color loss allowing more noise through the model which is penalised by metrics sensitive to incorrect random noise such as PSNR, where MAE/MSE will try to even out this noise so as to be closer, on average. All of this implies that the perceptual metrics better capture the output of noise by the model. Comparisons of outputs from the models with and without noise channels can be seen in Figure \ref{fig:single-image-noise-no-noise}.
+The addition of noise has mixed effects. The perceptual metrics significantly reward the addition of noise in almost all cases. SSIM and PSNR react differently depending on the loss: pixel-wise MSE/MAE scores increase slightly, whereas Color loss scores decrease. This can be interpreted as Color loss allowing more noise through the model which is penalised by metrics sensitive to incorrect random noise such as PSNR, where MAE/MSE will even out this noise to be closer to the ground truth, on average. All of this implies that the perceptual metrics better capture the output of noise by the model. Comparisons of outputs from the models with and without noise channels can be seen in Figure \ref{fig:single-image-noise-no-noise}.
 
 \begin{figure}
 
@@ -139,13 +139,13 @@ The addition of noise has mixed effects. The perceptual metrics significantly re
    
       \centering
 
-    \caption{\textbf{Single Image Noise Comparison.} Outputs from select models without noise (above) and with noise (below), no resizing. We see that when we feed noise into the model, the model learns to produce some variation, especially when the loss contains a feature based metric like VGG. However, the grain is far from the desired effect.}
+    \caption{\textbf{Single Image Noise Comparison.} Outputs from select models without noise (above) and with noise (below), no resizing. We see that when we feed noise into the model, the model learns to produce some variation, especially when the loss contains a feature-based metric like VGG. However, the grain is far from the desired effect.}
     \label{fig:single-image-noise-no-noise}
 \end{figure}
 
-We also experiment with resizing cropped patches during training meaning that we take a crop of a random scale from the image and resize it to the patch size. The results can be seen in \ref{tab:single-image-resize}. We show results for only MSE and MSE/VGG as a representative example of how both pixel wise, and combined losses perform. We also experimented with a combination of noise and resizing but found that both performed better alone with these losses.  We find that we reach peak SSIM and PSNR scores when resizing the cropped patches, and perceptual metrics also improve across the board.
+We also experiment with resizing cropped patches during training. This is done by taking a crop at a random scale from the image and resizing it to the patch size, $ 256 \times 256$. The results are in Table \ref{tab:single-image-resize}. We show results for only MSE and MSE/VGG as a representative example of how both pixel-wise and combined losses perform. We also experimented with a combination of noise and resizing but found that both performed better alone.  We find that we reach peak SSIM and PSNR scores when resizing the cropped patches, and perceptual metrics also improve across the board.
 
-We hypothesise that while resizing necessarily loses information on grain and noise patterns, the model sees a greater variety of areas of the image in a single patch and so may capture the color transformation better which is rewarded by every metric. With the MSE/VGG loss, this colour transformation is a nearly perfect overfit as the outputs in \ref{fig:single-image-resize} show. Furthermore, some grain is still produced when we feed noise into the model despite the resizing operation potentially removing grain, as can be seen in Figure \ref{fig:single-image-resize-noise}.
+We hypothesise that while resizing loses high-resolution information on grain and noise patterns, the model sees a greater variety of areas of the image in a single patch and so may capture the color transformation better which is rewarded by every metric. With the MSE/VGG loss, this colour transformation is a nearly perfect overfit as the outputs in \ref{fig:single-image-resize} show. Furthermore, some grain is still produced when we feed noise into the model despite the resizing operation potentially removing grain, as can be seen in Figure \ref{fig:single-image-resize-noise}.
 
 
 \begin{figure}[ht]
@@ -216,7 +216,7 @@ We hypothesise that while resizing necessarily loses information on grain and no
 
 \subsection{Full Dataset Results}
 
-We take the best performing losses and settings from the single image experiments and evaluate them on the full dataset. We split the dataset into a training, validation and test set using a 70-20-10 split ratio. We show the results of the full dataset experiments in Table \ref{tab:full-data-results}.
+We select the best performing losses and settings from the single image experiments and evaluate them on the full dataset, with results in Table \ref{tab:full-data-results}.
 
 \begin{table}
     \centering
@@ -238,7 +238,7 @@ We take the best performing losses and settings from the single image experiment
     \label{tab:full-data-results}
 \end{table}
 
-We selected models in terms of high scoring metrics and qualitative evaluation of color and grain production. This produces some models that should produce the best colour: MSE/VGG and MSE with resizing, and some that should produce the best grain: Color/VGG/TV-Rel, MSE/VGG/TV-Rel with a noise input channel. We find that the best performing model is MSE/VGG with resizing, which produces the best metrics across the board. A notable difference compared to the single image results is that our methods now almost never outperform the baseline despite training on the same number of patches per image. This is likely due to the increased complexity of the full dataset, which contains a wider variety of film effects and lighting conditions. The only exception is MSE/VGG which is on par with the baseline. A sample of results can be seen in Figure \ref{fig:full-data-results}.
+We selected models in terms of high scoring metrics and qualitative evaluation of color and grain production. This leaves us with some models that should produce the best colour: MSE/VGG and MSE with resizing, and other models that should produce the best grain: Color/VGG/TV-Rel, MSE/VGG/TV-Rel with a noise input channel. We find that the best performing model is MSE/VGG with resizing which produces the best metrics across the board. A notable difference compared to the single image results is that our methods now almost never outperform the baseline despite training on the same number of patches per image. This is likely due to the increased complexity of the full dataset, which contains a wider variety of film effects and lighting conditions. The only exception is MSE/VGG which is on par with the baseline. A sample of results can be seen in Figure \ref{fig:full-data-results}.
 
 
 \begin{figure}
@@ -382,7 +382,7 @@ We continue experimenting with the presence of resizing and noise using MSE and 
 
 % Comparison to DSLR results
 
-Comparing results with the related task of enhancement of mobile phone images in \cite{dslr-quality} indicates that our models have a much lower SSIM, but comparable PSNR. They achieve peak SSIM of 0.94 where we observe a peak SSIM of 0.64, whereas peak PSNR is 21.81 and 22.87 respecitively. This could be due to a large range of factors such as the the quality and uniformity of the DSLR images, the difference in model architecures or the difference in losses. However, perhaps the biggest reason is the greater complexity of the film effect.
+Comparing results with the related task of enhancement of mobile phone images in \cite{dslr-quality} indicates that our models have a much lower SSIM, but comparable PSNR. They achieve peak SSIM of 0.94 where we observe a peak SSIM of 0.64, whereas peak PSNR is 21.81 and 22.87 respectively. This could be due to a large range of factors such as the the quality and uniformity of the DSLR images, the difference in model architecures or the difference in losses. However, perhaps the biggest reason is the greater complexity of the film effect.
 
 % Summary
 

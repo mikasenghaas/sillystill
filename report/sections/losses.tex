@@ -3,45 +3,44 @@
 
 We propose a list of loss functions that can be combined, each targeting different effects.
 
-\textbf{MSE/ MAE.} Both the mean squared error (MSE, Eq.~\ref{eq:mse}) and mean absolute error (MAE, Eq.~\ref{eq:mae}) are common pixel-to-pixel loss functions, that are popularly used in image reconstruction tasks. They measure the average squared or absolute difference between the predicted and ground truth images pixels, respectively. For two images, $X, Y \in \mathbb{R}^{3 \times H \times W}$, the MSE loss is defined as
-
+\textbf{MSE/MAE.} Both the mean squared error (MSE, Eq.~\ref{eq:mse}) and mean absolute error (MAE, Eq.~\ref{eq:mae}) are common pixel-to-pixel loss functions, that are popular in image reconstruction tasks. They measure the average squared or absolute difference between the predicted and ground truth images pixels, respectively. For two images, $X, Y \in \mathbb{R}^{3 \times H \times W}$, the MSE and MAE losses are defined as:
+\begin{multicols}{2}
 \begin{equation}
-    \mathcal{L}_\text{MSE}(X, Y) = \frac{1}{n} \sum_{i=1}^{n} (X_i, Y_i)^2,
+    \mathcal{L}_\text{MSE}(X, Y) = \frac{1}{n} \sum_{i=1}^{n} (X_i, Y_i)^2
     \label{eq:mse}
 \end{equation}
 
-and we equivalently define the MAE loss as
-
 \begin{equation}
-    \mathcal{L}_\text{MAE}(X, Y) = \frac{1}{n} \sum_{i=1}^{n} |X_i - Y_i|,
+    \mathcal{L}_\text{MAE}(X, Y) = \frac{1}{n} \sum_{i=1}^{n} |X_i - Y_i|
     \label{eq:mae}
 \end{equation}
+\end{multicols}
 
-where the subscript $i$ indexes the pixels of the images. We hypothesise that
+where $i$ indexes the pixels of the images. We hypothesise that
 such loss functions are useful in preserving the overall structure and color of the image,
 but are not sufficient to capture higher-level visual effects such as grain and
 halation.
 
-\textbf{VGG Loss.} The VGG loss computes the MSE (Eq.~\ref{eq:mse}) between the feature representations of the predicted and ground truth images when passed through a pre-trained VGG-19~\cite{vgg} convolutional network. Letting $\varphi_k(I)$ denote the feature maps of the $k$-th layer of the VGG network, and the set $K$ and $\lambda_k$ denote the layers of interest \footnote{We use conv1\_2, conv2\_2, conv3\_2 with weights 0.4, 0.4 and 0.2 respectively.} and their respective weight in the loss function, the VGG loss is defined as
+\textbf{VGG Loss.} VGG loss computes the MSE (Eq.~\ref{eq:mse}) between the feature representations of the predicted and ground truth images when passed through a pre-trained VGG-19~\cite{vgg} convolutional network. Letting $\varphi_k(I)$ denote the feature maps of the $k$-th layer of the VGG network, and the sets $K$ and $\lambda$ denote the layers of interest \footnote{We use conv1\_2, conv2\_2, conv3\_2 with weights 0.4, 0.4 and 0.2 respectively.} and their weights in the loss function respectively, the VGG loss is defined as:
 
 \begin{equation}
    \mathcal{L}_\text{VGG}(X, Y) = \sum_{k \in K} \lambda_k \mathcal{L}_\text{MSE}(\varphi_k(X), \varphi_k(Y)).
     \label{eq:vgg}
 \end{equation}
 
-Intuitively, the VGG loss encourages the model to generate images that are similar to the ground truth images in terms of their high-level semantics, such 
-as edges, textures, and patterns.
+Intuitively, the VGG loss encourages the model to generate images that are similar to the ground truth images in terms of their high-level semantics such 
+as edges, textures and patterns.
 
-\textbf{Color Loss.} Inspired by~\cite{dslr-quality}, we consider an alternative to the MSE loss, which we refer to as the color loss. The color loss computes the MSE between two images, $X_b$ an $Y_b$, where $X_b$ and $Y_b$ are the blurred versions of the predicted and ground truth images, respectively. We can write
+\textbf{Color Loss.} Inspired by~\cite{dslr-quality}, we consider an alternative to the MSE loss, which we refer to as the color loss. The color loss computes the MSE between two images, $X_b$ an $Y_b$, where $X_b$ and $Y_b$ are blurred versions of the predicted and ground truth images respectively. Blurring is done using a Gaussian filter with a kernel size of 7 and \(\sigma=3\). We can write:
 
 \begin{equation}
     \mathcal{L}_\text{Color}(X, Y) = \mathcal{L}_\text{MSE}(X_b, Y_b).
     \label{eq:color}
 \end{equation}
 
-As the authors of the original paper argue, the main idea behind the loss is to evaluate the brighness, contrast and major colours of the image while ignoring fine-grained texture and content comparison. Crucially, the color loss, unlike MSE or MAE, is more robust to small pixel shifts which are present in our training data. However, as a standalone loss we hypothesise that the color loss is not sufficient to preserve details or high-level visual effects in the image.
+As the authors of the original paper argue, the main idea behind the loss is to evaluate the brightness, contrast and major colours of the image while ignoring fine-grained texture and content comparison. Crucially, the color loss, unlike MSE or MAE, is more robust to small pixel shifts which are present in our training data.
 
-\textbf{Relative Total Variational Loss (TV-Rel).} Traditionally, the \href{https://lightning.ai/docs/torchmetrics/stable/image/total_variation.html}{total variational} loss is used to encourage image smoothness and reduce noise by minimising the sum of the absolute differences between shifted pixel values. In our case, we aim to create grain, which can be seen as some form of noise. To this end, we propose the relative total variational loss defined as the absolute difference between the total variation of the predicted and ground
+\textbf{Relative Total Variational Loss (TV-Rel).} Traditionally, the \href{https://lightning.ai/docs/torchmetrics/stable/image/total_variation.html}{total variational} loss is used to encourage image smoothness and reduce noise by minimising the sum of the absolute differences between shifted pixel values. In our case, we aim to create grain, which can be seen as a form of noise. To this end, we propose the relative total variational loss defined as the absolute difference between the total variation of the predicted and ground
 truth images. 
 
 \begin{equation}
@@ -52,9 +51,7 @@ truth images.
 This loss encourages the model to generate images with a similar
 amount of noise to the ground truth film images.
 
-
-
-\textbf{Combination of Losses.} We combine the individual loss functions to form the final loss function using a weighted sum. For a set of loss functions $\mathcal{L}$ and corresponding weights $\beta$ \footnote{We simply use equal weights in all experiments}, the final loss function is defined as
+\textbf{Combination of Losses.} We combine the individual loss functions to form the final loss function using a weighted sum. For a set of loss functions $\mathcal{L}$ and corresponding weights $\beta$ \footnote{We simply use equal weights in all experiments with $\beta_i = 1$ for all $i$}, the final loss function is defined as
 
 \begin{equation}
     \mathcal{L}(X, Y) = \sum_{i} \beta_i \mathcal{L}_i(X, Y).
