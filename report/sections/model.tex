@@ -3,19 +3,22 @@
 
 Our image style translation network is based on the U-Net
 architecture~\cite{unet}. U-Net is a type of convolutional neural network (CNN)
-originally introduced for image segmentation tasks in 2015. The network features a U-shaped architecture, composed of a contracting path (encoder) and an expansive path (decoder). The contracting path resembles a conventional convolutional network, involving repeated convolutions
-followed by non-linear activation functions and pooling operations. This path
-progressively reduces spatial dimensions while enhancing feature details.
-Conversely, the expansive path integrates both feature and spatial information by using up-convolutions and merging with high-resolution features from the
-contracting path via skip connections.
+originally introduced for image segmentation tasks in 2015. In general, CNNs with skip connections have been
+successfully adapted for various image-to-image translation tasks and similar models are used as the
+building block of many modern model families, such as auto-encoders \cite{raw-to-raw} and GANs \cite{perceptual-losses-style-transfer}. The network features a U-shaped architecture, composed of an encoder and a decoder. The encoder
+resembles a conventional convolutional network, involving repeated convolutions
+followed by a non-linear activation functions and pooling operations. The decoder integrates both feature and spatial information using up-convolutions and high-resolution features via skip connections.
 
-% % Motivation for using U-Net
-% The architecture is well-suited for our problem for multiple reasons: First, it
-% is a relatively simple and well-understood model family, allowing us to focus on
-% the specifics of our problem rather than the intricacies of the model. Second,
-% despite its simplicity, it has been shown to be effective for image-to-image
-% translation tasks related to our task at hand, such as \cite{dslr-quality}. Finally, in being fully convolutional, it can be applied to images of arbitrary size.\footnote{So long as the input dimensions are divisible by $2^L$, where $L$ is the number of layers in the contracting path} 
-% This allows us to experiment with training on smaller image patches and applying the network to larger images at test time with no architectural changes or pre-processing steps
+% Motivation for using U-Net
+The architecture is well-suited for our problem for multiple reasons: First, it
+is a relatively simple model family, allowing us to focus on
+the specifics of our problem rather than the intricacies of the model. Second,
+despite its simplicity, similar models such as CNNs with residual connections have been shown to be effective for image-to-image translation, such as \cite{dslr-quality}. Finally,
+in being fully convolutional, it can be applied to images of arbitrary size
+\footnote{So long as the input dimensions are divisible by $2^L$, where $L$ is
+the number of layers in the contracting path}.  This allows us to experiment
+with training on smaller image patches and applying the network to larger images
+at test time with no architectural changes or pre-processing steps.
 
 % TODO: Maybe add some more citations on related work using U-Net
 
@@ -24,10 +27,7 @@ contracting path via skip connections.
 % Detailed model architecture
 For our experiments we follow related work \cite{unet,dslr-quality,raw-to-raw}
 to set sensible hyperparameters for our model. Our image style translation
-network is fully convolutional, with a three-layer contracting and expansive
-path. The contracting path consists of three convolutional blocks with 64, 128,
-and 256 filters, respectively. Each block consists of two convolutional layers
-with 3×3 kernels and zero padding, interleaved with ReLU activation functions.
+network is fully convolutional, with a three-layer encoder and decoder. The encoder consists of three convolutional blocks with 64, 128, and 256 filters, respectively. Each block consists of two convolutional layers with 3×3 kernels and zero padding, interleaved with ReLu activation functions.
 In between each of the convolutional blocks, we downsample the spatial dimension
 of the feature maps by a factor of two using a 2×2 max-pooling operation. The
 expansive path performs the reverse operation, i.e., it upsamples the spatial
@@ -36,7 +36,7 @@ to 3. Upsampling is performed via a 2×2 transposed convolution. After
 upsampling, we concatenate the feature maps from the corresponding layer in the
 contracting path before applying the convolxutional block. After the final layer,
 the model outputs a three-channel image, corresponding to the RGB channels of
-the transformed image.  Hence, the overall translation network $F_{\theta}$ thus
+the transformed image.  Thus, the overall translation network $F_{\theta}$
 is an image-to-image model, that takes an image $I$ as input and outputs a
 transformed image $F_{\theta}(I)$ of the same dimensions. 
 % Both input and output are three-dimensional tensors of size $3 \times H \times W$, where $3$ correspond to the RGB channels and $H$ and $W$ are the height and width of the image, respectively. The total number of parameters in the model is approximately 1.9M, corresponding to a memory footprint of around 7.6MB.

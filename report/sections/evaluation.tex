@@ -4,36 +4,32 @@
 % Qualitative assessment: Visual comparison of results (patches during training/
 % evaluation + inference on downsampled images on full dataset)
 To evaluate the generated film images, we conduct both qualitative and
-quantitative assessments. We qualitatively assess the model's performance by
-visually comparing the generated film images to the ground truth film images.
-For quantitative evaluation, we use four image quality and image similarity metrics. 
+quantitative assessments. For quantitative evaluation, we use four image quality and image similarity metrics. We include a reference baseline comparison which is calculated using the original digital image as the prediction.
 
-\textbf{Peak Signal-to-Noise Ratio (PSNR)} assesses the quality of a
-reconstructed image compared to its original by calculating the ratio of the
-maximum possible signal power to the power of corrupting noise. High PSNR values
-indicate better image quality, implying less noise corruption. However, PSNR
-can be sensitive to small pixel
-variations.
+We use two standard algorithmic metrics, \textbf{Peak Signal-to-Noise Ratio (PSNR)}, which measures the ratio of the maximum possible signal power to the power of corrupting noise, and \textbf{Structural Similarity Index (SSIM)}, which compares structural, luminance, and contrast elements between an original and a reconstructed image in a range from -1 to 1. We also use two learned distance metrics, \textbf{Learned Perceptual Image Patch Similarity (LPIPS)} \cite{LPIPS} and \textbf{PieApp} \cite{PieAPP}, where lower indicates higher similarity, which are trained on human-annotated data to align with human perception of image quality.
 
-\textbf{Structural Similarity Index (SSIM)} measures image quality by comparing
-structural, luminance, and contrast elements between an original and a
-reconstructed image. SSIM values range between -1 and 1, where 1 signifies
-perfect similarity. It aligns more closely with human visual perception compared
-to PSNR and is less sensitive to minor pixel changes, making it more reflective
-of perceived image quality.
+% \textbf{Peak Signal-to-Noise Ratio (PSNR)} assesses the quality of a
+% reconstructed image compared to its original by calculating the ratio of the
+% maximum possible signal power to the power of corrupting noise. High PSNR values
+% indicate better image quality, implying less noise corruption. However, PSNR
+% can be sensitive to small pixel
+% variations. \textbf{Structural Similarity Index (SSIM)} measures image quality by comparing
+% structural, luminance, and contrast elements between an original and a
+% reconstructed image. SSIM values range between -1 and 1, where 1 signifies
+% perfect similarity. It aligns more closely with human visual perception compared
+% to PSNR and is less sensitive to minor pixel changes, making it more reflective
+% of perceived image quality.
 
-\textbf{Learned Perceptual Image Patch Similarity (LPIPS)}~\cite{LPIPS} is a
-learned distance metric based on VGG features, capturing perceptual image
-quality based on human-annotated data. Lower LPIPS values indicate higher
-similarity between the images.
+% \textbf{Learned Perceptual Image Patch Similarity (LPIPS)}~\cite{LPIPS} is a
+% learned distance metric based on VGG features, capturing perceptual image quality based
+% on human-annotated data.Lower LPIPS values indicate higher similarity between the
+% images.
 
-\textbf{PieApp}, like LPIPS, is a learned metric designed to align with human
-perception. It defines a perceptual error score between a distorted image and
-its reference, representing human-perceived distortion magnitude. Lower PieApp
-scores indicate higher similarity between images.
+% \textbf{PieApp}, like LPIPS, is a learned metric designed to align with human
+% perception. It defines a perceptual error score between a distorted image and
+% its reference, representing human-perceived distortion magnitude. Lower PieApp
+% scores indicate higher similarity between images.
 
-% Baseline
-As our baseline, we compute the above mentioned metrics between the digital and film image in the dataset. Hence, by improving on the baseline our model does indeed learn visual effects that make the predicted film image more similar to the ground truth film image than the model's input.
 
 
 % More details from Annamira:
