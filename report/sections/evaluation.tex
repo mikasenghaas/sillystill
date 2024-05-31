@@ -23,9 +23,9 @@ to PSNR and is less sensitive to minor pixel changes, making it more reflective
 of perceived image quality.
 
 \textbf{Learned Perceptual Image Patch Similarity (LPIPS)}~\cite{LPIPS} is a
-learned distance metric based on VGG features, capturing perceptual image quality based
-on human-annotated data.Lower LPIPS values indicate higher similarity between the
-images.
+learned distance metric based on VGG features, capturing perceptual image
+quality based on human-annotated data. Lower LPIPS values indicate higher
+similarity between the images.
 
 \textbf{PieApp}, like LPIPS, is a learned metric designed to align with human
 perception. It defines a perceptual error score between a distorted image and
@@ -33,7 +33,7 @@ its reference, representing human-perceived distortion magnitude. Lower PieApp
 scores indicate higher similarity between images.
 
 % Baseline
-As our baseline, we compute the above mentioned metrics between the digital and film image in the dataset. Hence, by improving on the baseline our model does indeed learn visual effects that make the predicted film image more similar to the ground truth film image than the input the model was trained on.
+As our baseline, we compute the above mentioned metrics between the digital and film image in the dataset. Hence, by improving on the baseline our model does indeed learn visual effects that make the predicted film image more similar to the ground truth film image than the model's input.
 
 
 % More details from Annamira:
