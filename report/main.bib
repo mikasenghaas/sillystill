@@ -65,7 +65,21 @@
 @String(ACMMM = {ACM MM})
 @String(PR    = {PR})
 
+
+% Introduction
+@article{film-grain-rendering,
+    title   = {{Realistic Film Grain Rendering}},
+    author  = {Newson, Alasdair and Faraj, Noura and Galerne, Bruno and Delon, Julie},
+    journal = {{Image Processing On Line}},
+    volume  = {7},
+    pages   = {165--183},
+    year    = {2017},
+    note    = {\url{https://doi.org/10.5201/ipol.2017.192}}
+}
+
 % Literature Review
+
+% Image translation
 @misc{conditionalgan,
       title={Image-to-Image Translation with Conditional Adversarial Networks}, 
       author={Phillip Isola and Jun-Yan Zhu and Tinghui Zhou and Alexei A. Efros},
@@ -83,40 +97,75 @@
       archivePrefix={arXiv},
       primaryClass={cs.CV}
 }
-@misc{translation-pretraining,
-      title={Pretraining is All You Need for Image-to-Image Translation}, 
-      author={Tengfei Wang and Ting Zhang and Bo Zhang and Hao Ouyang and Dong Chen and Qifeng Chen and Fang Wen},
-      year={2022},
-      eprint={2205.12952},
+
+
+% Super Resolution
+@misc{image-super-resolution-with-deep-networks,
+      title={Image Super-Resolution Using Deep Convolutional Networks}, 
+      author={Chao Dong and Chen Change Loy and Kaiming He and Xiaoou Tang},
+      year={2015},
+      eprint={1501.00092},
       archivePrefix={arXiv},
       primaryClass={cs.CV}
 }
-@INPROCEEDINGS{image-style-transfer,
-  author={Gatys, Leon A. and Ecker, Alexander S. and Bethge, Matthias},
-  booktitle={2016 IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}, 
-  title={Image Style Transfer Using Convolutional Neural Networks}, 
-  year={2016},
-  volume={},
-  number={},
-  pages={2414-2423},
-  keywords={Image reconstruction;Neural networks;Image representation;Semantics;Neuroscience;Feature extraction;Visualization},
-  doi={10.1109/CVPR.2016.265}
+
+@misc{accurate-image-super-resolution,
+      title={Accurate Image Super-Resolution Using Very Deep Convolutional Networks}, 
+      author={Jiwon Kim and Jung Kwon Lee and Kyoung Mu Lee},
+      year={2016},
+      eprint={1511.04587},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
 }
-@misc{deep-photo-style-transfer,
-      title={Deep Photo Style Transfer}, 
-      author={Fujun Luan and Sylvain Paris and Eli Shechtman and Kavita Bala},
+
+
+@misc{gan-photo-realistic-super-resolution,
+      title={Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network}, 
+      author={Christian Ledig and Lucas Theis and Ferenc Huszar and Jose Caballero and Andrew Cunningham and Alejandro Acosta and Andrew Aitken and Alykhan Tejani and Johannes Totz and Zehan Wang and Wenzhe Shi},
       year={2017},
-      eprint={1703.07511},
+      eprint={1609.04802},
       archivePrefix={arXiv},
       primaryClass={cs.CV}
 }
-@misc{semi-supervised-raw-to-raw-mapping,
-      title={Semi-Supervised Raw-to-Raw Mapping}, 
-      author={Mahmoud Afifi and Abdullah Abuolaim},
-      year={2021},
-      eprint={2106.13883},
+@misc{esrgan-super-resolution,
+      title={ESRGAN: Enhanced Super-Resolution Generative Adversarial Networks}, 
+      author={Xintao Wang and Ke Yu and Shixiang Wu and Jinjin Gu and Yihao Liu and Chao Dong and Chen Change Loy and Yu Qiao and Xiaoou Tang},
+      year={2018},
+      eprint={1809.00219},
       archivePrefix={arXiv},
       primaryClass={cs.CV}
+}
+@misc{recovering-texture-super-resolution,
+      title={Recovering Realistic Texture in Image Super-resolution by Deep Spatial Feature Transform}, 
+      author={Xintao Wang and Ke Yu and Chao Dong and Chen Change Loy},
+      year={2018},
+      eprint={1804.02815},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+@misc{pulse-gan-perceptual-super-resolution,
+      title={PULSE: Self-Supervised Photo Upsampling via Latent Space Exploration of Generative Models}, 
+      author={Sachit Menon and Alexandru Damian and Shijia Hu and Nikhil Ravi and Cynthia Rudin},
+      year={2020},
+      eprint={2003.03808},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+@misc{gan-progressive-stability-resolution,
+      title={Progressive Growing of GANs for Improved Quality, Stability, and Variation}, 
+      author={Tero Karras and Timo Aila and Samuli Laine and Jaakko Lehtinen},
+      year={2018},
+      eprint={1710.10196},
+      archivePrefix={arXiv},
+      primaryClass={cs.NE}
+}
+@misc{gan-style-based-resolution,
+      title={A Style-Based Generator Architecture for Generative Adversarial Networks}, 
+      author={Tero Karras and Samuli Laine and Timo Aila},
+      year={2019},
+      eprint={1812.04948},
+      archivePrefix={arXiv},
+      primaryClass={cs.NE}
 }
 
 @misc{resolution-perceptual-losses,
@@ -126,73 +175,6 @@
       eprint={1603.08155},
       archivePrefix={arXiv},
       primaryClass={cs.CV}
-}
-@misc{accurate-image-super-resolution,
-      title={Accurate Image Super-Resolution Using Very Deep Convolutional Networks}, 
-      author={Jiwon Kim and Jung Kwon Lee and Kyoung Mu Lee},
-      year={2016},
-      eprint={1511.04587},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
-}
-@misc{photo-realistic-super-resolution,
-      title={Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network}, 
-      author={Christian Ledig and Lucas Theis and Ferenc Huszar and Jose Caballero and Andrew Cunningham and Alejandro Acosta and Andrew Aitken and Alykhan Tejani and Johannes Totz and Zehan Wang and Wenzhe Shi},
-      year={2017},
-      eprint={1609.04802},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
-}
-@misc{pulse-super-resolution,
-      title={PULSE: Self-Supervised Photo Upsampling via Latent Space Exploration of Generative Models}, 
-      author={Sachit Menon and Alexandru Damian and Shijia Hu and Nikhil Ravi and Cynthia Rudin},
-      year={2020},
-      eprint={2003.03808},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
-}
-
-@article{film-grain-rendering,
-    title   = {{Realistic Film Grain Rendering}},
-    author  = {Newson, Alasdair and Faraj, Noura and Galerne, Bruno and Delon, Julie},
-    journal = {{Image Processing On Line}},
-    volume  = {7},
-    pages   = {165--183},
-    year    = {2017},
-    note    = {\url{https://doi.org/10.5201/ipol.2017.192}}
-}
-
-@article{dslr-quality,
-  author       = {Andrey Ignatov and
-                  Nikolay Kobyshev and
-                  Kenneth Vanhoey and
-                  Radu Timofte and
-                  Luc Van Gool},
-  title        = {DSLR-Quality Photos on Mobile Devices with Deep Convolutional Networks},
-  journal      = {CoRR},
-  volume       = {abs/1704.02470},
-  year         = {2017},
-  url          = {http://arxiv.org/abs/1704.02470},
-  eprinttype    = {arXiv},
-  eprint       = {1704.02470},
-  timestamp    = {Mon, 13 Aug 2018 16:48:02 +0200},
-  biburl       = {https://dblp.org/rec/journals/corr/IgnatovKVTG17.bib},
-  bibsource    = {dblp computer science bibliography, https://dblp.org}
-}
-
-@article{raw-to-raw,
-  author       = {Mahmoud Afifi and
-                  Abdullah Abuolaim},
-  title        = {Semi-Supervised Raw-to-Raw Mapping},
-  journal      = {CoRR},
-  volume       = {abs/2106.13883},
-  year         = {2021},
-  url          = {https://arxiv.org/abs/2106.13883},
-  eprinttype    = {arXiv},
-  eprint       = {2106.13883},
-  timestamp    = {Wed, 30 Jun 2021 16:14:10 +0200},
-  biburl       = {https://dblp.org/rec/journals/corr/abs-2106-13883.bib},
-  bibsource    = {dblp computer science bibliography, https://dblp.org}
 }
 
 @article{zoom-to-learn,
@@ -212,6 +194,18 @@
   bibsource    = {dblp computer science bibliography, https://dblp.org}
 }
 
+@misc{contextual-loss,
+      title={The Contextual Loss for Image Transformation with Non-Aligned Data}, 
+      author={Roey Mechrez and Itamar Talmi and Lihi Zelnik-Manor},
+      year={2018},
+      eprint={1803.02077},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+
+
+
+% Image Colorization
 @article{large-scale-colorisation,
   title={Learning Large-Scale Automatic Image Colorization},
   author={Aditya Deshpande and Jason Rock and David Alexander Forsyth},
@@ -253,56 +247,40 @@ journal = {ACM Trans. Graph.},
 }
 
 @article{semantic-colorisation,
-author = {Chia, Alex Yong-Sang and Zhuo, Shaojie and Gupta, Raj Kumar and Tai, Yu-Wing and Cho, Siu-Yeung and Tan, Ping and Lin, Stephen},
-title = {Semantic colorization with internet images},
-year = {2011},
-issue_date = {December 2011},
-publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
-volume = {30},
-number = {6},
-issn = {0730-0301},
-url = {https://doi.org/10.1145/2070781.2024190},
-doi = {10.1145/2070781.2024190},
-journal = {ACM Trans. Graph.},
-
+      author = {Chia, Alex Yong-Sang and Zhuo, Shaojie and Gupta, Raj Kumar and Tai, Yu-Wing and Cho, Siu-Yeung and Tan, Ping and Lin, Stephen},
+      title = {Semantic colorization with internet images},
+      year = {2011},
+      issue_date = {December 2011},
+      publisher = {Association for Computing Machinery},
+      address = {New York, NY, USA},
+      volume = {30},
+      number = {6},
+      issn = {0730-0301},
+      url = {https://doi.org/10.1145/2070781.2024190},
+      doi = {10.1145/2070781.2024190},
+      journal = {ACM Trans. Graph.},
 }
 
-@article{LPIPS,
-  author       = {Richard Zhang and
-                  Phillip Isola and
-                  Alexei A. Efros and
-                  Eli Shechtman and
-                  Oliver Wang},
-  title        = {The Unreasonable Effectiveness of Deep Features as a Perceptual Metric},
+
+% Raw-to-Raw Mapping
+@article{raw-to-raw,
+  author       = {Mahmoud Afifi and
+                  Abdullah Abuolaim},
+  title        = {Semi-Supervised Raw-to-Raw Mapping},
   journal      = {CoRR},
-  volume       = {abs/1801.03924},
-  year         = {2018},
-  url          = {http://arxiv.org/abs/1801.03924},
+  volume       = {abs/2106.13883},
+  year         = {2021},
+  url          = {https://arxiv.org/abs/2106.13883},
   eprinttype    = {arXiv},
-  eprint       = {1801.03924},
-  timestamp    = {Wed, 14 Aug 2019 08:23:33 +0200},
-  biburl       = {https://dblp.org/rec/journals/corr/abs-1801-03924.bib},
+  eprint       = {2106.13883},
+  timestamp    = {Wed, 30 Jun 2021 16:14:10 +0200},
+  biburl       = {https://dblp.org/rec/journals/corr/abs-2106-13883.bib},
   bibsource    = {dblp computer science bibliography, https://dblp.org}
 }
 
-@article{PieAPP,
-  author       = {Ekta Prashnani and
-                  Hong Cai and
-                  Yasamin Mostofi and
-                  Pradeep Sen},
-  title        = {PieAPP: Perceptual Image-Error Assessment through Pairwise Preference},
-  journal      = {CoRR},
-  volume       = {abs/1806.02067},
-  year         = {2018},
-  url          = {http://arxiv.org/abs/1806.02067},
-  eprinttype    = {arXiv},
-  eprint       = {1806.02067},
-  timestamp    = {Mon, 13 Aug 2018 16:46:33 +0200},
-  biburl       = {https://dblp.org/rec/journals/corr/abs-1806-02067.bib},
-  bibsource    = {dblp computer science bibliography, https://dblp.org}
-}
 
+
+% Style Transfer
 @misc{scaling-painting-style-transfer,
       title={Scaling Painting Style Transfer}, 
       author={Bruno Galerne and Lara Raad and José Lezama and Jean-Michel Morel},
@@ -311,8 +289,64 @@ journal = {ACM Trans. Graph.},
       archivePrefix={arXiv},
       primaryClass={cs.CV}
 }
+@INPROCEEDINGS{image-style-transfer,
+  author={Gatys, Leon A. and Ecker, Alexander S. and Bethge, Matthias},
+  booktitle={2016 IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}, 
+  title={Image Style Transfer Using Convolutional Neural Networks}, 
+  year={2016},
+  volume={},
+  number={},
+  pages={2414-2423},
+  keywords={Image reconstruction;Neural networks;Image representation;Semantics;Neuroscience;Feature extraction;Visualization},
+  doi={10.1109/CVPR.2016.265}
+}
+@misc{deep-photo-style-transfer,
+      title={Deep Photo Style Transfer}, 
+      author={Fujun Luan and Sylvain Paris and Eli Shechtman and Kavita Bala},
+      year={2017},
+      eprint={1703.07511},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+@misc{perceptual-losses-style-transfer,
+      title={Perceptual Losses for Real-Time Style Transfer and Super-Resolution}, 
+      author={Justin Johnson and Alexandre Alahi and Li Fei-Fei},
+      year={2016},
+      eprint={1603.08155},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+@misc{arbitrary-style-transfer,
+      title={Arbitrary Style Transfer in Real-time with Adaptive Instance Normalization}, 
+      author={Xun Huang and Serge Belongie},
+      year={2017},
+      eprint={1703.06868},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+
+@article{dslr-quality,
+  author       = {Andrey Ignatov and
+                  Nikolay Kobyshev and
+                  Kenneth Vanhoey and
+                  Radu Timofte and
+                  Luc Van Gool},
+  title        = {DSLR-Quality Photos on Mobile Devices with Deep Convolutional Networks},
+  journal      = {CoRR},
+  volume       = {abs/1704.02470},
+  year         = {2017},
+  url          = {http://arxiv.org/abs/1704.02470},
+  eprinttype    = {arXiv},
+  eprint       = {1704.02470},
+  timestamp    = {Mon, 13 Aug 2018 16:48:02 +0200},
+  biburl       = {https://dblp.org/rec/journals/corr/IgnatovKVTG17.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
 
 % Implementation
+
+
 @article{opencv,
     author = {Bradski, G.},
     citeulike-article-id = {2236121},
@@ -360,13 +394,13 @@ journal = {ACM Trans. Graph.},
 }
 
 @inproceedings{flann,
-author = {Muja, Marius and Lowe, David},
-year = {2009},
-month = {01},
-pages = {331-340},
-title = {Fast Approximate Nearest Neighbors with Automatic Algorithm Configuration.},
-volume = {1},
-journal = {VISAPP 2009 - Proceedings of the 4th International Conference on Computer Vision Theory and Applications}
+      author = {Muja, Marius and Lowe, David},
+      year = {2009},
+      month = {01},
+      pages = {331-340},
+      title = {Fast Approximate Nearest Neighbors with Automatic Algorithm Configuration.},
+      volume = {1},
+      journal = {VISAPP 2009 - Proceedings of the 4th International Conference on Computer Vision Theory and Applications}
 }
 
 
@@ -398,6 +432,41 @@ journal = {VISAPP 2009 - Proceedings of the 4th International Conference on Comp
   pages={839-846},
   keywords={Filtering;Color;Low pass filters;Photometry;Imaging phantoms;Pixel;Shape measurement;Smoothing methods;Computer science;Humans},
   doi={10.1109/ICCV.1998.710815}}
+
+@article{LPIPS,
+  author       = {Richard Zhang and
+                  Phillip Isola and
+                  Alexei A. Efros and
+                  Eli Shechtman and
+                  Oliver Wang},
+  title        = {The Unreasonable Effectiveness of Deep Features as a Perceptual Metric},
+  journal      = {CoRR},
+  volume       = {abs/1801.03924},
+  year         = {2018},
+  url          = {http://arxiv.org/abs/1801.03924},
+  eprinttype    = {arXiv},
+  eprint       = {1801.03924},
+  timestamp    = {Wed, 14 Aug 2019 08:23:33 +0200},
+  biburl       = {https://dblp.org/rec/journals/corr/abs-1801-03924.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
+
+@article{PieAPP,
+  author       = {Ekta Prashnani and
+                  Hong Cai and
+                  Yasamin Mostofi and
+                  Pradeep Sen},
+  title        = {PieAPP: Perceptual Image-Error Assessment through Pairwise Preference},
+  journal      = {CoRR},
+  volume       = {abs/1806.02067},
+  year         = {2018},
+  url          = {http://arxiv.org/abs/1806.02067},
+  eprinttype    = {arXiv},
+  eprint       = {1806.02067},
+  timestamp    = {Mon, 13 Aug 2018 16:46:33 +0200},
+  biburl       = {https://dblp.org/rec/journals/corr/abs-1806-02067.bib},
+  bibsource    = {dblp computer science bibliography, https://dblp.org}
+}
 
 @misc{
       glcm,
