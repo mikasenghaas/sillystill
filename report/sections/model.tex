@@ -10,13 +10,13 @@ resembles a conventional convolutional network, involving repeated convolutions
 followed by a non-linear activation functions and pooling operations. The decoder integrates both feature and spatial information using up-convolutions and high-resolution features via skip connections.
 
 % Motivation for using U-Net
-% The architecture is well-suited for our problem for multiple reasons: First, it
-% is a relatively simple model family, allowing us to focus on
-% the specifics of our problem rather than the intricacies of the model. Second,
-% despite its simplicity, similar models such as CNNs with residual connections have been shown to be effective for image-to-image translation, such as \cite{dslr-quality}. Finally,
-% in being fully convolutional, it can be applied to images of arbitrary size
-% \footnote{So long as the input dimensions are divisible by $2^L$, where $L$ is
-% the number of layers in the contracting path}.  This allows us to experiment
+We selected UNet as it
+is a relatively simple model family, allowing us to focus on
+the specifics of our problem rather than the intricacies of the model. Despite its simplicity, similar models such as CNNs with residual connections have been shown to be effective for image-to-image translation, such as \cite{dslr-quality}. Finally,
+in being fully convolutional, it can be applied to images of arbitrary size
+\footnote{So long as the input dimensions are divisible by $2^L$, where $L$ is
+the number of layers in the encoder}.  
+% This allows us to experiment
 % with training on smaller image patches and applying the network to larger images
 % at test time with no architectural changes or pre-processing steps.
 
@@ -30,11 +30,11 @@ to set sensible hyperparameters for our model. Our image style translation
 network is fully convolutional, with a three-layer encoder and decoder. The encoder consists of three convolutional blocks with 64, 128, and 256 filters, respectively. Each block consists of two convolutional layers with 3×3 kernels and zero padding, interleaved with ReLu activation functions.
 In between each of the convolutional blocks, we downsample the spatial dimension
 of the feature maps by a factor of two using a 2×2 max-pooling operation. The
-expansive path performs the reverse operation, i.e., it upsamples the spatial
+decoder performs the reverse operation, i.e., it upsamples the spatial
 dimension and decreases the number of filters from 256 to 128, 64, and finally
 to 3. Upsampling is performed via a 2×2 transposed convolution. After
 upsampling, we concatenate the feature maps from the corresponding layer in the
-contracting path before applying the convolxutional block. After the final layer,
+encoder before applying the convolxutional block. After the final layer,
 the model outputs a three-channel image, corresponding to the RGB channels of
 the transformed image.  Thus, the overall translation network $F_{\theta}$
 is an image-to-image model, that takes an image $I$ as input and outputs a

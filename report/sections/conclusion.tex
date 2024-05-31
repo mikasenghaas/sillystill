@@ -12,4 +12,6 @@ Our contributions include the creation of a dataset of paired images taken with 
 
 % Limitations & Future Work
 
-Our results are severely limited by the small size and great variety of our dataset, meaning that the model must learn a complex function with relatively little training data. This is evidenced by the lack of sign of halation ever being produced by our models, as they were simply not trained on many patches containing halation. While we tried many combinations of hyperpamaters, we did not rigorously explore all options. Further work could systematically investigate the effect of kernel size, model size, patch size or the weightings for each loss function when combined. Addtionally, a texture loss that more precisely captures the grain seen in films could be added, such as GCLM \cite{glcm} or a GAN-based loss.
+Our results are severely limited by the small size and great variety of our dataset, meaning that the model must learn a complex function with relatively little training data. This is evidenced by the lack of sign of halation ever being produced by our models, as they were simply not trained on many patches containing halation. We also restricted ourselves to a pure deep learning approach, and did not explore the use of statistical models for film grain, halation, and colour hue.
+
+
