@@ -1,3 +1,4 @@
+\newpage
 \section{Appendix}
 \label{sec:appendix}
 
@@ -39,10 +40,12 @@ python src/train.py experiment=full-data logger=none
 
 To edit the loss functions or other parameters, you can edit the configuration files in \texttt{configs/experiment/single-image.yaml}. The model will be trained, and inference will be run automatically, with results logged locally. If you want to log to weights and biases, you can remove the logger flag.
 
+\newpage
 \subsection{All Results}
 \label{sec:all-results}
 
 \begin{table}[ht]
+    \scriptsize
     \centering
     \caption{
         \textbf{Single Image.} All Results}
@@ -79,6 +82,7 @@ To edit the loss functions or other parameters, you can edit the configuration f
 \end{table}
 
 \begin{table}[ht]
+    \scriptsize
     \centering
     \setlength{\tabcolsep}{0.3em}
     \caption{\textbf{Full Dataset.} All results}
