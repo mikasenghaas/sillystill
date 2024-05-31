@@ -9,9 +9,7 @@
 To recreate the look of Cinestill-800T we aim to train a deep image-to-image
 translation network on a paired digital-film dataset. This requires a dataset of
 digital images and their corresponding film images, a suitable model
-architecture, and carefully designed loss functions capable of capturing the intricate film appearance, like grain, halation and colour profile.
-
-This sections details design choices for each of these components: starting from data collection and processing, we motivate the model architecture and loss functions used and describe the training and evaluation procedure.
+architecture, and carefully designed loss functions capable of capturing the appearance of film.
 
 \subsection{Data}
 \label{subsec:data}
@@ -24,10 +22,7 @@ differences between the looks of the two mediums. As no such dataset was
 available, we had to collect our own.
 
 % Dataset collection
-\subsubsection{Data Collection}
-\label{subsubsec:data-collection}
-
-The main goal of the data collection was to capture an \textit{aligned} and \textit{diverse} dataset of digital-film image pairs. Aligned, so our model can learn a style rather than a content function and diverse, so as it can learn the complex patterns required to model how Cinestill-800T reacts in various scenes and lighting conditions.
+\textbf{Data Collection. }\label{subsubsec:data-collection} The main goal of the data collection was to capture an aligned and diverse dataset of digital-film image pairs: aligned, as our model should merely transfer style and not move content around, and diverse in order to capture Cinestill-800T's baheviour in a variety of scenes and lighting conditions.
 
 \begin{table}
     \centering
@@ -43,7 +38,7 @@ The main goal of the data collection was to capture an \textit{aligned} and \tex
     \label{tab:cameras}
 \end{table}
 
-The data collection was carefully designed to achieve both goals: To ensure aligned images, we take inspiration from the setup proposed in~\cite{dslr-quality} and utilise two cameras, a Sony Alpha 7 digital camera and a Nikon F3 film camera mounted on a tripod. Photos were taken by keeping the same tripod setup, and exchange the digital for the film camera, or vice versa. Camera settings, like aperture, ISO, shutter speed, were kept constant across both cameras as best as possible (Table~\ref{tab:cameras}). Further, we refrained from shooting scenes with motion, like cars, or faces, to minimise the misaligned caused by temporal shift between the two images. To create a diverse dataset, images were taken in three separate sessions, varying indoor and outdoor locations, weather conditions and scenes. Specific emphasis was put on ensuring that all special visual effects (halation, grain and colours) were well-represented in the dataset. The final raw dataset consists of $n=41$ image pairs. Some examples are presented in Figure~\ref{fig:raw-dataset}. 
+To ensure aligned images, we take inspiration from the setup proposed in~\cite{dslr-quality} and utilise two cameras, a Sony Alpha 7 digital camera and a Nikon F3 film camera mounted on a tripod. Photos were taken by keeping the same tripod setup with both cameras. Camera settings, like aperture, ISO, shutter speed, were kept constant across both cameras as best as possible (Table~\ref{tab:cameras}). We also only shot static scenes. To create a diverse dataset, images were taken both indoors and outdoors, in different weather conditions, with different light and containing different subjects. Specific emphasis was put on ensuring that all special visual effects (halation, grain and colours) were well-represented in the dataset. The final raw dataset consists of $n=41$ image pairs. Some examples are presented in Figure~\ref{fig:raw-dataset}. 
 
 % TODO: Maybe introduce notation to refer to dataset
 % $D_{\text{raw}}=\{(I^F_n, I^D_n)\}_n^{41}$
@@ -110,75 +105,80 @@ The data collection was carefully designed to achieve both goals: To ensure alig
 \subsubsection*{Data Preprocessing}
 \label{subsubsec:preprocessing}
 
-Despite best efforts to capture the exact same scene on the digital and film
-images, the raw image pairs were not perfectly aligned. Specifically, the images
-were not spatially aligned and showed different dynamic ranges. To address this
-issue, we performed a series of pre-processing steps.
-
-% Keypoint Alignment
-First, we aligned the images using keypoint alignment. This technique is based
-on the assumption that the digital and film images should contain the same
-visual features. We follow a standard image processing pipeline using openly
-available implementations of common feature detection, matching and perspective
-transformation algorithms from the OpenCV library~\cite{opencv}. For all image
-pairs we perform the following steps:
-
-\begin{enumerate}
-    \item \textbf{Keypoint Detection} We use the ORB~\cite{orb} (Oriented FAST and Rotated BRIEF) feature detection algorithm to detect keypoints and extract descriptors from both images.
-    \item \textbf{Keypoint Matching} We then use the FLANN~\cite{flann} (Fast Library for Approximate Nearest Neighbors) algorithm to match the keypoints between the images. We apply the Lowe's ratio test to filter out matches that are likely to be incorrect.
-    \item \textbf{Homography Estimation} Finally, we estimate a homography matrix using a subset of the matched keypoints using the RANSAC algorithm~\cite{ransac}. The matrix defines a perspective transformation which we apply to the digital image to align it with the film image.
-\end{enumerate}
-
-% TODO: Could go into more detail about the maths behind the algorithms and algorithms' parameters used in our experiments
-
-% TODO: Could mention that we tried other keypoint detection algorithms: 
-% We also experimented with other keypoint detection algorithms, such as SIFT (Scale-Invariant Feature Transform)~\cite{sift} and SURF (Speeded-Up Robust Features)~\cite{surf}, and simple brute-force feature matching algorithms, but found that the above pipeline provided accurate results and did not require a patent license.
+Inevitably, raw image pairs are not perfectly spatially aligned. To address this
+issue, we first spatially align the images using keypoint alignment. We follow a standard processing pipeline using openly available implementations of common feature detection, matching and perspective transformation algorithms from the OpenCV library~\cite{opencv}. For all image pairs we first detect keypoints and extract descriptors using ORB~\cite{orb}, match them using FLANN~\cite{flann}, and estimate a homography transformation matrix using the \href{https://www.mathworks.com/discovery/ransac.html}{RANSAC} algorithm.
 
 % Luminance Alignment
-Next, we address the differences in the dynamic range of the images. To ensure that our model does not learn systematic brightness adjustments caused by slight variations in the camera setup during our data collection, we aimed to align the luminance of the film image to the digital image. In this way, the digital image serves as a reference for the luminance of the film image, as we want our training distribution to be as close as possible to the types of images our model will see at inference time. The luminance alignment is performed using histogram matching in CIELAB space. Specifically, we follow these steps:
+To ensure that our model does not learn systematic brightness adjustments, we also align the luminance of each image pair. We align the luminance of the film image to the digital image as our model receives digital as input at inference time. The luminance alignment is performed using histogram matching on the luminance channel in CIELAB space before converting back to RGB.
 
-\begin{enumerate}
-    \item \textbf{Convert to CIELAB} We convert both the digital and film images to the CIELAB colour space, where the $L$-channel corresponds to luminance.
-    \item \textbf{Histogram Matching} We then match the luminance histogram of the film image to the digital image. This is done by computing and interpolating the cumulative distribution function (CDF) of the luminance channel of both images.
-    \item \textbf{Convert back to RGB} Finally, we convert the film image back to the RGB colour space.
-\end{enumerate}
+% \begin{enumerate}
+%     \item \textbf{Convert to CIELAB} We convert both the digital and film images to the CIELAB colour space, where the $L$-channel corresponds to luminance.
+%     \item \textbf{Histogram Matching} We then match the luminance histogram of the film image to the digital image. This is done by computing and interpolating the cumulative distribution function (CDF) of the luminance channel of both images.
+%     \item \textbf{Convert back to RGB} Finally, we convert the film image back to the RGB colour space.
+% \end{enumerate}
 
-We observe that both the keypoint alignment and luminance matching steps are
-crucial prerequisites for training our model. An example of the results of these
-steps can be seen in Figure~\ref{fig:data-preprocessing}. After the
+An example of the results of these two steps can be seen in Figure~\ref{fig:data-preprocessing}. After the
 preprocessing steps we are left with 38 processed image pairs. We publicly
-release both the raw and processed dataset to facilitate further research in
-this or related areas.
+release both the raw and processed dataset to facilitate further work.
+
+% \begin{enumerate}
+%     \item \textbf{Keypoint Detection} We use the ORB~\cite{orb} (Oriented FAST and Rotated BRIEF) feature detection algorithm to detect keypoints and extract descriptors from both images.
+%     \item \textbf{Keypoint Matching} We then use the FLANN~\cite{flann} (Fast Library for Approximate Nearest Neighbors) algorithm to match the keypoints between the images. We apply the Lowe's ratio test to filter out matches that are likely to be incorrect.
+%     \item \textbf{Homography Estimation} Finally, we estimate a homography matrix using a subset of the matched keypoints using the RANSAC algorithm~\cite{ransac}. The matrix defines a perspective transformation which we apply to the digital image to align it with the film image.
+% \end{enumerate}
+
+% Could go into more detail about the maths behind the algorithms and algorithms' parameters used in our experiments. Absolutely Not. 
+
+% Could mention that we tried other keypoint detection algorithms: Absolutely Not.
+% We also experimented with other keypoint detection algorithms, such as SIFT (Scale-Invariant Feature Transform)~\cite{sift} and SURF (Speeded-Up Robust Features)~\cite{surf}, and simple brute-force feature matching algorithms, but found that the above pipeline provided accurate results and did not require a patent license.
+
+
 
 \begin{figure}
-    \begin{subfigure}[t]{.49\textwidth}
-      \centering
-      \includegraphics[width=\linewidth]{figures/raw-film.jpeg}
-      \caption{Raw Film Image}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[t]{.49\textwidth}
-      \centering
-      \includegraphics[width=\linewidth]{figures/processed-film.jpeg}
-      \caption{Processed Film Image}
-    \end{subfigure}
-  
-    \medskip
-  
-    \begin{subfigure}[t]{.49\textwidth}
-      \centering
-      \includegraphics[width=\linewidth]{figures/raw-digital.jpeg}
-      \caption{Raw Digital Image}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[t]{.49\textwidth}
-      \centering
-      \includegraphics[width=\linewidth]{figures/processed-digital.jpeg}
-      \caption{Processed Digital Image}
-    \end{subfigure}
+    % \begin{subfigure}[t]{.24\textwidth}
+    %   \centering
+    %   \includegraphics[width=\linewidth]{figures/raw-film.jpeg}
+    %   \caption{Raw Film Image}
+    % \end{subfigure}
+    % \hfill
+    % \begin{subfigure}[t]{.24\textwidth}
+    %   \centering
+    %   \includegraphics[width=\linewidth]{figures/processed-film.jpeg}
+    %   \caption{Processed Film Image}
+    % \end{subfigure}
+    % \hfill
+    % \begin{subfigure}[t]{.24\textwidth}
+    %   \centering
+    %   \includegraphics[width=\linewidth]{figures/raw-digital.jpeg}
+    %   \caption{Raw Digital Image}
+    % \end{subfigure}
+    % \hfill
+    % \begin{subfigure}[t]{.24\textwidth}
+    %   \centering
+    %   \includegraphics[width=\linewidth]{figures/processed-digital.jpeg}
+    %   \caption{Processed Digital Image}
+    % \end{subfigure}
 
-    \caption{\textbf{Dataset Preprocessing.} Example of a raw and processed image pair. The raw images (a) and (c) show misalignment and differences in dynamic range. After keypoint alignment and luminance matching, the processed images (b) and (d) are spatially and luminance aligned.}
+
+    \begin{subfigure}[b]{0.49\textwidth}
+      \centering
+      \includegraphics[width=0.49\textwidth]{figures/raw-film.jpeg}
+      \includegraphics[width=0.49\textwidth]{figures/processed-film.jpeg}
+      \captionsetup{justification=centering}
+      \caption{Film: Raw (left) vs. Processed (right).} 
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.49\textwidth}
+      \centering
+      \includegraphics[width=0.49\textwidth]{figures/raw-digital.jpeg}
+      \includegraphics[width=0.49\textwidth]{figures/raw-film}
+      \captionsetup{justification=centering}
+      \caption{Digital: Raw (left) vs. Processed (right).}
+  \end{subfigure}
+
+    \caption{\textbf{Dataset Preprocessing.} Example of a raw and processed image pair. We can see the luminance alignment in the film image (a) and the spatial alignment in the digital image (b).}
     \label{fig:data-preprocessing}
 \end{figure}
 
-% TODO: Maybe talk about data augmentation (horizontal/ vertical flips, brightness adjustment and blur)
+% Maybe talk about data augmentation (horizontal/ vertical flips, brightness adjustment and blur)
+% We didn't do this for our final runs, so no.
