@@ -11,18 +11,15 @@ translation network on a paired digital-film dataset. This requires a dataset of
 digital images and their corresponding film images, a suitable model
 architecture, and carefully designed loss functions capable of capturing the appearance of film.
 
-\subsection{Data}
+\subsection{Data Collection and Preprocessing}
 \label{subsec:data}
+\label{subsubsec:data-collection}
 
 % Motivation
-While unpaired digital or film datasets are abundant, our method requires
-\textit{paired} digital-film images. This means, that the exact same scene has
-to be captured with both a digital and a film camera to allow the model to learn
-differences between the looks of the two mediums. As no such dataset was
-available, we had to collect our own.
+While unpaired digital or film datasets are abundant, our method requires \textit{paired} digital-film images. This means, that the exact same scene has to be captured with both a digital and a film camera to allow the model to learn differences between the looks of the two mediums. Images should be aligned, as our model should merely transfer style and not move content around, and diverse in order to capture Cinestill-800T's baheviour in a variety of scenes and lighting conditions. As no such dataset was available, we collected our own.
 
 % Dataset collection
-\textbf{Data Collection. }\label{subsubsec:data-collection} The main goal of the data collection was to capture an aligned and diverse dataset of digital-film image pairs: aligned, as our model should merely transfer style and not move content around, and diverse in order to capture Cinestill-800T's baheviour in a variety of scenes and lighting conditions.
+\textbf{Data Collection. } To ensure aligned images, we take inspiration from the setup proposed in~\cite{dslr-quality} and utilise two cameras, a Sony Alpha 7 digital camera and a Nikon F3 film camera mounted on a tripod. Photos were taken by keeping the same tripod setup with both cameras. Camera settings, like aperture, ISO, shutter speed, were kept constant across both cameras as best as possible (Table~\ref{tab:cameras}). We only shot static scenes to limit changes in the scene between shots. To create a diverse dataset, images were taken both indoors and outdoors, in different weather conditions, with different light and containing different subjects. Specific emphasis was put on ensuring that all special visual effects (halation, grain and colours) were well-represented in the dataset. The final raw dataset consists of $n=41$ image pairs. Some examples are presented in Figure~\ref{fig:raw-dataset}. 
 
 \begin{table}
     \centering
@@ -37,8 +34,6 @@ available, we had to collect our own.
     \end{tabular}
     \label{tab:cameras}
 \end{table}
-
-To ensure aligned images, we take inspiration from the setup proposed in~\cite{dslr-quality} and utilise two cameras, a Sony Alpha 7 digital camera and a Nikon F3 film camera mounted on a tripod. Photos were taken by keeping the same tripod setup with both cameras. Camera settings, like aperture, ISO, shutter speed, were kept constant across both cameras as best as possible (Table~\ref{tab:cameras}). We also only shot static scenes. To create a diverse dataset, images were taken both indoors and outdoors, in different weather conditions, with different light and containing different subjects. Specific emphasis was put on ensuring that all special visual effects (halation, grain and colours) were well-represented in the dataset. The final raw dataset consists of $n=41$ image pairs. Some examples are presented in Figure~\ref{fig:raw-dataset}. 
 
 % TODO: Maybe introduce notation to refer to dataset
 % $D_{\text{raw}}=\{(I^F_n, I^D_n)\}_n^{41}$

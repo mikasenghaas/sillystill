@@ -6,7 +6,7 @@ We propose a list of loss functions that can be combined, each targeting differe
 \textbf{MSE/ MAE.} Both the mean squared error (MSE, Eq.~\ref{eq:mse}) and mean absolute error (MAE, Eq.~\ref{eq:mae}) are common pixel-to-pixel loss functions, that are popularly used in image reconstruction tasks. They measure the average squared or absolute difference between the predicted and ground truth images pixels, respectively. For two images, $X, Y \in \mathbb{R}^{3 \times H \times W}$, the MSE loss is defined as
 
 \begin{equation}
-    \mathcal{L}_\text{MSE}(X, Y) = \frac{1}{n} \sum_{i=1}^{n} (X_i - Y_i)^2,
+    \mathcal{L}_\text{MSE}(X, Y) = \frac{1}{n} \sum_{i=1}^{n} (X_i, Y_i)^2,
     \label{eq:mse}
 \end{equation}
 
