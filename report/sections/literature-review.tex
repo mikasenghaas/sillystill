@@ -1,0 +1,34 @@
+\section{Literature Review}
+\label{sec:literature-review}
+
+% All your statements must be referenced. Any related paper/resource you found should be listed for readers.}
+
+% Go over the entire related literature. Start from general to the most specific related methods.
+
+% For the most related papers, and for all papers/algorithms used in your
+% project, you should go more into details and explain what the paper does,
+% adding an explanation of their pros and cons and how they compare/relate to
+% what you have done in your own work.
+
+Many methods have presented as viable solutions for stylistic effect generation using image to image translation using Deep Learning. Among these, there is a variety of kinds of model architectures and effects produced.
+
+\vspace{5pt}\noindent\textbf{Image Translation.} GANs have seen successful application in generic image translation, such as in Conditional Image-Image Translation \cite{conditionalgan} in which a loss is learned by a discriminator network which is conditioned on the input. This can be generalised to unpaired image data using Cyclic GANs \cite{cyclicgan} where two translation networks are used in either direction, and cyclic consistency is enforced using the loss function.
+
+
+\noindent\textbf{Super Resolution.} The task of generating a higher resolution image from a lower resolution image has been tackled by deep learning approaches with a variety of pixel-wise and perceptual losses \cite{image-super-resolution-with-deep-networks,accurate-image-super-resolution,resolution-perceptual-losses}. GANs have produced impressive results \cite{gan-photo-realistic-super-resolution, esrgan-super-resolution}, especially in combination with perceptual losses \cite{pulse-gan-perceptual-super-resolution,recovering-texture-super-resolution}. Methods for greater stability during training have been developed \cite{gan-progressive-stability-resolution} and for greater control over which style is produced \cite{gan-style-based-resolution}. 
+
+\noindent A contextual bilateral loss was introduced by \cite{zoom-to-learn} based on RGB and VGG feature patches that builds on the contextual loss proposed by \cite{contextual-loss} by adding a distance weighting. The authors claim that this loss is robust to misalignment in paired datasets. We implemented this loss but found it did not improve our results and do not include it in our final models.
+
+\noindent\textbf{Image Colorisation.} Converting a grayscale image to a color has been attempted by \cite{large-scale-colorisation} using chromaticity maps, and \cite{intrinsic-colorisation} addresses the problem of illuminants by searching the web for reference images. \cite{deep-colorisation} leverages deep learning with separate networks for different kinds of images. This suggests a natural extension of our work would be to condition the digital-film mapping on features such as a luminance histogram.
+
+\noindent\textbf{Raw to Raw Mapping.} \cite{raw-to-raw} maps the raw output of one camera to another using paired auto-encoders. Each auto-encoder is trained on raw outputs from a different camera, and the latent space of the two auto-encoders is mapped using a paired dataset. We implemented this architecture for a digital to film mapping, but it did not produce good initial results so we did not pursue it further.
+
+\noindent\textbf{Style Transfer.} Style transfer, which maps the style of one image to the content of another, has seen success using CNNs which are trained to minimize a content and style loss. This has been applied to paintings \cite{image-style-transfer, scaling-painting-style-transfer} and to photorealistic images \cite{deep-photo-style-transfer}. These methods require an expensive optimization for every image. Instead, \cite{resolution-perceptual-losses} uses perceptual losses based on VGG features to train a feed forward model and \cite{arbitrary-style-transfer} extends this to arbitrary styles using adaptive instance normalization. \cite{dslr-quality} attempts to convert the style of phone images to DSLR quality using a composite loss including functions for colour, texture and content. We follow a similar approach in our work, using perceptual features produced by VGG-19 \cite{vgg} as part of our loss to train a feed forward CNN for style transfer.
+
+
+% ---------------------------------------------------------
+% \noindent\textbf{Super Resolution.} Super-resolution involves generating a higher resolution image from a lower resolution one. Existing approaches either train on paired datasets of low resolution and high resolution images of the same scene, or a dataset of high resolution images with their downsampled low-quality versions.
+
+% Generally, CNN-based methods for super resolution involve downsampling a high-resolution before feeding it through a CNN which involves both convolutional layers and upsampling layers. Often loss is defined based on the L1 or L2 norm between the original high resolution image and the upsampled output image. Training with loss based on average distance metrics between high quality and low quality images tends to produce a blurring affect, as noted in \cite{photo-realistic-super-resolution} and \cite{dslr-quality}. Success of a super resolution model is often measured by the Peak Single to Noise Ratio (PSNR), which is directly optimized by simple MSE losses. In \cite{dslr-quality} different loss functions are employed which combine analytical content and color losses with an adversarially learned texture loss. 
+
+% To avoid the challenge of producing perceptually good results with CNNs, approaches such as \cite{pulse-super-resolution} and \cite{photo-realistic-super-resolution} use Generative Adversarial Networks (GANs). In this case, a generative model is trained to produce high resolution images based on low-quality images that are able to fool discriminator trained to distinguish super-resolved images from real images.

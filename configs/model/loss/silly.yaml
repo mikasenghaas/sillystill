@@ -1,0 +1,7 @@
+_target_: src.models.loss.SillyLoss
+
+losses:
+  - _target_: src.models.loss.MSELoss
+  - _target_: src.models.loss.GCLMLoss
+
+weights: [1.0, 1.0]

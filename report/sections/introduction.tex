@@ -1,0 +1,59 @@
+\section{Introduction}
+\label{sec:introduction}
+
+% Maximum 3-4 pages, all external statements must be referenced
+% 1. What is the problem in general terms? Why is it important/of interest?
+% 2. What other solutions are available? Why are they not good enough? What would we ideally want to have? (-> Narrow down to solutions similar to the last question (i.e. what we ideally want to have), which will be close to our proposition.)
+% 3. What are these good similar solutions? How do they work? (some technical insight) What are their limitations?
+% 4. What are we proposing? How does it contribute/improve? What do we base our work on, briefly how do we solve?
+% 5. What are the assumptions we make? A bit more about the method, what will be presented.
+
+% What is the problem in general terms? Why is it important/of interest?
+Film photography is popular among artists and photographers for capturing scenes
+in a unique way. They use optical flaws, such as halation and chromatic
+aberrations, for aesthetic purposes. Such visual effects are the result of
+complex physical processes that are not present in modern digital photography.
+Hence, to recreate the visual effects of film in digital images, computational
+methods are required. This motivates our work, where we investigate the
+feasibility of using a pure deep learning approach to recreate the visual
+effects of Cinestill-800T film, an iconic film stock known for its grain
+textures, color hues and red halation.
+
+% 2. What other solutions are available? Why are they not good enough? What would we ideally want to have? (-> Narrow down to solutions similar to the last question (i.e. what we ideally want to have), which will be close to our proposition.) What are these good similar solutions? How do they work? (some technical insight) What are their limitations?
+
+Most available solutions involve directly modelling
+the physical processes that lead to the visual effects~\cite{film-grain-rendering}. However, the complex
+interplay between the camera, film stock, and chemicals during the development
+process, means that simplifying assumptions have to be made. In addition, such
+models are often computationally expensive and time consuming, especially when applied to
+high-resolution images.
+
+Ideally, a digital image could be processed into its film equivalent on the
+order of seconds with high fidelity. Deep learning models have shown impressive
+results in learning complex mappings, out-performing handcrafted models in many
+tasks. One can hope that a deep learning model could learn higher quality
+style translations than existing methods, while reducing computational complexity.
+However, the problem of recreating film effect has not been directly addressed
+by deep learning literature. Related computational photography problems include
+camera raw-to-raw mappings, quality enhancement, grayscale colorisation, and
+style transfer. As none of these involve direct applicatino to the problem of film
+effect generation, we examine the commonly used techniques and how they could be adapted to our task.
+
+% 3. What are we proposing? How does it contribute/improve? What do we base our
+% work on, briefly how do we solve? What are the assumptions we make? A bit more
+% about the method, what will be presented.
+All of this motivates our work, where we investigate the feasibility of using
+deep learning to recreate the visual effects of Cinestill-800T film in digital
+images. We propose training a U-Net-like model translation network on a
+new dataset of paired digital and film images. While we acknowledge
+that using direct statistical models for film grain, halation, and color hue may
+be effective as a standalone, or in combination with deep learning, we constrain
+this work to only explore pure deep learning methods.
+
+Our contributions can be summarised as:
+
+\begin{itemize}
+    \item We propose a pure deep learning approach to recreate the visual effects of Cinestill-800T film in digital images.
+    \item We present a self-collected dataset of paired digital and film images, which we publicly release to the research community.
+    \item We investigate and analyse various techniques that help to improve the creation of visual effects, such as adding noise to the input, training on random-resized crops, or varying the loss function.
+\end{itemize}

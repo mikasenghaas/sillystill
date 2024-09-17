@@ -1,0 +1,17 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+% Guidelines:
+% - A short conclusion where you summarize what you have essentially done in your project, possible extensions or future work, as well as limitations.
+
+%  Conclusion
+
+In this work, we have explored the use of convolution neural networks in modeling the effect given by Cinestill800T film. We focused on the use of different loss functions as well as the addition of a noise channel to the input, and the use of random scales of patches during training. We find that a combination of MSE/VGG gives the best colour production which is significantly helped by resizing, and that the addition of a noise channel and another loss such as TV-Rel produces some grain.
+
+Our contributions include the creation of a dataset of paired images taken with a film and digital camera, and all of our code in Pytorch, the details of which can be found in Section \ref{sec:code-documentation} in the appendix.
+
+% Limitations & Future Work
+
+Our results are severely limited by the small size and great variety of our dataset, meaning that the model must learn a complex function with relatively little training data. This is evidenced by the lack of sign of halation ever being produced by our models, as they were simply not trained on enough patches containing halation. We also restricted ourselves to a pure deep learning approach, and did not explore the use of statistical models for film grain, halation, and colour hue.
+
+

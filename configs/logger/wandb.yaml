@@ -1,0 +1,10 @@
+_target_: lightning.pytorch.loggers.wandb.WandbLogger
+id: null 
+group: ${group}
+name: ${name}
+entity: "sillystill"
+project: "sillystill"
+save_dir: "${paths.output_dir}"
+tags: "${tags}"
+job_type: ""
+log_model: True

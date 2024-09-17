@@ -1,0 +1,6 @@
+\section{Further Work}
+\label{sec:further-work}
+
+While we tried many combinations of hyperpamaters, we did not rigorously explore all options. Further work could systematically investigate the effect of kernel size, model size, patch size or the weightings for each loss function when combined. The dataset could be also narrowed focused to include only scenes of a similar nature to give the model an easier function to learn. This could be taken to the extreme for halation, where only patches containing some halation could be fed to the model. A natural extension would be to condition the model on features of the image such as dynamic range. 
+
+For grain production, an implicitly defined texture loss that more precisely captures the grain seen in films could be added, such as GCLM \cite{glcm} or notably an adversarial loss as in \cite{dslr-quality}. Avenues we only briefly explored could be tested in more depth. This includes the paired auto-encoder architecture from \cite{raw-to-raw} and the contextual bilateral loss from \cite{zoom-to-learn}, both contained in our code. Lastly, the model could be combined with a non-ML approach to see if a hybrid model can produce better results.

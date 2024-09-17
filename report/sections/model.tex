@@ -1,0 +1,56 @@
+\subsection{Model}
+\label{subsec:model}
+
+Our image style translation network is based on the U-Net
+architecture~\cite{unet}. U-Net is a type of convolutional neural network (CNN)
+originally introduced for image segmentation tasks in 2015. CNNs have been
+successfully adapted for various image-to-image translation tasks and similar models are used as the
+building block of many modern model families, such as auto-encoders \cite{raw-to-raw} and GANs \cite{perceptual-losses-style-transfer}. The network features a U-shaped architecture, composed of an encoder and a decoder. The encoder
+resembles a conventional convolutional network, involving repeated convolutions
+followed by a non-linear activation functions and pooling operations. The decoder integrates both feature and spatial information using up-convolutions and high-resolution features via skip connections.
+
+% Motivation for using U-Net
+We selected UNet as it is a relatively simple model family, allowing us to focus on
+the specifics of our problem rather than the intricacies of the model. Despite its simplicity, similar models such as CNNs with residual connections have been shown to be effective for image-to-image translation, such as in \cite{dslr-quality}. As it is fully convolutional, it can be applied to images of arbitrary size.
+\footnote{So long as the input dimensions are divisible by $2^L$, where $L$ is
+the number of layers in the encoder}
+% This allows us to experiment
+% with training on smaller image patches and applying the network to larger images
+% at test time with no architectural changes or pre-processing steps.
+
+% TODO: Maybe add some more citations on related work using U-Net
+
+% TODO: Add figure for U-Net architecture
+
+% Detailed model architecture
+For our experiments we follow related work \cite{unet,dslr-quality,raw-to-raw}
+to set sensible hyperparameters for our model. Our image style translation
+network is fully convolutional, with a three-layer encoder and decoder. The encoder consists of three convolutional blocks with 64, 128, and 256 filters, respectively. Each block consists of two convolutional layers with 3×3 kernels and zero padding, interleaved with ReLu activation functions.
+In between each of the convolutional blocks, we downsample the spatial dimension
+of the feature maps by a factor of two using a 2×2 max-pooling operation. The
+decoder performs the reverse operation by upsampling the spatial
+dimension. It decreases the number of filters from 256 to 128, 64, and finally
+to 3. Upsampling is performed via a 2×2 transposed convolution. After
+upsampling, we concatenate the feature maps from the corresponding layer in the
+encoder before applying a convolutional block. After the final layer,
+the model outputs a three-channel image, corresponding to the RGB channels of
+the transformed image. Thus, the overall translation network $F_{\theta}$
+is an image-to-image model, that takes an image $I$ as input and outputs a
+transformed image $F_{\theta}(I)$ of the same dimensions. 
+% Both input and output are three-dimensional tensors of size $3 \times H \times W$, where $3$ correspond to the RGB channels and $H$ and $W$ are the height and width of the image, respectively. The total number of parameters in the model is approximately 1.9M, corresponding to a memory footprint of around 7.6MB.
+
+% TODO: Maybe mention that we don't employ normalisation/ dropout layers
+
+% \begin{table}{ccc}
+%     \centering
+%     \caption{
+%         \textbf{Model architectures.} The table shows the base model architecture that is used for all experiments, unless otherwise specified.
+%     }
+%     \label{tab:model}
+%     \begin{tabular}{ccc}
+%         \toprule
+%         \# Input Channels & \# Hidden Channels & Convolution & Pooling & Non-Linearity \\
+%         3 & 64, 128, 256 & 3x3 (1) & 2x2 Max & ReLU \\
+%         \midrule
+%         \bottomrule
+% \end{table}

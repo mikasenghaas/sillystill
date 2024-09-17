@@ -1,0 +1,49 @@
+This is BibTeX, Version 0.99d (TeX Live 2024)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: main.aux
+The style file: splncs04.bst
+Database file #1: main.bib
+Warning--empty booktitle in flann
+Warning--empty booktitle in orb
+You've used 32 entries,
+            2850 wiz_defined-function locations,
+            828 strings with 10980 characters,
+and the built_in function-call counts, 15709 in all, are:
+= -- 1139
+> -- 694
+< -- 14
++ -- 287
+- -- 252
+* -- 1019
+:= -- 2087
+add.period$ -- 17
+call.type$ -- 32
+change.case$ -- 225
+chr.to.int$ -- 0
+cite$ -- 34
+duplicate$ -- 1329
+empty$ -- 1402
+format.name$ -- 283
+if$ -- 3309
+int.to.chr$ -- 0
+int.to.str$ -- 32
+missing$ -- 296
+newline$ -- 102
+num.names$ -- 64
+pop$ -- 718
+preamble$ -- 1
+purify$ -- 190
+quote$ -- 0
+skip$ -- 348
+stack$ -- 0
+substring$ -- 593
+swap$ -- 675
+text.length$ -- 14
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 128
+warning$ -- 2
+while$ -- 107
+width$ -- 34
+write$ -- 282
+(There were 2 warnings)

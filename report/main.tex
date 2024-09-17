@@ -1,0 +1,96 @@
+\documentclass[runningheads]{llncs}
+
+% ---------------------------------------------------------------
+% Based on ECCV 2024 template
+
+
+\usepackage{eccv}
+
+% OPTIONAL: Un-comment the following line for a version which is easier to read
+% on small portrait-orientation screens (e.g., mobile phones, or beside other windows)
+%\usepackage[mobile]{eccv}
+
+
+% ---------------------------------------------------------------
+% Other packages
+
+% Commonly used abbreviations (\eg, \ie, \etc, \cf, \etal, etc.)
+\usepackage{eccvabbrv}
+
+% Include other packages here, before hyperref.
+\usepackage{graphicx}
+\usepackage{parskip}
+\usepackage{booktabs}
+
+% The "axessiblity" package can be found at: https://ctan.org/pkg/axessibility?lang=en
+\usepackage[accsupp]{axessibility}  % Improves PDF readability for those with disabilities.
+
+
+% ---------------------------------------------------------------
+% Hyperref package
+
+% It is strongly recommended to use hyperref, especially for the review version.
+% Please disable hyperref *only* if you encounter grave issues.
+% hyperref with option pagebackref eases the reviewers' job, but should be disabled for the final version.
+%
+% If you comment hyperref and then uncomment it, you should delete
+% main.aux before re-running LaTeX.
+% (Or just hit 'q' on the first LaTeX run, let it finish, and you
+%  should be clear).
+
+% TODO FINAL: Comment out the following line for the camera-ready version
+\usepackage[pagebackref,breaklinks,colorlinks,citecolor=eccvblue]{hyperref}
+% TODO FINAL: Un-comment the following line for the camera-ready version
+%\usepackage{hyperref}
+
+% Support for ORCID icon
+\usepackage{orcidlink}
+
+
+\begin{document}
+
+% Instructions
+% - Please write your reports in \LaTeX~and make them as well-written and presentable as possible, report quality is taken into account in grading.
+% - Submit your zipped \LaTeX~files and the PDF to Moodle OR via email to the TAs (\url{ehsan.pajouheshgar@epfl.ch}, \url{martin.everaert@epfl.ch}, \url{raphael.achddou@epfl.ch}).
+% - We recommend you the provided template to make things easier for you.
+% - You can use Overleaf to collaborate together on the same document and ease compilation of \LaTeX~files.
+
+% - Reports should not exceed 15 pages if you use the provided template format (and equivalent length if you are not using this template). This does not include References and the Appendix. You should be concise and make every sentence and figure convey good information such that everything essential fits the 15 pages. Below is a suggested structure you can follow. You can add more sections if deemed necessary.
+
+% Title & Authors
+\title{
+    Sillystill: Recreating the Look of Cinestill-800T using Deep Learning
+}
+
+\author{Mika Senghaas \quad Annamira O'Toole \quad Pierre Lardet}
+
+\institute{Supervised by Dr. Raphaël Achddou in CS413 at EPFL}
+
+\maketitle
+\thispagestyle{empty}
+
+% Abstract
+\input{sections/abstract.tex}
+
+% Report
+\input{sections/introduction.tex}
+\input{sections/literature-review.tex}
+% Implementation
+\input{sections/dataset.tex}
+\input{sections/model.tex}
+\input{sections/losses.tex} 
+\input{sections/experiments.tex}
+\input{sections/evaluation.tex}
+\input{sections/results.tex}
+\input{sections/conclusion.tex}
+\input{sections/further-work.tex}
+
+% References
+\newpage
+\bibliographystyle{splncs04}
+\bibliography{main}
+
+% Appendix
+\input{sections/appendix.tex}
+
+\end{document}

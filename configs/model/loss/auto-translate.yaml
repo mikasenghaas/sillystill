@@ -1,0 +1,10 @@
+_target_: src.models.loss.AutoTranslateLoss
+
+reconstruction_weight: 1.0
+encoder_weight: 1.0
+paired_reconstruction_weight: 1.0
+paired_loss_fn: 
+  _target_: src.models.loss.MSEVGGLoss
+  mse_weight: 1.0
+  feature_weight: 1.0
+do_penalise_film_transformation: False

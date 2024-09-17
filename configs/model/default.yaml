@@ -1,0 +1,15 @@
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 1e-3
+  weight_decay: 1e-3
+
+scheduler:
+  _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+  _partial_: true
+  mode: min
+  factor: 1e-1
+  patience: 5
+
+augment: 0.0
+training_patch_size: 128

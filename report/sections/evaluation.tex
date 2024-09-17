@@ -1,0 +1,86 @@
+\subsection{Evaluation}
+\label{subsec:evaluation}
+
+% Qualitative assessment: Visual comparison of results (patches during training/
+% evaluation + inference on downsampled images on full dataset)
+To evaluate the generated film images, we conduct both qualitative and
+quantitative assessments. For quantitative evaluation, we use four image quality and image similarity metrics. We include a reference baseline comparison which is calculated using the original digital image as the prediction.
+
+We use two standard algorithmic metrics, \textbf{Peak Signal-to-Noise Ratio (PSNR)}, which measures the ratio of the maximum possible signal power to the power of corrupting noise, and \textbf{Structural Similarity Index (SSIM)}, which compares structural, luminance, and contrast elements between an original and a reconstructed image in a range from -1 to 1. We also use two learned distance metrics, \textbf{Learned Perceptual Image Patch Similarity (LPIPS)} \cite{LPIPS} and \textbf{PieApp} \cite{PieAPP}, where lower indicates higher similarity, which are trained on human-annotated data to align with human perception of image quality.
+
+% \textbf{Peak Signal-to-Noise Ratio (PSNR)} assesses the quality of a
+% reconstructed image compared to its original by calculating the ratio of the
+% maximum possible signal power to the power of corrupting noise. High PSNR values
+% indicate better image quality, implying less noise corruption. However, PSNR
+% can be sensitive to small pixel
+% variations. \textbf{Structural Similarity Index (SSIM)} measures image quality by comparing
+% structural, luminance, and contrast elements between an original and a
+% reconstructed image. SSIM values range between -1 and 1, where 1 signifies
+% perfect similarity. It aligns more closely with human visual perception compared
+% to PSNR and is less sensitive to minor pixel changes, making it more reflective
+% of perceived image quality.
+
+% \textbf{Learned Perceptual Image Patch Similarity (LPIPS)}~\cite{LPIPS} is a
+% learned distance metric based on VGG features, capturing perceptual image quality based
+% on human-annotated data.Lower LPIPS values indicate higher similarity between the
+% images.
+
+% \textbf{PieApp}, like LPIPS, is a learned metric designed to align with human
+% perception. It defines a perceptual error score between a distorted image and
+% its reference, representing human-perceived distortion magnitude. Lower PieApp
+% scores indicate higher similarity between images.
+
+
+
+% More details from Annamira:
+% \textbf{Peak Signal-to-Noise Ratio (PSNR).} The Peak Signal-to-Noise Ratio (PSNR) is a frequently used pixel-based metric to evaluate the quality of a reconstructed image. It measures the ratio between the maximum possible power of a signal and the power of the noise that affects the fidelity of its representation. If the PSNR value is high, the quality of the image is high, as it implies a low level of corrupting noise.
+% 
+% We denote the Mean Squared Error (MSE) between an original $m$-by-$n$ pixel image $I$ and the reconstructed image $J$, as $\text{MSE}(I, J)$. The PSNR is then defined using MSE as:
+% 
+% \begin{equation}
+%     \text{PSNR}(I, J) = 10 \cdot \log_{10} \left( \frac{{\text{MAX}_I}^2}{\text{MSE}(I, J)} \right)
+%     \label{eq:psnr}
+% \end{equation}
+% 
+% where $\text{MAX}_I$ is the maximum possible pixel value of the image. The PSNR is usually expressed in decibels (dB).
+% 
+% As an image similarity metric, PSNR has several limitations. It does not take into account the human visual system's perception of image quality, and it is sensitive to small changes in pixel values. This means that small changes in the image can lead to large changes in the PSNR value. For this reason, PSNR is often used in combination with other image quality metrics to provide a more comprehensive evaluation of image quality.
+% 
+% We use PSNR to compute the pixel-wise similarity between the ground truth film image and the predicted film images. Given PSNR's sensitivity to noise patterns in the image, we expect PSNR to report high values when the model is able to accurately predict noise patterns in the film image. However, the exact placement of the noise pattern is likely to drastically effect the pixel-by-pixel MSE computation for PSNR, and therefore the PSNR value may not be a useful judgement of similarity between real and generated film.
+% 
+% Therefore, we expect PSNR to judge predictions most positively when we use MSE loss, as opposed to other loss functions.
+% 
+% \textbf{Structural Similarity Index (SSIM).} The Structural Similarity Index (SSIM) is a pixel-based metric for measuring the similarity between two images. It is based on the assumption that the human visual system is highly sensitive to structural information in images, and that the perceived quality of an image is determined by the similarity of its structure to the structure of a reference image.
+% 
+% SSIM is designed to capture three aspects of image quality: luminance, contrast, and structure. As these aspects are not judgements of color accuratecy, SSIM is often computed based on the luminance channel of the image, or individually over the red, green, and blue channels and then combined to create a final signal. In our implementation
+% 
+% The SSIM index is defined as:
+% 
+% \begin{equation}
+%     \text{SSIM}(I, J) = \frac{(2\mu_I\mu_J + C_1)(2\sigma_{IJ} + C_2)}{(\mu_I^2 + \mu_J^2 + C_1)(\sigma_I^2 + \sigma_J^2 + C_2)}
+%     \label{eq:ssim}
+% \end{equation}
+% 
+% where $\mu_I$ and $\mu_J$ are the average pixel values of images $I$ and $J$, $\sigma_I^2$ and $\sigma_J^2$ are the variances of images $I$ and $J$, $\sigma_{IJ}$ is the covariance of images $I$ and $J$, and $C_1$ and $C_2$ are constants to stabilise the any division with weak a denominator. The SSIM index ranges from -1 to 1, where 1 indicates perfect similarity between the images.
+% 
+% Given SSIM's sensitivity to structural information in the image, we expect SSIM to report high values when the model is able to accurately predict the structure and/or grain of the film image, but not be sensitive to the accuracy of the color hue, saturation, or grain. We expect SSIM to be a more robust metric than PSNR, closer in agreement with human perception, as it is less sensitive to small changes in pixel values and more closely aligns with the human visual system's perception of image quality.
+% 
+% % - LPIPS
+% 
+% \subsubsection{Learned Perceptual Image Patch Similarity (LPIPS)}
+% 
+% Proposed in \cite{LPIPS}, the Learned Perceptual Image Patch Similarity (LPIPS) metric is a learned metric based on VGG features. As features of the VGG network trained on ImageNet classification are useful as training loss for image synthesis, it follows that these features should capture some kind of perceptual quality of images. The LPIPS metric computes the distance between two images based on the distance between their VGG features. 
+ 
+% LPIPS is trained on a human-annotated dataset of images along with several distorted copies of each imgage. Humans were asked to choose the most similar image to the original image from the distorted images. The LPIPS metric is then trained to predict the human choice on this dataset.
+% 
+% We expect LPIPS to be a more robust metric than PSNR and SSIM, as it is trained on human-annotated data and should more closely align with a human's subjective opinion of image quality.  
+% 
+% % - PieAPP
+% 
+% \subsubsection{Perceptual Image-Error Assessment through Pairwise Preference (PieApp)}
+% 
+% Similar to LPIPS, the Perceptual Image-Error Assessment through Pairwise Preference (PieApp) metric is a learned metric trained on a large-scale dataset labeled with the probability that humans will prefered one image over another \cite{PieAPP}. PieApp trains a pairwise-learning framework to predict the preference of one distorted image over the other, similar to LPIPS. 
+% 
+% PieApp defines a \textit{perceptual error} score between a distorted image and its reference which represents the magnitude of human-perceived distortion. The key observation is that PieApp's trained network can predict a human's perception of error without ever being trained on explicit human perceptual-error labels, but rather only on human preference labels.
+% 
+% Like LPIPS, we expect PieApp to be a more robust metric than PSNR and SSIM, as it is trained on human-annotated data. We expect both PieApp and LPIPS to align most closely with a human's subjective opinion of image quality.

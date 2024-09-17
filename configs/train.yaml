@@ -1,0 +1,23 @@
+# @package _global_
+
+defaults:
+  - _self_
+  - data: paired
+  - model: translation
+  - logger: null
+  - callbacks: default
+  - trainer: gpu
+  - paths: default
+  - hydra: default
+  - extras: default
+  - experiment: null
+
+task: "train"
+group: null
+name: null
+tags: ["dev"]
+seed: null
+
+train: false
+test: false
+inference: true

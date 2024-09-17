@@ -1,0 +1,74 @@
+\subsection{Loss Functions}
+\label{subsec:loss-functions}
+
+We propose a list of loss functions that can be combined, each targeting different effects.
+
+\textbf{MSE/MAE.} Both the mean squared error (MSE, Eq.~\ref{eq:mse}) and mean absolute error (MAE, Eq.~\ref{eq:mae}) are common pixel-to-pixel loss functions, that are popular in image reconstruction tasks. They measure the average squared or absolute difference between the predicted and ground truth images pixels, respectively. For two images, $X, Y \in \mathbb{R}^{3 \times H \times W}$, the MSE and MAE losses are defined as:
+\begin{multicols}{2}
+\begin{equation}
+    \mathcal{L}_\text{MSE}(X, Y) = \frac{1}{n} \sum_{i=1}^{n} (X_i, Y_i)^2
+    \label{eq:mse}
+\end{equation}
+
+\begin{equation}
+    \mathcal{L}_\text{MAE}(X, Y) = \frac{1}{n} \sum_{i=1}^{n} |X_i - Y_i|
+    \label{eq:mae}
+\end{equation}
+\end{multicols}
+
+where $i$ indexes the pixels of the images. We hypothesise that
+such loss functions are useful in preserving the overall structure and color of the image,
+but are not sufficient to capture higher-level visual effects such as grain and
+halation.
+
+\textbf{VGG Loss.} VGG loss computes the MSE (Eq.~\ref{eq:mse}) between the feature representations of the predicted and ground truth images when passed through a pre-trained VGG-19~\cite{vgg} convolutional network. Letting $\varphi_k(I)$ denote the feature maps of the $k$-th layer of the VGG network, and the sets $K$ and $\lambda$ denote the layers of interest \footnote{We use conv1\_2, conv2\_2, conv3\_2 with weights 0.4, 0.4 and 0.2 respectively.} and their weights in the loss function respectively, the VGG loss is defined as:
+
+\begin{equation}
+   \mathcal{L}_\text{VGG}(X, Y) = \sum_{k \in K} \lambda_k \mathcal{L}_\text{MSE}(\varphi_k(X), \varphi_k(Y)).
+    \label{eq:vgg}
+\end{equation}
+
+Intuitively, the VGG loss encourages the model to generate images that are similar to the ground truth images in terms of their high-level semantics such 
+as edges, textures and patterns.
+
+\textbf{Color Loss.} Inspired by~\cite{dslr-quality}, we consider an alternative to the MSE loss, which we refer to as the color loss. The color loss computes the MSE between two images, $X_b$ an $Y_b$, where $X_b$ and $Y_b$ are blurred versions of the predicted and ground truth images respectively. Blurring is done using a Gaussian filter with a kernel size of 7 and \(\sigma=3\). We can write:
+
+\begin{equation}
+    \mathcal{L}_\text{Color}(X, Y) = \mathcal{L}_\text{MSE}(X_b, Y_b).
+    \label{eq:color}
+\end{equation}
+
+As the authors of the original paper argue, the main idea behind the loss is to evaluate the brightness, contrast and major colours of the image while ignoring fine-grained texture and content comparison. Crucially, the color loss, unlike MSE or MAE, is more robust to small pixel shifts which are present in our training data.
+
+\textbf{Relative Total Variational Loss (TV-Rel).} Traditionally, the \href{https://lightning.ai/docs/torchmetrics/stable/image/total_variation.html}{total variational} loss is used to encourage image smoothness and reduce noise by minimising the sum of the absolute differences between shifted pixel values. In our case, we aim to create grain, which can be seen as a form of noise. To this end, we propose the relative total variational loss defined as the absolute difference between the total variation of the predicted and ground
+truth images. 
+
+\begin{equation}
+    \mathcal{L}_\text{TV-Rel} = |TV(X) - TV(Y)| 
+    \label{eq:tv-rel}
+  \end{equation}
+
+This loss encourages the model to generate images with a similar
+amount of noise to the ground truth film images.
+
+\textbf{Combination of Losses.} We combine the individual loss functions to form the final loss function using a weighted sum. For a set of loss functions $\mathcal{L}$ and corresponding weights $\beta$ \footnote{We simply use equal weights in all experiments with $\beta_i = 1$ for all $i$}, the final loss function is defined as
+
+\begin{equation}
+    \mathcal{L}(X, Y) = \sum_{i} \beta_i \mathcal{L}_i(X, Y).
+    \label{eq:combined-loss}
+\end{equation}
+
+Some combinations of loss functions are more effective than others, and we will experiment with different combinations, as outlined in Section \ref{sec:results}.
+
+% \textbf{CoBi Loss.} Introduced by \cite{zoom-to-learn}, Contextual Bilateral Loss (CoBi Loss) is inspired by the bilateral filter \cite{bilateral-filter} which preserves-edges while reducing noise. The motivation for its design is to judge image feature similarity even when an image pair is misaligned. CoBi Loss combines spatial pixel coordinates and pixel-level RGB information for a nearest neighbor search on image features. 
+% 
+% \begin{definition}
+%   \textbf{CoBi Loss}
+% \begin{equation}
+%   \text{CoBi}(P, Q) = \frac{1}{N}\Sigma_{i,j}\min_{j=1,...M} (D_{p_i,q_i} + \omega_s D'_{p_i, q_i})
+% \end{equation}
+% \end{definition}
+% 
+% Where $P$ and $Q$ are the predicted and ground truth images with $N$ and $M$ feature points respectively. $\omega_s$ is a hyperparameter that controls the influence of the spatial awareness for nearest neighbor search. $D_{p_i,q_i}$ and $D'_{p_i,q_i}$ are distance measurements between feature points of the predicted and ground truth images. 
+
+% TODO: Talk about combination of losses.

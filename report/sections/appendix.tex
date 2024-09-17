@@ -1,0 +1,166 @@
+\newpage
+\section{Appendix}
+\label{sec:appendix}
+
+% Guidelines
+% - No page limits
+% - Provide documentation for all of your codes. This will help the grading of your submitted codes, the clearer things are the easier it will be to understand your codes, to test them and to grade you fairly. 
+% - If you have any proofs or any notes, you can also add them to the appendix.
+
+\subsection{Code Documentation}
+\label{sec:code-documentation}
+
+The code for this project is available at \url{https://github.com/mikasenghaas/sillystill/tree/main}. The code is written in Python and uses \href{https://pytorch.org/}{PyTorch}, \href{https://lightning.ai/docs/pytorch/stable/}{Lightning} and \href{https://hydra.cc/}{Hydra} for configuration. The code is structured as follows:
+
+\begin{itemize}
+    \item \texttt{/src} contains the main code for the project, including the data processing, models, losses and training scripts.
+        \begin{itemize}
+            \item \texttt{/data} contains all datasets and Lightning datamodules. 
+            \item \texttt{/models} contains the PyTorch model classes and loss functions.
+            \item \texttt{/eval} contains wrapper classes for evaluation metrics.
+            \item \texttt{/utils} contains a variety of utility functions.
+            \item \texttt{train.py} is the main training script.
+            \item \texttt{dev.py} is a developer script for testing code without using Lightning or Hydra.
+            \item \texttt{preprocess.py} is a script for preprocessing the dataset.
+            \item \texttt{evaluate.py} is an evaluation script.
+            \item \texttt{unsplash.py} is a script for downloading images from Unsplash.
+        \end{itemize}
+    \item \texttt{/data} contains our dataset
+    \item \texttt{/configs} contains the Hydra configuration files for the experiments.
+    \item \texttt{/notebooks} contains Jupyter notebooks for investigating the data processing, losses, models and evaluation.
+    \item \texttt{/report} contains the Latex files for the report.
+\end{itemize}
+
+In order to train a model, the \texttt{src/train.py} script can be run with the desired configuration. You can specify a hydra configuration with flags or by editing the configuration files. The two experiments in this report can be run with the following commands:
+
+\begin{verbatim}
+python src/train.py experiment=single-image logger=none
+python src/train.py experiment=full-data logger=none
+\end{verbatim}
+
+To edit the loss functions or other parameters, you can edit the configuration file \texttt{configs/experiment/single-image.yaml}. The model will be trained, and inference will be run automatically, with results logged locally. If you want to log  to weights and biases, you can remove the logger flag.
+
+\newpage
+\subsection{All Results}
+\label{sec:all-results}
+
+\begin{table}[ht]
+    \scriptsize
+    \centering
+    \caption{
+        \textbf{Single Image.} All Results}
+    \begin{tabular}{lcc|cccc}
+        \toprule
+        \multicolumn{3}{c}{\textbf{Configuration}}& \multicolumn{4}{c}{\textbf{Evaluation}} \\
+        Loss & Noise & Resized & SSIM & PSNR & LPIPS & PieAPP \\
+        \midrule
+        MSE + VGG & No & Yes & \textbf{0.71} & \textbf{23.19} & 0.35 & 1.62 \\
+        MAE & Yes & No & 0.68 & 19.04 & 0.33 & 1.96 \\
+        Color + VGG + TV-Rel & No & No & 0.68 & 19.67 & 0.45 & 1.42 \\
+        Color + VGG & No & No & 0.68 & 20.07 & 0.45 & 1.61 \\
+        Color + VGG & Yes & No & 0.68 & 17.94 & 0.36 & 1.58 \\
+        Color + VGG + TV-Rel & Yes & No  & 0.67 & 18.01 & 0.37 & \textbf{1.14} \\
+        MSE & No & Yes & 0.67 & 20.03 & 0.47 & 1.77 \\
+        MSE & Yes & No & 0.67 & 19.26 & 0.32 & 1.89 \\
+        MSE + VGG & Yes & No & 0.67 & 19.79 & 0.34 & 2.05 \\
+        MSE & Yes & Yes & 0.67 & 18.61 & 0.30 & 1.87 \\
+        MSE + TV-Rel + VGG & Yes & No & 0.66 & 20.14 & 0.30 & 1.84 \\
+        MSE + VGG & No & No & 0.66 & 18.26 & 0.48 & 2.53 \\
+        MAE & No & No & 0.65 & 18.61 & 0.50 & 2.12 \\
+        Color & No & No & 0.65 & 18.45 & 0.50 & 2.99 \\
+        MSE & No & No & 0.65 & 18.29 & 0.50 & 2.42 \\
+        \textbf{Baseline} & - & - & 0.64 & 16.97 & 0.36 & 3.79 \\
+        \midrule
+        Color & Yes & No & 0.63 & 15.66 & 0.43 & 2.50 \\
+        TV-Rel & Yes & No & 0.27 & 11.11 & \textbf{0.27} & 2.20 \\
+        TV-Rel & No & No & 0.17 & 9.84 & 0.60 & 4.84 \\
+        VGG & No & No & 0.16 & 9.10 & 0.62 & 4.50 \\
+        VGG & Yes & No & 0.06 & 8.71 & 0.64 & 5.11 \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:all-single-image-results}
+\end{table}
+
+\begin{table}[ht]
+    \scriptsize
+    \centering
+    \setlength{\tabcolsep}{0.3em}
+    \caption{\textbf{Full Dataset.} All results}
+    \begin{tabular}{lcc|cccc}
+        \toprule
+        \multicolumn{3}{c}{\textbf{Configuration}} & \multicolumn{4}{c}{\textbf{Evaluation}} \\
+        Loss & Resize & Noise & SSIM & PSNR & LPIPS & PieAPP \\
+        \midrule
+        \textbf{Baseline} & - & - & \textbf{0.64} & 21.68 & \textbf{0.26} & 1.96 \\
+        \hline
+        MSE + VGG & Yes & Yes & \textbf{0.64} & \textbf{22.87} & 0.27 & 1.90 \\
+        MSE + VGG & Yes & No & 0.63 & 22.85 & 0.27 & \textbf{1.84} \\
+        MSE & Yes & No & 0.63 & 22.20 & 0.35 & 2.31 \\
+        MSE & Yes & No & 0.59 & 19.68 & 0.48 & 3.38 \\
+        Color + VGG + TV-Rel & No & Yes & 0.59 & 21.42 & 0.41 & 3.07 \\
+        MSE & No & No & 0.58 & 20.47 & 0.50 & 3.67 \\
+        MSE + VGG & No & No & 0.58 & 20.47 & 0.50 & 3.67 \\
+        MSE + VGG + TV-Rel & No & Yes & 0.58 & 20.43 & 0.46 & 3.54 \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:all-full-dataset-results}
+\end{table}
+
+
+% Example 1: Only show runs w/ resize
+% \begin{table}
+%     \centering
+%     \caption{
+%         \textbf{Single Image Results.} Only runs w/o resize
+%     .}
+%     \begin{tabular}{lc|cccc}
+%         \toprule
+%         \multicolumn{2}{c}{\textbf{Configuration}}& \multicolumn{4}{c}{\textbf{Evaluation}} \\
+%         Loss & Noise & SSIM & PSNR & LPIPS & PieAPP \\
+%         \midrule
+%         MAE & Yes & 0.68 & 19.04 & 0.33 & 1.96 \\
+%         Color + VGG + TV-Rel & No & 0.68 & 19.67 & 0.45 & 1.42 \\
+%         Color + VGG & No & 0.68 & 20.07 & 0.45 & 1.61 \\
+%         Color + VGG & Yes & 0.68 & 17.94 & 0.36 & 1.58 \\
+%         Color + VGG + TV-Rel & Yes & 0.67 & 18.01 & 0.37 & \textbf{1.14} \\
+%         MSE & Yes & 0.67 & 19.26 & 0.32 & 1.89 \\
+%         MSE + TV-Rel + VGG & Yes & 0.66 & 20.14 & \textbf{0.30} & 1.84 \\
+%         MSE + VGG & No & 0.66 & 18.26 & 0.48 & 2.53 \\
+%         MAE & No & 0.65 & 18.61 & 0.50 & 2.12 \\
+%         Color & No & 0.65 & 18.45 & 0.50 & 2.99 \\
+%         MSE & No & 0.65 & 18.29 & 0.50 & 2.42 \\
+%         \textbf{Baseline} & - & 0.64 & 16.97 & 0.36 & 3.79 \\
+%         \hline
+%         Color & Yes & 0.63 & 15.66 & 0.43 & 2.50 \\
+%         TV-Rel & Yes & 0.27 & 11.11 & 0.27 & 2.20 \\
+%         TV-Rel & No & 0.17 & 9.84 & 0.60 & 4.84 \\
+%         VGG & No & 0.16 & 9.10 & 0.62 & 4.50 \\
+%         VGG & Yes & 0.06 & 8.71 & 0.64 & 5.11 \\
+%         TV-Abs & Yes & 0.00 & 4.96 & 0.60 & 19.05 \\
+%         TV-Abs & No & 0.00 & 4.96 & 0.53 & 19.05 \\
+%         \bottomrule
+%     \end{tabular}
+%     \label{tab:single-image-results}
+% \end{table}
+
+% Example 2: MSE w/ and w/o noise and resize
+% Could be nice to show the influence of noise/ resize w/ MSE loss (only loss that has all combinations)
+% \begin{table}
+%     \centering
+%     \caption{
+%         \textbf{Single Image Results.} MSE Runs
+%     .}
+%     \begin{tabular}{lcc|cccc}
+%         \toprule
+%         \multicolumn{3}{c}{\textbf{Configuration}}& \multicolumn{4}{c}{\textbf{Evaluation}} \\
+%         Loss & Noise & Resized & SSIM & PSNR & LPIPS & PieAPP \\
+%         \midrule
+%         MSE & No & Yes & \textbf{0.67} & \textbf{20.03} & 0.47 & \textbf{1.77} \\
+%         MSE & Yes & No & 0.67 & 19.26 & 0.32 & 1.89 \\
+%         MSE & Yes & Yes & 0.67 & 18.61 & \textbf{0.30} & 1.87 \\
+%         MSE & No & No & 0.65 & 18.29 & 0.50 & 2.42 \\
+%         \textbf{Baseline} & - & - & 0.64 & 16.97 & 0.36 & 3.79 \\
+%         \bottomrule
+%     \end{tabular}
+% \end{table}
+

@@ -1,0 +1,55 @@
+# @package _global_
+
+# To run: `python train.py -m experiment={filename}`
+
+defaults:
+  - override /data: paired
+  - override /model: translation
+  - override /model/net: unet
+  - override /model/loss: silly
+  - override /logger: wandb
+
+group: single-image
+tags: ["MSE"]
+seed: 42
+
+train: true
+test: false
+inference: true
+
+data:
+  image_dirs:
+    - data/paired/grain/film
+    - data/paired/grain/digital
+
+trainer:
+  min_steps: 50
+  max_steps: 400
+
+  # Disable validation
+  num_sanity_val_steps: 0
+  limit_val_batches: 0
+
+callbacks:
+  early_stopping:
+    monitor: "train/loss"
+    patience: 50
+
+model:
+  net:
+    with_noise: true
+    hidden_channels: [64, 128, 256]
+    kernel_size: 3
+  loss:
+    losses:
+      # - _target_: src.models.loss.MAELoss
+      - _target_: src.models.loss.MSELoss
+      # - _target_: src.models.loss.VGGLoss
+      # - _target_: src.models.loss.ColorLoss
+      # - _target_: src.models.loss.TVAbsoluteLoss
+      # - _target_: src.models.loss.TVRelativeLoss
+      # - _target_: src.models.loss.FrequencyLoss # Not MPS
+      # - _target_: src.models.loss.GCLMLoss # Non-differentiable
+      # - _target_: src.models.loss.CoBiLoss # OOM
+    weights: [1.0, 1.0, 1.0]
+  training_patch_size: 256

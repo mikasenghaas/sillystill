@@ -1,0 +1,5 @@
+defaults:
+  - rich_progress_bar
+  - learning_rate_monitor
+  - early_stopping
+  - _self_

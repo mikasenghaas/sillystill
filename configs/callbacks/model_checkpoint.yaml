@@ -1,0 +1,12 @@
+# https://lightning.ai/docs/pytorch/stable/api/lightning.pytorch.callbacks.ModelCheckpoint.html
+
+model_checkpoint:
+  _target_: lightning.pytorch.callbacks.ModelCheckpoint
+  dirpath: ${paths.output_dir}/checkpoints/
+  filename: best
+  monitor: val/loss
+  mode: "min"
+  verbose: True 
+  save_last: True
+  save_top_k: 1
+  save_weights_only: False

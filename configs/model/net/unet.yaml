@@ -1,0 +1,5 @@
+_target_: src.models.net.UNet
+
+hidden_channels: [64, 128, 256]
+input_output_channels: 3
+with_noise: True

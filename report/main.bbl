@@ -1,0 +1,102 @@
+\begin{thebibliography}{10}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+\providecommand{\doi}[1]{https://doi.org/#1}
+
+\bibitem{raw-to-raw}
+Afifi, M., Abuolaim, A.: Semi-supervised raw-to-raw mapping. CoRR  \textbf{abs/2106.13883} (2021), \url{https://arxiv.org/abs/2106.13883}
+
+\bibitem{opencv}
+Bradski, G.: {The OpenCV Library}. Dr. Dobb's Journal of Software Tools  (2000)
+
+\bibitem{deep-colorisation}
+Cheng, Z., Yang, Q., Sheng, B.: Deep colorization. CoRR  \textbf{abs/1605.00075} (2016), \url{http://arxiv.org/abs/1605.00075}
+
+\bibitem{large-scale-colorisation}
+Deshpande, A., Rock, J., Forsyth, D.A.: Learning large-scale automatic image colorization. 2015 IEEE International Conference on Computer Vision (ICCV) pp. 567--575 (2015), \url{https://api.semanticscholar.org/CorpusID:13195504}
+
+\bibitem{image-super-resolution-with-deep-networks}
+Dong, C., Loy, C.C., He, K., Tang, X.: Image super-resolution using deep convolutional networks (2015)
+
+\bibitem{scaling-painting-style-transfer}
+Galerne, B., Raad, L., Lezama, J., Morel, J.M.: Scaling painting style transfer (2022)
+
+\bibitem{image-style-transfer}
+Gatys, L.A., Ecker, A.S., Bethge, M.: Image style transfer using convolutional neural networks. In: 2016 IEEE Conference on Computer Vision and Pattern Recognition (CVPR). pp. 2414--2423 (2016). \doi{10.1109/CVPR.2016.265}
+
+\bibitem{arbitrary-style-transfer}
+Huang, X., Belongie, S.: Arbitrary style transfer in real-time with adaptive instance normalization (2017)
+
+\bibitem{dslr-quality}
+Ignatov, A., Kobyshev, N., Vanhoey, K., Timofte, R., Gool, L.V.: Dslr-quality photos on mobile devices with deep convolutional networks. CoRR  \textbf{abs/1704.02470} (2017), \url{http://arxiv.org/abs/1704.02470}
+
+\bibitem{conditionalgan}
+Isola, P., Zhu, J.Y., Zhou, T., Efros, A.A.: Image-to-image translation with conditional adversarial networks (2018)
+
+\bibitem{resolution-perceptual-losses}
+Johnson, J., Alahi, A., Fei-Fei, L.: Perceptual losses for real-time style transfer and super-resolution (2016)
+
+\bibitem{perceptual-losses-style-transfer}
+Johnson, J., Alahi, A., Fei-Fei, L.: Perceptual losses for real-time style transfer and super-resolution (2016)
+
+\bibitem{gan-progressive-stability-resolution}
+Karras, T., Aila, T., Laine, S., Lehtinen, J.: Progressive growing of gans for improved quality, stability, and variation (2018)
+
+\bibitem{gan-style-based-resolution}
+Karras, T., Laine, S., Aila, T.: A style-based generator architecture for generative adversarial networks (2019)
+
+\bibitem{accurate-image-super-resolution}
+Kim, J., Lee, J.K., Lee, K.M.: Accurate image super-resolution using very deep convolutional networks (2016)
+
+\bibitem{gan-photo-realistic-super-resolution}
+Ledig, C., Theis, L., Huszar, F., Caballero, J., Cunningham, A., Acosta, A., Aitken, A., Tejani, A., Totz, J., Wang, Z., Shi, W.: Photo-realistic single image super-resolution using a generative adversarial network (2017)
+
+\bibitem{intrinsic-colorisation}
+Liu, X., Wan, L., Qu, Y., Wong, T.T., Lin, S., Leung, C.S., Heng, P.A.: Intrinsic colorization. ACM Trans. Graph.  \textbf{27}(5) (2008). \doi{10.1145/1409060.1409105}, \url{https://doi.org/10.1145/1409060.1409105}
+
+\bibitem{deep-photo-style-transfer}
+Luan, F., Paris, S., Shechtman, E., Bala, K.: Deep photo style transfer (2017)
+
+\bibitem{contextual-loss}
+Mechrez, R., Talmi, I., Zelnik-Manor, L.: The contextual loss for image transformation with non-aligned data (2018)
+
+\bibitem{pulse-gan-perceptual-super-resolution}
+Menon, S., Damian, A., Hu, S., Ravi, N., Rudin, C.: Pulse: Self-supervised photo upsampling via latent space exploration of generative models (2020)
+
+\bibitem{flann}
+Muja, M., Lowe, D.: Fast approximate nearest neighbors with automatic algorithm configuration. vol.~1, pp. 331--340 (01 2009)
+
+\bibitem{film-grain-rendering}
+Newson, A., Faraj, N., Galerne, B., Delon, J.: {Realistic Film Grain Rendering}. {Image Processing On Line}  \textbf{7},  165--183 (2017), \url{https://doi.org/10.5201/ipol.2017.192}
+
+\bibitem{PieAPP}
+Prashnani, E., Cai, H., Mostofi, Y., Sen, P.: Pieapp: Perceptual image-error assessment through pairwise preference. CoRR  \textbf{abs/1806.02067} (2018), \url{http://arxiv.org/abs/1806.02067}
+
+\bibitem{unet}
+Ronneberger, O., Fischer, P., Brox, T.: U-net: Convolutional networks for biomedical image segmentation (2015)
+
+\bibitem{orb}
+Rublee, E., Rabaud, V., Konolige, K., Bradski, G.: Orb: an efficient alternative to sift or surf. pp. 2564--2571 (11 2011). \doi{10.1109/ICCV.2011.6126544}
+
+\bibitem{vgg}
+Simonyan, K., Zisserman, A.: Very deep convolutional networks for large-scale image recognition (2015)
+
+\bibitem{recovering-texture-super-resolution}
+Wang, X., Yu, K., Dong, C., Loy, C.C.: Recovering realistic texture in image super-resolution by deep spatial feature transform (2018)
+
+\bibitem{esrgan-super-resolution}
+Wang, X., Yu, K., Wu, S., Gu, J., Liu, Y., Dong, C., Loy, C.C., Qiao, Y., Tang, X.: Esrgan: Enhanced super-resolution generative adversarial networks (2018)
+
+\bibitem{glcm}
+Wang, Y.D., Swietojanski, P., Armstrong, R.T., Mostaghimi, P.: Pixel co-occurence based loss metrics for super resolution texture recovery (2020), \url{https://openreview.net/forum?id=rylrI1HtPr}
+
+\bibitem{LPIPS}
+Zhang, R., Isola, P., Efros, A.A., Shechtman, E., Wang, O.: The unreasonable effectiveness of deep features as a perceptual metric. CoRR  \textbf{abs/1801.03924} (2018), \url{http://arxiv.org/abs/1801.03924}
+
+\bibitem{zoom-to-learn}
+Zhang, X.C., Chen, Q., Ng, R., Koltun, V.: Zoom to learn, learn to zoom. CoRR  \textbf{abs/1905.05169} (2019), \url{http://arxiv.org/abs/1905.05169}
+
+\bibitem{cyclicgan}
+Zhu, J.Y., Park, T., Isola, P., Efros, A.A.: Unpaired image-to-image translation using cycle-consistent adversarial networks (2020)
+
+\end{thebibliography}

@@ -1,0 +1,7 @@
+defaults:
+  - _self_
+  - net: unet
+  - loss: silly
+  - default
+
+_target_: src.models.TranslationModule
